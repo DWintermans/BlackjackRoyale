@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlackjackAPI.Controllers
 {
-    [ApiController]
+	[ApiController]
 	[Route("[controller]")]
 	public class AccountController : ControllerBase
 	{
@@ -36,7 +36,7 @@ namespace BlackjackAPI.Controllers
 			{
 				return Unauthorized(new { message = "Invalid credentials" });
 			}
-			
+
 			string token = _accountLogic.CreateJWT(user_id);
 			return Ok(new { message = "Login successful", jwt = token });
 		}
@@ -53,7 +53,7 @@ namespace BlackjackAPI.Controllers
 		[Route("Register")]
 		public IActionResult Register(Register model)
 		{
-			if (!ModelState.IsValid)  
+			if (!ModelState.IsValid)
 			{
 				return BadRequest(ModelState);
 			}
@@ -97,7 +97,7 @@ namespace BlackjackAPI.Controllers
 				return BadRequest(new { message = result.Message });
 			}
 
-			return Ok(new { message = "Username changed succesfully"});
+			return Ok(new { message = "Username changed succesfully" });
 		}
 
 		/// <summary>

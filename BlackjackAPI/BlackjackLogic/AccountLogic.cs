@@ -1,12 +1,11 @@
-﻿using Konscious.Security.Cryptography;
-using BlackjackLogic.Interfaces.Logic;
+﻿using BlackjackLogic.Interfaces.Logic;
 using BlackjackLogic.Interfaces.Repository;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
+using Konscious.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace BlackjackLogic
 {
@@ -27,10 +26,10 @@ namespace BlackjackLogic
 		{
 			public bool Success { get; set; }
 			public string Message { get; set; }
-			public string JWT { get; set; } 
+			public string JWT { get; set; }
 		}
 
-		public string CreateJWT(int user_id) 
+		public string CreateJWT(int user_id)
 		{
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var key = Encoding.ASCII.GetBytes("ah48MZ4amGS3VqakPxjsYSekeg3yar6MbirervAigfquZkcF8wSCS3VKTWMaQCMR8dSJh3McMCcoT59rUnTxqKoSyAELPRcdZVF9wtB8XxhUPpTQUA5nWoGVSfd8R4Go");
@@ -51,7 +50,7 @@ namespace BlackjackLogic
 			return jwt;
 		}
 
-		public int GetUserIDFromJWT(string token) 
+		public int GetUserIDFromJWT(string token)
 		{
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var validationParameters = new TokenValidationParameters
@@ -80,9 +79,9 @@ namespace BlackjackLogic
 			{
 				Console.WriteLine("Token validation failed: " + ex.Message);
 				return 0;
-			}		
+			}
 		}
-		
+
 		public AccountResult CreateAccount(string username, string password)
 		{
 			if (_accountDAL.IsUsernameTaken(username))
@@ -151,7 +150,7 @@ namespace BlackjackLogic
 			{
 				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
 			}
-			else 
+			else
 			{
 				byte[] db_hashed_pw = loginInfo.hashed_pw;
 				byte[] db_salt = loginInfo.salt;

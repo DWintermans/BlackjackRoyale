@@ -130,7 +130,7 @@ namespace BlackjackDAL
 			catch (Exception ex)
 			{
 				Console.WriteLine($"An error occurred: {ex.Message}");
-				return 0; 
+				return 0;
 			}
 		}
 
