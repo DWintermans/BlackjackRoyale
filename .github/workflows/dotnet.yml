@@ -32,4 +32,4 @@ jobs:
       run: dotnet build BlackjackAPI/BlackjackRoyale.sln --no-restore
       
     - name: Test
-      run: dotnet test BlackjackAPI/BlackjackRoyale.sln--no-build --verbosity normal
+      run: dotnet test BlackjackAPI/BlackjackRoyale.sln --no-build --verbosity normal
