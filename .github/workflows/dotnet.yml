@@ -21,8 +21,8 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore BlackjackAPI/BlackjackRoyale.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build BlackjackAPI/BlackjackRoyale.sln --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test BlackjackAPI/BlackjackRoyale.sln--no-build --verbosity normal
