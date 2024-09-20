@@ -1,10 +1,10 @@
-﻿namespace BlackjackService
+﻿using BlackjackService;
+
+internal class Program
 {
-	class Program
+	public static void Main(string[] args)
 	{
-		static void Main(string[] args)
-		{
-			Console.WriteLine("WebSocket connection will be established here.");
-		}
+		Websocket websocket = new Websocket();
+		websocket.Run().Wait();
 	}
 }
