@@ -16,13 +16,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+        
+    - name: List files for debugging
+      run: ls -R 
+      
     - name: Restore dependencies
       run: dotnet restore BlackjackAPI/BlackjackRoyale.sln
+      
     - name: Build
       run: dotnet build BlackjackAPI/BlackjackRoyale.sln --no-restore
+      
     - name: Test
       run: dotnet test BlackjackAPI/BlackjackRoyale.sln--no-build --verbosity normal
