@@ -19,7 +19,7 @@
 					break;
 
 				default:
-					await Websocket.ReturnMessageToUserID(user_id, "Unknown group action");
+					await Websocket.SendNotificationToUserID(user_id, "Unknown group action");
 					break;
 			}
 		}
@@ -43,8 +43,8 @@
 				Console.WriteLine("Group_ID: " + group.Key + " | User_IDs: " + string.Join(", ", group.Value));
 			}
 
-			Websocket.ReturnMessageToUserID(user_id, "Group with ID '" + group_id + "' created.");
-			Websocket.ReturnMessageToUserID(user_id, $"You have joined group '{group_id}'.");
+			Websocket.SendNotificationToUserID(user_id, "Group with ID '" + group_id + "' created.");
+			Websocket.SendNotificationToUserID(user_id, $"You have joined group '{group_id}'.");
 		}
 
 		private static async Task JoinGroup(string group_id, int user_id)
@@ -62,11 +62,11 @@
 					SharedData.groupMembers[group_id].Add(user_id);
 					Console.WriteLine($"User {user_id} joined group {group_id}");
 
-					Websocket.ReturnMessageToUserID(user_id, $"You have joined group '{group_id}'.");
+					Websocket.SendNotificationToUserID(user_id, $"You have joined group '{group_id}'.");
 				}
 				else
 				{
-					Websocket.ReturnMessageToUserID(user_id, $"You are already a member of group '{group_id}'.");
+					Websocket.SendNotificationToUserID(user_id, $"You are already a member of group '{group_id}'.");
 				}
 
 				foreach (var group in SharedData.groupMembers)
@@ -76,7 +76,7 @@
 			}
 			else
 			{
-				Websocket.ReturnMessageToUserID(user_id, "Group does not exist.");
+				Websocket.SendNotificationToUserID(user_id, "Group does not exist.");
 			}
 		}
 
@@ -90,7 +90,7 @@
 
 					Console.WriteLine($"User {user_id} left group {group_id}");
 
-					Websocket.ReturnMessageToUserID(user_id, $"You have left group '{group_id}'.");
+					Websocket.SendNotificationToUserID(user_id, $"You have left group '{group_id}'.");
 
 					if (SharedData.groupMembers[group_id].Count == 0)
 					{

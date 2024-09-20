@@ -12,7 +12,6 @@ namespace BlackjackService;
 internal class Websocket
 {
 	private static Dictionary<string, WebSocket> connectedClients = new Dictionary<string, WebSocket>();
-	private static Dictionary<string, string> userIDToCliendIdMap = new Dictionary<string, string>();
 
 	public async Task Run()
 	{
@@ -57,10 +56,10 @@ internal class Websocket
 
 				connectedClients.Remove(client_id);
 
-				string keyToRemove = userIDToCliendIdMap.FirstOrDefault<KeyValuePair<string, string>>((KeyValuePair<string, string> x) => x.Value == client_id).Key;
+				string keyToRemove = SharedData.userIDToCliendIdMap.FirstOrDefault<KeyValuePair<string, string>>((KeyValuePair<string, string> x) => x.Value == client_id).Key;
 				if (keyToRemove != null)
 				{
-					userIDToCliendIdMap.Remove(keyToRemove);
+					SharedData.userIDToCliendIdMap.Remove(keyToRemove);
 				}
 				break;
 			}
@@ -74,14 +73,14 @@ internal class Websocket
 		//check if category and action are present
 		if (string.IsNullOrEmpty(message.category.ToString()) && string.IsNullOrEmpty(message.action.ToString()))
 		{
-			await ReturnMessageToSender(socket, "Invalid message format");
+			await SendNotificationToSender(socket, "Invalid message format");
 			return;
 		}
 
 		//check if token is present
 		if (string.IsNullOrEmpty(message.token.ToString()))
 		{
-			await ReturnMessageToSender(socket, "Missing token");
+			await SendNotificationToSender(socket, "Missing token");
 			return;
 		}
 
@@ -90,7 +89,7 @@ internal class Websocket
 		user_id = GetUserIDFromJWT(message.token.ToString());
 		if (user_id <= 0)
 		{
-			await ReturnMessageToSender(socket, "Invalid or expired token");
+			await SendNotificationToSender(socket, "Invalid or expired token");
 			return;
 		}
 
@@ -101,7 +100,7 @@ internal class Websocket
 				break;
 
 			case "chat":
-				await HandleChatAction(message, user_id);
+				await Chat.HandleChatAction(message, user_id);
 				break;
 
 			case "group":
@@ -113,33 +112,78 @@ internal class Websocket
 				break;
 
 			default:
-				await ReturnMessageToUserID(user_id, "Unknown category");
+				await SendNotificationToUserID(user_id, "Unknown category");
 				break;
 		}
 	}
 
-	public static async Task ReturnMessageToSender(WebSocket socket, string message)
+	public static async Task SendNotificationToSender(WebSocket socket, string message)
 	{
 		byte[] bytes = Encoding.UTF8.GetBytes(message);
 		await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 	}
 
-	public static async Task ReturnMessageToUserID(int user_id, string message)
+	public static async Task SendNotificationToUserID(int user_id, string message)
 	{
-		if (userIDToCliendIdMap.TryGetValue(user_id.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+		if (SharedData.userIDToCliendIdMap.TryGetValue(user_id.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
 		{
 			byte[] bytes = Encoding.UTF8.GetBytes(message);
 			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 		}
 	}
 
+	public static async Task SendPrivateChatMessageToUserID(int sender_id, int receiver_id, string message)
+	{
+		MessageModel messageModel = new MessageModel
+		{
+			Sender = sender_id,
+			Receiver = receiver_id,
+			Message = message,
+			Datetime = DateTime.Now
+		};
+
+		string Message = JsonConvert.SerializeObject(messageModel);
+		byte[] bytes = Encoding.UTF8.GetBytes(Message);
+
+		//send message to receiver when connected
+		if (SharedData.userIDToCliendIdMap.TryGetValue(receiver_id.ToString(), out string receiver_client_id) && connectedClients.TryGetValue(receiver_client_id, out WebSocket receiverSocket))
+		{
+			await receiverSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+		}
+
+		//send message to back sender
+		if (SharedData.userIDToCliendIdMap.TryGetValue(sender_id.ToString(), out string sender_client_id) && connectedClients.TryGetValue(sender_client_id, out WebSocket senderSocket))
+		{
+			await senderSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+		}
+	}
+
+	public static async Task SendChatMessageToUserID(int sender_id, int receiver_id, string message)
+	{
+		MessageModel messageModel = new MessageModel
+		{
+			Sender = sender_id,
+			Receiver = receiver_id,
+			Message = message,
+			Datetime = DateTime.Now
+		};
+
+		string Message = JsonConvert.SerializeObject(messageModel);
+		byte[] bytes = Encoding.UTF8.GetBytes(Message);
+
+		//send message to receiver when connected
+		if (SharedData.userIDToCliendIdMap.TryGetValue(receiver_id.ToString(), out string receiver_client_id) && connectedClients.TryGetValue(receiver_client_id, out WebSocket receiverSocket))
+		{
+			await receiverSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+		}
+	}
 
 	private static async void Link_UserID_To_WebsocketID(int user_id, string client_id)
 	{
-		userIDToCliendIdMap[user_id.ToString()] = client_id;
+		SharedData.userIDToCliendIdMap[user_id.ToString()] = client_id;
 		Console.WriteLine("Associating sender: " + user_id + " with client ID: " + client_id);
 
-		foreach (KeyValuePair<string, string> item in userIDToCliendIdMap)
+		foreach (KeyValuePair<string, string> item in SharedData.userIDToCliendIdMap)
 		{
 			Console.Write("Connected clients:");
 			Console.WriteLine("USER_ID: " + item.Key + ", CLIENT_ID: " + item.Value);
@@ -178,21 +222,6 @@ internal class Websocket
 		}
 	}
 
-	private static async Task HandleChatAction(dynamic message, int client_id)
-	{
-		if (message.action == "send_message")
-		{
-			string groupId = message.groupId;
-			string chatMessage = message.message;
-
-			// Broadcast message to all clients in the group
-			if (groupId != null && chatMessage != null)
-			{
-				//await BroadcastMessageToGroupAsync(groupId, chatMessage);
-			}
-		}
-	}
-
 	private static async Task HandleGameAction(dynamic message, int user_id)
 	{
 		switch (message.action)
@@ -212,6 +241,4 @@ internal class Websocket
 				break;
 		}
 	}
-
-
 }
