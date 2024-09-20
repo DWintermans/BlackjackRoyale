@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BlackjackService
+﻿namespace BlackjackService
 {
 	class Program
 	{

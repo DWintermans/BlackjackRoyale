@@ -24,9 +24,9 @@ namespace BlackjackLogic
 
 		public class AccountResult
 		{
-			public bool Success { get; set; }
-			public string Message { get; set; }
-			public string JWT { get; set; }
+			public required bool Success { get; set; }
+			public string? Message { get; set; }
+			public string? JWT { get; set; }
 		}
 
 		public string CreateJWT(int user_id)
@@ -146,7 +146,7 @@ namespace BlackjackLogic
 			//Get old password and salt from db based on user_id
 			var loginInfo = _accountDAL.RetrieveSalt_HashInformation(user_id);
 
-			if (loginInfo.hashed_pw == null || loginInfo.salt == null)
+			if (loginInfo.hashed_pw == null || loginInfo.hashed_pw.Length == 0 || loginInfo.salt == null || loginInfo.salt.Length == 0)
 			{
 				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
 			}
@@ -176,7 +176,7 @@ namespace BlackjackLogic
 		{
 			if (_accountDAL.IsUsernameTaken(user_name))
 			{
-				return new AccountResult { Success = false, Message = "Invalid username" };
+				return new AccountResult { Success = false, Message = "Username already in use." };
 			}
 
 			if (!_accountDAL.UpdateUsername(user_id, user_name))
