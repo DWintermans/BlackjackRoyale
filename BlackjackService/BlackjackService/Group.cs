@@ -59,10 +59,18 @@
 
 		private static async Task JoinGroup(string group_id, int user_id)
 		{
-			//leavy current group if possible, cant leave group youre trying to join.
+			//cant leave group youre trying to join.
 			if (!SharedData.groupMembers[group_id].Contains(user_id))
 			{
+				//leavy current group if possible
 				await LeaveGroup(user_id);
+			}
+
+			//cant join full group
+			if (SharedData.groupMembers.TryGetValue(group_id, out List<int> groupMembers) && groupMembers.Count >= 4)
+			{
+				await Websocket.SendNotificationToUserID(user_id, $"Group '{group_id}' is full!");
+				return;
 			}
 
 			if (SharedData.groupMembers.ContainsKey(group_id))
@@ -93,6 +101,12 @@
 
 		private static async Task LeaveGroup(int user_id)
 		{
+			//clear playerhands if possible
+			if (SharedData.playerHands.ContainsKey(user_id))
+			{
+				SharedData.playerHands[user_id].Clear();
+			}
+
 			foreach (var group_id in SharedData.groupMembers.Keys.ToList())
 			{
 				if (SharedData.groupMembers[group_id].Contains(user_id))
@@ -167,15 +181,10 @@
 
 				if (readyCount > totalMembers / 2)
 				{
-					await StartGame(group_id);
+					await Websocket.SendNotificationToGroupID(group_id, "The game is starting now!");
+					await Game.StartGame(group_id);
 				}
 			}
-		}
-
-		private static async Task StartGame(string group_id)
-		{
-			await Websocket.SendNotificationToGroupID(group_id, "The game is starting now!");
-			await Websocket.SendNotificationToGroupID(group_id, "Place your bets now!");
 		}
 
 		private static string GetGroupIDForUserID(int user_id)
