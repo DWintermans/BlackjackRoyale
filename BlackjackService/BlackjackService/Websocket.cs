@@ -73,14 +73,14 @@ internal class Websocket
 		//check if category and action are present
 		if (string.IsNullOrEmpty(message.category.ToString()) && string.IsNullOrEmpty(message.action.ToString()))
 		{
-			await SendNotificationToSender(socket, "Invalid message format");
+			await SendNotificationToSocket(socket, "Invalid message format");
 			return;
 		}
 
 		//check if token is present
 		if (string.IsNullOrEmpty(message.token.ToString()))
 		{
-			await SendNotificationToSender(socket, "Missing token");
+			await SendNotificationToSocket(socket, "Missing token");
 			return;
 		}
 
@@ -89,7 +89,7 @@ internal class Websocket
 		user_id = GetUserIDFromJWT(message.token.ToString());
 		if (user_id <= 0)
 		{
-			await SendNotificationToSender(socket, "Invalid or expired token");
+			await SendNotificationToSocket(socket, "Invalid or expired token");
 			return;
 		}
 
@@ -108,7 +108,7 @@ internal class Websocket
 				break;
 
 			case "game":
-				await HandleGameAction(message, user_id);
+				await Game.HandleGameAction(message, user_id);
 				break;
 
 			default:
@@ -117,7 +117,7 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendNotificationToSender(WebSocket socket, string message)
+	public static async Task SendNotificationToSocket(WebSocket socket, string message)
 	{
 		byte[] bytes = Encoding.UTF8.GetBytes(message);
 		await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
@@ -129,6 +129,18 @@ internal class Websocket
 		{
 			byte[] bytes = Encoding.UTF8.GetBytes(message);
 			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+		}
+	}
+
+	public static async Task SendNotificationToGroupID(string group_id, string message)
+	{
+		foreach (int user_id in SharedData.groupMembers[group_id])
+		{
+			if (SharedData.userIDToCliendIdMap.TryGetValue(user_id.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+			{
+				byte[] bytes = Encoding.UTF8.GetBytes(message);
+				await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+			}
 		}
 	}
 
@@ -219,26 +231,6 @@ internal class Websocket
 		{
 			Console.WriteLine("Token validation failed: " + ex.Message);
 			return 0;
-		}
-	}
-
-	private static async Task HandleGameAction(dynamic message, int user_id)
-	{
-		switch (message.action)
-		{
-			case "hit":
-				//await ProcessHitAction(client_id);
-				break;
-
-			case "stand":
-				//await ProcessStandAction(client_id);
-				break;
-
-			// Add cases for "split", "surrender", etc.
-
-			default:
-				//await SendMessageAsync(connectedClients[client_id], "Unknown game action");
-				break;
 		}
 	}
 }
