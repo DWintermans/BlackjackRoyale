@@ -4,12 +4,27 @@
 	{
 		private static Dictionary<int, bool> userReadyStatus = new Dictionary<int, bool>();
 
+		private const int MaxGroupSize = 4;
+
+		public string Group_ID { get; private set; }
+		public List<Player> Members { get; private set; }
+		public List<string> Deck { get; private set; }
+		public List<Player> WaitingRoom { get; private set; }
+
+		public Group(string group_id)
+		{
+			Group_ID = group_id;
+			Members = new List<Player>();
+			Deck = new List<string>();
+			WaitingRoom = new List<Player>();
+		}
+
 		public static async Task HandleGroupAction(dynamic message, int user_id)
 		{
 			switch (message.action.ToString())
 			{
 				case "create_group":
-					await CreateGroup(user_id);
+					await CreateGroup_v2(user_id);
 					break;
 
 				case "join_group":
@@ -17,7 +32,7 @@
 					break;
 
 				case "leave_group":
-					await LeaveGroup(user_id);
+					LeaveGroup_v2(user_id);
 					break;
 
 				case "ready":
@@ -34,28 +49,97 @@
 			}
 		}
 
-		public static async Task CreateGroup(int user_id)
+		private static async Task CreateGroup_v2(int user_id)
 		{
-			//leavy current group if possible
-			await LeaveGroup(user_id);
+			//leave current group if possible
+			LeaveGroup_v2(user_id);
 
 			string group_id = GenerateRandomGroupID();
-
-			while (SharedData.groupMembers.ContainsKey(group_id))
+			while (SharedData.Groups.ContainsKey(group_id))
 			{
 				group_id = GenerateRandomGroupID();
 			}
 
-			SharedData.groupMembers[group_id] = new List<int> { user_id };
+			Group group = new Group(group_id);
+			Player player = new Player(user_id);
+		
+			//add to group
+			group.Members.Add(player);
 
-			foreach (var group in SharedData.groupMembers)
+			//add group to list
+			SharedData.Groups[group_id] = group;
+
+			foreach (var g in SharedData.Groups)
 			{
-				Console.WriteLine("Group_ID: " + group.Key + " | User_IDs: " + string.Join(", ", group.Value));
+				Console.WriteLine("Group_ID: " + g.Key + " | User_IDs: " + string.Join(", ", g.Value.Members.Select(m => m.User_ID)));
 			}
 
-			Websocket.SendNotificationToUserID(user_id, "Group with ID '" + group_id + "' created.");
-			Websocket.SendNotificationToUserID(user_id, $"You have joined group '{group_id}'.");
+			Websocket.SendNotificationToUserID(player.User_ID, $"Group with ID {group.Group_ID} created.");
+			Websocket.SendNotificationToUserID(player.User_ID, $"You have joined group {group.Group_ID}.");
 		}
+
+		private static void LeaveGroup_v2(int user_id)
+		{
+			Player player = GetPlayerByUserID(user_id);
+			if (player == null) return;
+
+			foreach (var group in SharedData.Groups.Values.ToList())
+			{
+				if (group.Members.Any(p => p.User_ID == user_id))
+				{
+					group.Members.RemoveAll(p => p.User_ID == user_id);
+				
+					player.ClearHand();
+					player.IsReady = false;
+
+					Websocket.SendNotificationToUserID(player.User_ID, $"You have left group '{group.Group_ID}'.");
+					Websocket.SendNotificationToGroupID(group.Group_ID, $"{player.User_ID} left the group.");
+				
+					Console.WriteLine($"User {user_id} left group {group.Group_ID}");
+
+					if (group.Members.Count == 0)
+					{
+						SharedData.Groups.Remove(group.Group_ID);
+						Console.WriteLine($"Group {group.Group_ID} has been removed as it is empty.");
+					}
+
+					break;
+				}
+			}
+		}
+
+		private static Player GetPlayerByUserID(int user_id)
+		{
+			if (SharedData.Players.TryGetValue(user_id, out Player player))
+			{
+				return player;
+			}
+
+			return null;
+		}
+
+		//public static async Task CreateGroup(int user_id)
+		//{
+		//	//leavy current group if possible
+		//	LeaveGroup(user_id);
+
+		//	string group_id = GenerateRandomGroupID();
+
+		//	while (SharedData.groupMembers.ContainsKey(group_id))
+		//	{
+		//		group_id = GenerateRandomGroupID();
+		//	}
+
+		//	SharedData.groupMembers[group_id] = new List<int> { user_id };
+
+		//	foreach (var group in SharedData.groupMembers)
+		//	{
+		//		Console.WriteLine("Group_ID: " + group.Key + " | User_IDs: " + string.Join(", ", group.Value));
+		//	}
+
+		//	Websocket.SendNotificationToUserID(user_id, "Group with ID '" + group_id + "' created.");
+		//	Websocket.SendNotificationToUserID(user_id, $"You have joined group '{group_id}'.");
+		//}
 
 		private static async Task JoinGroup(string group_id, int user_id)
 		{
@@ -69,8 +153,8 @@
 				//check if already joined an existing group
 				if (!SharedData.groupMembers[group_id].Contains(user_id))
 				{
-					//leavy current group if possible
-					await LeaveGroup(user_id);
+					//leave current group if possible
+					//LeaveGroup(user_id);
 				}
 
 				//cant join a full group
@@ -112,36 +196,36 @@
 			}
 		}
 
-		private static async Task LeaveGroup(int user_id)
-		{
-			//clear playerhands if possible
-			if (SharedData.playerHands.ContainsKey(user_id))
-			{
-				SharedData.playerHands[user_id].Clear();
-			}
+		//private static void LeaveGroup(int user_id)
+		//{
+		//	//clear playerhands if possible
+		//	if (SharedData.playerHands.ContainsKey(user_id))
+		//	{
+		//		SharedData.playerHands[user_id].Clear();
+		//	}
 
-			foreach (var group_id in SharedData.groupMembers.Keys.ToList())
-			{
-				if (SharedData.groupMembers[group_id].Contains(user_id))
-				{
-					SharedData.groupMembers[group_id].Remove(user_id);
+		//	foreach (var group_id in SharedData.groupMembers.Keys.ToList())
+		//	{
+		//		if (SharedData.groupMembers[group_id].Contains(user_id))
+		//		{
+		//			SharedData.groupMembers[group_id].Remove(user_id);
 
-					Console.WriteLine($"User {user_id} left group {group_id}");
+		//			Console.WriteLine($"User {user_id} left group {group_id}");
 
-					//set ready status to false
-					userReadyStatus[user_id] = false;
+		//			//set ready status to false
+		//			userReadyStatus[user_id] = false;
 					
-					Websocket.SendNotificationToUserID(user_id, $"You have left group '{group_id}'.");
-					Websocket.SendNotificationToGroupID(group_id, $"{user_id} left the group.");
+		//			Websocket.SendNotificationToUserID(user_id, $"You have left group '{group_id}'.");
+		//			Websocket.SendNotificationToGroupID(group_id, $"{user_id} left the group.");
 
-					if (SharedData.groupMembers[group_id].Count == 0)
-					{
-						SharedData.groupMembers.Remove(group_id);
-						Console.WriteLine($"Group {group_id} has been removed as it is empty.");
-					}
-				}
-			}
-		}
+		//			if (SharedData.groupMembers[group_id].Count == 0)
+		//			{
+		//				SharedData.groupMembers.Remove(group_id);
+		//				Console.WriteLine($"Group {group_id} has been removed as it is empty.");
+		//			}
+		//		}
+		//	}
+		//}
 
 		private static async Task AddPlayerToWaitingRoom(string group_id, int user_id)
 		{

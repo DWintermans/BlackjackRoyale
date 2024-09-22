@@ -46,7 +46,7 @@ internal class Websocket
 			WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
 			string receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
-			Console.WriteLine("Received message: " + receivedMessage);
+			//Console.WriteLine("Received message: " + receivedMessage);
 
 			RouteMessage(receivedMessage, client_id, socket);
 
@@ -194,6 +194,17 @@ internal class Websocket
 	{
 		SharedData.userIDToCliendIdMap[user_id.ToString()] = client_id;
 		Console.WriteLine("Associating sender: " + user_id + " with client ID: " + client_id);
+
+		Player player = new Player(user_id);
+		if (!SharedData.Players.ContainsKey(user_id))
+		{
+			SharedData.Players[user_id] = player;
+			Console.WriteLine($"Player created and added for USER_ID: {user_id}");
+		}
+		else
+		{
+			Console.WriteLine($"Player for USER_ID: {user_id} already exists.");
+		}
 
 		foreach (KeyValuePair<string, string> item in SharedData.userIDToCliendIdMap)
 		{
