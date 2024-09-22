@@ -59,23 +59,40 @@
 
 		private static async Task JoinGroup(string group_id, int user_id)
 		{
-			//cant leave group youre trying to join.
-			if (!SharedData.groupMembers[group_id].Contains(user_id))
+			//check if group exists
+			if (!SharedData.groupMembers.ContainsKey(group_id))
 			{
-				//leavy current group if possible
-				await LeaveGroup(user_id);
-			}
-
-			//cant join full group
-			if (SharedData.groupMembers.TryGetValue(group_id, out List<int> groupMembers) && groupMembers.Count >= 4)
-			{
-				await Websocket.SendNotificationToUserID(user_id, $"Group '{group_id}' is full!");
-				return;
-			}
-
-			if (SharedData.groupMembers.ContainsKey(group_id))
-			{
+				Websocket.SendNotificationToUserID(user_id, "Group does not exist.");
+			} 
+			else 
+			{ 
+				//check if already joined an existing group
 				if (!SharedData.groupMembers[group_id].Contains(user_id))
+				{
+					//leavy current group if possible
+					await LeaveGroup(user_id);
+				}
+
+				//cant join a full group
+				if (SharedData.groupMembers.TryGetValue(group_id, out List<int> groupMembers) && groupMembers.Count >= 4)
+				{
+					await Websocket.SendNotificationToUserID(user_id, $"Group '{group_id}' is full!");
+					return;
+				}
+
+				//add player to waitingroom if game has already started (if group already has deck of cards), add to playgroup on round start
+				if (!SharedData.groupMembers[group_id].Contains(user_id) && 
+					SharedData.groupDeck.ContainsKey(group_id) && 
+					SharedData.groupDeck[group_id].Count > 0 &&
+					SharedData.groupMembers.TryGetValue(group_id, out List<int> Members) && (Members.Count + 1) <= 4
+					)
+				{
+					await AddPlayerToWaitingRoom(group_id, user_id);
+					return;
+				}
+
+				//game has not started, try add to group if not already part of group.
+				if (!SharedData.groupMembers[group_id].Contains(user_id) && !SharedData.groupDeck.ContainsKey(group_id) && SharedData.groupDeck[group_id].Count <= 0)
 				{
 					SharedData.groupMembers[group_id].Add(user_id);
 					Console.WriteLine($"User {user_id} joined group {group_id}");
@@ -92,10 +109,6 @@
 				{
 					Console.WriteLine("Group_ID: " + group.Key + " | User_IDs: " + string.Join(", ", group.Value));
 				}
-			}
-			else
-			{
-				Websocket.SendNotificationToUserID(user_id, "Group does not exist.");
 			}
 		}
 
@@ -130,6 +143,33 @@
 			}
 		}
 
+		private static async Task AddPlayerToWaitingRoom(string group_id, int user_id)
+		{
+			//create waiting room
+			if (!SharedData.waitingRoom.ContainsKey(group_id))
+			{
+				SharedData.waitingRoom[group_id] = new List<int>();
+			}
+
+			SharedData.waitingRoom[group_id].Add(user_id);
+			await Websocket.SendNotificationToUserID(user_id, "You have joined the waiting room. You will enter the game when the current round is over.");
+		}
+
+		public static async Task MovePlayersFromWaitingRoom(string group_id)
+		{
+			if (SharedData.waitingRoom.ContainsKey(group_id))
+			{
+				List<int> newPlayers = SharedData.waitingRoom[group_id];
+				foreach (int user_id in newPlayers)
+				{
+					SharedData.groupMembers[group_id].Add(user_id);
+					await Websocket.SendNotificationToUserID(user_id, "The current round is over. You are now in the game.");
+				}
+
+				SharedData.waitingRoom[group_id].Clear();
+			}
+		}
+
 		private static async Task Ready(int user_id)
 		{
 			await SetReadyStatus(user_id, true);
@@ -147,6 +187,13 @@
 
 			if (group_id != null)
 			{
+				//if game has already started, dont allow ready/unready commands
+				if (SharedData.groupDeck.ContainsKey(group_id) && SharedData.groupDeck[group_id].Count > 0)
+				{
+					await Websocket.SendNotificationToUserID(user_id, "The game has already started. You cannot change your ready status now.");
+					return;
+				}
+
 				userReadyStatus[user_id] = isReady;
 
 				string message = isReady ? "You are now ready." : "You are now unready.";
@@ -198,8 +245,6 @@
 			}
 			return null;
 		}
-
-
 
 		private static string GenerateRandomGroupID()
 		{

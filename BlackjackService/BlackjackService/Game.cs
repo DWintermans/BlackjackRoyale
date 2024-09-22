@@ -3,7 +3,6 @@
 	public class Game
 	{
 		private static Dictionary<string, List<string>> dealerHand = new Dictionary<string, List<string>>(); //group_id, cards
-		private static Dictionary<string, List<string>> groupDeck = new Dictionary<string, List<string>>(); //group_id, cards
 
 		static List<string> baseDeck = new List<string>
 		{
@@ -50,7 +49,7 @@
 					break;
 
 				case "stand":
-					//await Stand(user_id);
+					await Stand(user_id);
 					break;
 
 				default:
@@ -60,14 +59,16 @@
 		}
 		public static async Task StartGame(string group_id)
 		{
+			await Group.MovePlayersFromWaitingRoom(group_id);
+
 			await Websocket.SendNotificationToGroupID(group_id, "Place your bets now!");
 
-			while (!groupDeck.ContainsKey(group_id) || groupDeck[group_id].Count <= 52)
+			while (!SharedData.groupDeck.ContainsKey(group_id) || SharedData.groupDeck[group_id].Count <= 52)
 			{
 				AddNewDeckToGroup(group_id);
 			}
 
-			if (groupDeck[group_id].Count <= 52)
+			if (SharedData.groupDeck[group_id].Count <= 52)
 			{
 				AddNewDeckToGroup(group_id);
 			}
@@ -113,8 +114,9 @@
 					await DealCard(user_id);
 				}
 
-				//TODO: send message for displaying fake second card dealer after starting game
-				await Websocket.SendNotificationToGroupID(group_id, $"TODO: send message for displaying fake second card dealer after starting game");
+				await Websocket.SendNotificationToGroupID(group_id, "Setup has ended");
+				
+//TODO: send message for displaying fake second card dealer after starting game
 			}
 		}
 
@@ -124,13 +126,13 @@
 			List<string> newDeck = new List<string>(baseDeck);
 			newDeck = newDeck.OrderBy(card => rng.Next()).ToList();
 
-			if (!groupDeck.ContainsKey(group_id))
+			if (!SharedData.groupDeck.ContainsKey(group_id))
 			{
-				groupDeck[group_id] = new List<string>();
+				SharedData.groupDeck[group_id] = new List<string>();
 			}
 
 			//add deck to existing
-			groupDeck[group_id].AddRange(newDeck); 
+			SharedData.groupDeck[group_id].AddRange(newDeck); 
 
 			Console.WriteLine($"A new deck has been shuffled and added to group: {group_id}");
 		}
@@ -139,10 +141,10 @@
 		{
 			string group_id = GetGroupIDForUserID(user_id);
 
-			if (groupDeck[group_id].Count == 0) return;
+			if (SharedData.groupDeck[group_id].Count == 0) return;
 
-			string card = groupDeck[group_id][0];
-			groupDeck[group_id].RemoveAt(0);
+			string card = SharedData.groupDeck[group_id][0];
+			SharedData.groupDeck[group_id].RemoveAt(0);
 
 			//remove first character (e.g. H9 > 9, HK > 10, H0 > 10)
 			char cardRank = card[1];
@@ -157,10 +159,10 @@
 
 		private static async Task DealCardToDealer(string group_id)
 		{
-			if (groupDeck[group_id].Count == 0) return;
+			if (SharedData.groupDeck[group_id].Count == 0) return;
 
-			string card = groupDeck[group_id][0];
-			groupDeck[group_id].RemoveAt(0);
+			string card = SharedData.groupDeck[group_id][0];
+			SharedData.groupDeck[group_id].RemoveAt(0);
 
 			//remove first character (e.g. H9 > 9, HK > 10, H0 > 10)
 			char cardRank = card[1];
@@ -175,7 +177,12 @@
 
 		private static async Task Hit(int user_id)
 		{
-			await DealCard(user_id);
+			await DealCard(user_id);		
+		}
+		
+		private static async Task Stand(int user_id)
+		{
+			await StartGame(GetGroupIDForUserID(user_id));
 		}
 
 		private static string GetGroupIDForUserID(int user_id)
