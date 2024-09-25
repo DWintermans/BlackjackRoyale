@@ -39,7 +39,7 @@ namespace BlackjackLogic
 				{
 						new System.Security.Claims.Claim("user_id", user_id.ToString())
 					}),
-				Expires = DateTime.UtcNow.AddHours(1),
+				Expires = DateTime.UtcNow.AddDays(30),
 				Issuer = "Issuer",
 				Audience = "Audience",
 				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

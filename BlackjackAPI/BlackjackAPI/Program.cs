@@ -4,6 +4,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//allow everything for cors policy
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowAll",
+		builder =>
+		{
+			builder.AllowAnyOrigin()  
+				   .AllowAnyHeader()  
+				   .AllowAnyMethod();
+		});
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -57,6 +69,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+app.UseCors("AllowAll");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
