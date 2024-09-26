@@ -7,5 +7,18 @@
 		public static Dictionary<int, Player> Players = new Dictionary<int, Player>();
 		public static Dictionary<string, Group> Groups = new Dictionary<string, Group>();
 
+		public static Group GetGroupForPlayer(Player player)
+		{
+			foreach (var group in Groups.Values)
+			{
+				if (group.Members.Any(p => p.User_ID == player.User_ID))
+				{
+					return group;
+				}
+			}
+
+			return null;
+		}
+
 	}
 }

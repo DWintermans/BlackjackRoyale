@@ -2,8 +2,6 @@
 {
 	public class Game
 	{
-		private static Dictionary<string, List<string>> dealerHand = new Dictionary<string, List<string>>(); //group_id, cards
-
 		static List<string> baseDeck = new List<string>
 		{
 			"H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H0", "HJ", "HK", "HQ", "HA",
@@ -37,164 +35,139 @@
 			{"HJ", "JackHearts.png"}, {"CJ", "JackClubs.png"}, {"DJ", "JackDiamonds.png"}, {"SJ", "JackSpades.png"}
 		};
 
-		public static async Task HandleGameAction(dynamic message, int user_id)
+		public static async Task HandleGameAction(Player player, dynamic message)
 		{
+			//check if group exists / if game has started (has received deck)
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			if (group == null)
+			{
+				await Websocket.SendNotificationToPlayer(player, "You must be part of a group to play the game.");
+				return;
+			}
+
+			if (group.Deck.Count == 0) 
+			{
+				await Websocket.SendNotificationToPlayer(player, "The game has not started yet");
+				return;
+			}
+
 			switch (message.action.ToString())
 			{
 				case "bet":
-					//await Bet(user_id, message.bet.ToString());
+					//await Bet(player, message.bet.ToString());
 
 				case "hit":
-					await Hit(user_id);
+					await Hit(player);
 					break;
 
 				case "stand":
-					await Stand(user_id);
+					await Stand(player);
 					break;
 
 				default:
-					await Websocket.SendNotificationToUserID(user_id, "Unknown game action");
+					await Websocket.SendNotificationToPlayer(player, "Unknown game action");
 					break;
 			}
 		}
-		public static async Task StartGame(string group_id)
+		public static async Task StartGame(Group group)
 		{
-			await Group.MovePlayersFromWaitingRoom(group_id);
+			await Group.MovePlayersFromWaitingRoom(group);
 
-			await Websocket.SendNotificationToGroupID(group_id, "Place your bets now!");
+			await Websocket.SendNotificationToGroup(group, "Place your bets now!");
 
-			while (!SharedData.groupDeck.ContainsKey(group_id) || SharedData.groupDeck[group_id].Count <= 52)
+			while (group.Deck.Count <= 52)
 			{
-				AddNewDeckToGroup(group_id);
+				AddNewDeckToGroup(group);
 			}
 
-			if (SharedData.groupDeck[group_id].Count <= 52)
+			//clear player hand
+			foreach (var player in group.Members)
 			{
-				AddNewDeckToGroup(group_id);
+				player.ClearHand();
 			}
 
-			if (SharedData.groupMembers.TryGetValue(group_id, out List<int> groupMembers))
+			//clear dealer hand
+			group.DealerHand.Clear();
+
+			//give each player a card
+			foreach (var player in group.Members)
 			{
-				//initialize game, clear hands
-				foreach (int user_id in groupMembers)
-				{
-					if (!SharedData.playerHands.ContainsKey(user_id))
-					{
-						SharedData.playerHands[user_id] = new List<string>();
-					}
-					else
-					{
-						//clear player hand if possible
-						SharedData.playerHands[user_id].Clear();
-					}
-				}
-
-				if (!dealerHand.ContainsKey(group_id))
-				{
-					dealerHand[group_id] = new List<string>();
-				}
-				else
-				{
-					//clear dealer hand if possible
-					dealerHand[group_id].Clear();
-				}
-
-				//give each player a card
-				foreach (int user_id in groupMembers)
-				{
-					await DealCard(user_id);
-				}
-
-				//give dealer a card
-				await DealCardToDealer(group_id);
-
-				//give each player a second card
-				foreach (int user_id in groupMembers)
-				{
-					await DealCard(user_id);
-				}
-
-				await Websocket.SendNotificationToGroupID(group_id, "Setup has ended");
-				
-//TODO: send message for displaying fake second card dealer after starting game
+				await DealCard(player);
 			}
+
+			//give dealer a card
+			await DealCardToDealer(group);
+
+			//give each player a second card
+			foreach (var player in group.Members)
+			{
+				await DealCard(player);
+			}
+
+			await Websocket.SendNotificationToGroup(group, "Setup has ended");
+
+			//TODO: send message for displaying fake second card dealer after starting game
 		}
 
-		private static void AddNewDeckToGroup(string group_id)
+		private static void AddNewDeckToGroup(Group group)
 		{
 			Random rng = new Random();
 			List<string> newDeck = new List<string>(baseDeck);
 			newDeck = newDeck.OrderBy(card => rng.Next()).ToList();
 
-			if (!SharedData.groupDeck.ContainsKey(group_id))
-			{
-				SharedData.groupDeck[group_id] = new List<string>();
-			}
-
 			//add deck to existing
-			SharedData.groupDeck[group_id].AddRange(newDeck); 
+			group.Deck.AddRange(newDeck);
 
-			Console.WriteLine($"A new deck has been shuffled and added to group: {group_id}");
+			Console.WriteLine($"A new deck has been shuffled and added to group: {group.Group_ID}");
 		}
 
-		private static async Task DealCard(int user_id)
+		private static async Task DealCard(Player player)
 		{
-			string group_id = GetGroupIDForUserID(user_id);
+			Group group = SharedData.GetGroupForPlayer(player);
 
-			if (SharedData.groupDeck[group_id].Count == 0) return;
+			if (group.Deck.Count == 0) return;
 
-			string card = SharedData.groupDeck[group_id][0];
-			SharedData.groupDeck[group_id].RemoveAt(0);
+			string card = group.Deck[0];
+			group.Deck.RemoveAt(0);
 
 			//remove first character (e.g. H9 > 9, HK > 10, H0 > 10)
 			char cardRank = card[1];
 			cardToValueMap.TryGetValue(cardRank, out int cardvalue);
 			cardToNameMap.TryGetValue(card, out string cardName);
 
-			SharedData.playerHands[user_id].Add(cardvalue.ToString());
+			player.Hand.Add(cardvalue.ToString());
 
-			await Websocket.SendNotificationToUserID(user_id, $"You were dealt: {cardName}");
-			Console.WriteLine($"{user_id} received {cardName}");
+			await Websocket.SendNotificationToPlayer(player, $"You were dealt: {cardName}");
+			Console.WriteLine($"{player.User_ID} received {cardName}");
 		}
 
-		private static async Task DealCardToDealer(string group_id)
+		private static async Task DealCardToDealer(Group group)
 		{
-			if (SharedData.groupDeck[group_id].Count == 0) return;
+			if (group.Deck.Count == 0) return;
 
-			string card = SharedData.groupDeck[group_id][0];
-			SharedData.groupDeck[group_id].RemoveAt(0);
+			string card = group.Deck[0];
+			group.Deck.RemoveAt(0);
 
 			//remove first character (e.g. H9 > 9, HK > 10, H0 > 10)
 			char cardRank = card[1];
 			cardToValueMap.TryGetValue(cardRank, out int cardvalue);
 			cardToNameMap.TryGetValue(card, out string cardName);
 
-			dealerHand[group_id].Add(card);
+			group.DealerHand.Add(card);
 
-			await Websocket.SendNotificationToGroupID(group_id, $"Dealer was dealt: {cardName}");
-			Console.WriteLine($"{group_id} dealer received {cardName}");
+			await Websocket.SendNotificationToGroup(group, $"Dealer was dealt: {cardName}");
+			Console.WriteLine($"{group.Group_ID} dealer received {cardName}");
 		}
 
-		private static async Task Hit(int user_id)
+		private static async Task Hit(Player player)
 		{
-			await DealCard(user_id);		
+			await DealCard(player);		
 		}
 		
-		private static async Task Stand(int user_id)
+		private static async Task Stand(Player player)
 		{
-			await StartGame(GetGroupIDForUserID(user_id));
-		}
-
-		private static string GetGroupIDForUserID(int user_id)
-		{
-			foreach (var group in SharedData.groupMembers)
-			{
-				if (group.Value.Contains(user_id))
-				{
-					return group.Key;
-				}
-			}
-			return null;
+			await StartGame(SharedData.GetGroupForPlayer(player));
 		}
 
 	}

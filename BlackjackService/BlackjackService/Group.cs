@@ -7,6 +7,7 @@
 		public string Group_ID { get; private set; }
 		public List<Player> Members { get; private set; }
 		public List<string> Deck { get; private set; }
+		public List<string> DealerHand { get; private set; }
 		public List<Player> WaitingRoom { get; private set; }
 
 		public Group(string group_id)
@@ -14,6 +15,7 @@
 			Group_ID = group_id;
 			Members = new List<Player>();
 			Deck = new List<string>();
+			DealerHand = new List<string>();
 			WaitingRoom = new List<Player>();
 		}
 
@@ -128,7 +130,7 @@
 			}
 
 			//leave current group is possible
-			Group oldGroup = GetGroupForPlayer(player);
+			Group oldGroup = SharedData.GetGroupForPlayer(player);
 			if (oldGroup != null && oldGroup.Group_ID != group.Group_ID)
 			{
 				LeaveGroup(player);
@@ -196,7 +198,7 @@
 
 		private static async Task SetReadyStatus(Player player, bool isReady)
 		{
-			Group group = GetGroupForPlayer(player);
+			Group group = SharedData.GetGroupForPlayer(player);
 
 			if (group == null)
 			{
@@ -241,21 +243,8 @@
 			if (readyCount > totalMembers / 2)
 			{
 				await Websocket.SendNotificationToGroup(group, "The game is starting now!");
-				//await Game.StartGame(group);
+				await Game.StartGame(group);
 			}			
-		}
-
-		private static Group GetGroupForPlayer(Player player)
-		{
-			foreach (var group in SharedData.Groups.Values)
-			{
-				if (group.Members.Any(p => p.User_ID == player.User_ID))
-				{
-					return group; 
-				}
-			}
-
-			return null;
 		}
 
 		private static string GenerateRandomGroupID()

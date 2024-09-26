@@ -93,6 +93,7 @@ internal class Websocket
 			return;
 		}
 
+		//create new Player if none exist for user_id
 		Player player = new Player(user_id);
 		if (!SharedData.Players.ContainsKey(user_id))
 		{
@@ -114,7 +115,7 @@ internal class Websocket
 				break;
 
 			case "game":
-				await Game.HandleGameAction(message, user_id);
+				await Game.HandleGameAction(player, message);
 				break;
 
 			default:

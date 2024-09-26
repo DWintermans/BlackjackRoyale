@@ -22,7 +22,7 @@
 
 		public static async Task SendMessage(Player player, string receiver, string chatMessage)
 		{
-			Group group = GetGroupForPlayer(player);
+			Group group = SharedData.GetGroupForPlayer(player);
 
 			if (receiver.ToString().ToUpper() == "GLOBAL") //global message
 			{
@@ -74,7 +74,7 @@
 			{
 				Player user = userEntry.Value;
 
-				bool isInGroup = GetGroupForPlayer(user) != null;
+				bool isInGroup = SharedData.GetGroupForPlayer(user) != null;
 
 				if (!isInGroup)
 				{
@@ -82,19 +82,5 @@
 				}
 			}
 		}
-
-		private static Group GetGroupForPlayer(Player player)
-		{
-			foreach (var group in SharedData.Groups.Values)
-			{
-				if (group.Members.Any(p => p.User_ID == player.User_ID))
-				{
-					return group;
-				}
-			}
-
-			return null;
-		}
-
 	}
 }
