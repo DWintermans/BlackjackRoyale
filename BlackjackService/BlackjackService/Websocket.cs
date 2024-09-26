@@ -106,7 +106,7 @@ internal class Websocket
 				break;
 
 			case "chat":
-				await Chat.HandleChatAction(message, user_id);
+				await Chat.HandleChatAction(player, message);
 				break;
 
 			case "group":
@@ -150,11 +150,11 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendPrivateChatMessageToUserID(int sender_id, int receiver_id, string message)
+	public static async Task SendPrivateChatMessageToPlayer(Player player, int receiver_id, string message)
 	{
 		MessageModel messageModel = new MessageModel
 		{
-			Sender = sender_id,
+			Sender = player.User_ID,
 			Receiver = receiver_id,
 			Message = message,
 			Datetime = DateTime.Now
@@ -170,17 +170,17 @@ internal class Websocket
 		}
 
 		//send message to back sender
-		if (SharedData.userIDToCliendIdMap.TryGetValue(sender_id.ToString(), out string sender_client_id) && connectedClients.TryGetValue(sender_client_id, out WebSocket senderSocket))
+		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string sender_client_id) && connectedClients.TryGetValue(sender_client_id, out WebSocket senderSocket))
 		{
 			await senderSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 		}
 	}
 
-	public static async Task SendChatMessageToUserID(int sender_id, int receiver_id, string message)
+	public static async Task SendChatMessageToPlayer(Player player, int receiver_id, string message)
 	{
 		MessageModel messageModel = new MessageModel
 		{
-			Sender = sender_id,
+			Sender = player.User_ID,
 			Receiver = receiver_id,
 			Message = message,
 			Datetime = DateTime.Now

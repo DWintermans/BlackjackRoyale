@@ -2,12 +2,12 @@
 {
 	public class Chat
 	{
-		public static async Task HandleChatAction(dynamic message, int user_id)
+		public static async Task HandleChatAction(Player player, dynamic message)
 		{
 			switch (message.action.ToString())
 			{
 				case "send_message":
-					await SendMessage(user_id, message.receiver.ToString(), message.message.ToString());
+					await SendMessage(player, message.receiver.ToString(), message.message.ToString());
 					break;
 
 				case "delete_message":
@@ -15,105 +15,86 @@
 					//await DeleteMessage();
 					break;
 				default:
-					await Websocket.SendNotificationToUserID(user_id, "Unknown group action");
+					await Websocket.SendNotificationToPlayer(player, "Unknown group action");
 					break;
 			}
 		}
 
-		public static async Task SendMessage(int sender_id, string receiver, string chatMessage)
+		public static async Task SendMessage(Player player, string receiver, string chatMessage)
 		{
+			Group group = GetGroupForPlayer(player);
+
 			if (receiver.ToString().ToUpper() == "GLOBAL") //global message
 			{
-				if (IsUserInGroup(sender_id))
+				if (group == null)
 				{
-					await Websocket.SendNotificationToUserID(sender_id, $"As a member of this group, you can only send messages to this group.");
+					await SendMessageGlobally(player, chatMessage);
 				}
 				else
 				{
-					await SendMessageGlobally(sender_id, chatMessage);
+					await Websocket.SendNotificationToPlayer(player, $"As a member of this group, you can only send messages to this group.");
 				}
 			}
 			else if (receiver.ToString().ToUpper() == "GROUP") //group message
 			{
-				string group_id = null;
-
-				//get group_id from participating sender
-				foreach (var group in SharedData.groupMembers)
+				if (group != null)
 				{
-					if (group.Value.Contains(sender_id))
-					{
-						group_id = group.Key;
-						break;
-					}
-				}
-
-				if (group_id != null)
-				{
-					await SendMessageToGroup(sender_id, group_id, chatMessage);
+					await SendMessageToGroup(player, group, chatMessage);
 				}
 				else
 				{
-					await Websocket.SendNotificationToUserID(sender_id, $"You are not a member of a group.");
+					await Websocket.SendNotificationToPlayer(player, $"You are not a member of a group.");
 				}
 			}
 			else if (int.TryParse(receiver.ToString(), out int receiver_id)) //private message
 			{
 				//cant send private message to yourself
-				if (sender_id != receiver_id)
+				if (player.User_ID != receiver_id)
 				{
-					await Websocket.SendPrivateChatMessageToUserID(sender_id, receiver_id, chatMessage);
+					await Websocket.SendPrivateChatMessageToPlayer(player, receiver_id, chatMessage);
 				}
 			}
 			else
 			{
-				await Websocket.SendNotificationToUserID(sender_id, $"Unexpected value received for 'receiver'.");
+				await Websocket.SendNotificationToPlayer(player, $"Unexpected value received for 'receiver'.");
 			}
 		}
 
-
-		public static async Task SendMessageToGroup(int sender_id, string group_id, string chatMessage)
+		public static async Task SendMessageToGroup(Player player, Group group, string chatMessage)
 		{
-			foreach (int member_id in SharedData.groupMembers[group_id])
+			foreach (var member in group.Members)
 			{
-				await Websocket.SendChatMessageToUserID(sender_id, member_id, chatMessage);
+				await Websocket.SendChatMessageToPlayer(player, member.User_ID, chatMessage);
 			}
 		}
 
-		public static async Task SendMessageGlobally(int sender_id, string chatMessage)
+		public static async Task SendMessageGlobally(Player player, string chatMessage)
 		{
-			foreach (var user in SharedData.userIDToCliendIdMap)
+			foreach (var userEntry in SharedData.Players) 
 			{
-				int active_user_id = int.Parse(user.Key);
+				Player user = userEntry.Value;
 
-				bool isInGroup = false;
-				foreach (var group in SharedData.groupMembers)
-				{
-					if (group.Value.Contains(active_user_id))
-					{
-						isInGroup = true;
-						break;
-					}
-				}
+				bool isInGroup = GetGroupForPlayer(user) != null;
 
 				if (!isInGroup)
 				{
-					await Websocket.SendChatMessageToUserID(sender_id, active_user_id, chatMessage);
+					await Websocket.SendChatMessageToPlayer(player, user.User_ID, chatMessage);
 				}
 			}
 		}
 
-		private static bool IsUserInGroup(int user_id)
+		private static Group GetGroupForPlayer(Player player)
 		{
-			foreach (var group in SharedData.groupMembers)
+			foreach (var group in SharedData.Groups.Values)
 			{
-				if (group.Value.Contains(user_id))
+				if (group.Members.Any(p => p.User_ID == player.User_ID))
 				{
-					return true;
+					return group;
 				}
 			}
-			return false;
-		}
 
+			return null;
+		}
 
 	}
 }

@@ -2,8 +2,6 @@
 {
 	public class Group
 	{
-		private static Dictionary<int, bool> userReadyStatus = new Dictionary<int, bool>();
-
 		private const int MaxGroupSize = 4;
 
 		public string Group_ID { get; private set; }
@@ -115,11 +113,11 @@
 
 			Group group = SharedData.Groups[group_id];
 
-			//check if already joined an existing group
+			//check if already in group
 			if (group.Members.Any(p => p.User_ID == player.User_ID))
 			{
-				//leave current group if possible
-				LeaveGroup(player);
+				await Websocket.SendNotificationToPlayer(player, "You are already in this group.");
+				return;
 			}
 
 			//cant join a full group
@@ -129,7 +127,14 @@
 				return;
 			}
 
-			//add player to waitingroom if game has already started (if group already has deck of cards), add to playgroup on round start
+			//leave current group is possible
+			Group oldGroup = GetGroupForPlayer(player);
+			if (oldGroup != null && oldGroup.Group_ID != group.Group_ID)
+			{
+				LeaveGroup(player);
+			}
+
+			//game has started -> add to waitingroom 
 			if (group.Deck.Count > 0 && (group.Members.Count + group.WaitingRoom.Count < MaxGroupSize))
 			{
 				await AddPlayerToWaitingRoom(group, player);
