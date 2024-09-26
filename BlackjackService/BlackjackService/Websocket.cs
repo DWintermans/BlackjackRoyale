@@ -93,10 +93,16 @@ internal class Websocket
 			return;
 		}
 
+		Player player = new Player(user_id);
+		if (!SharedData.Players.ContainsKey(user_id))
+		{
+			SharedData.Players[user_id] = player;
+		}
+
 		switch (message.category.ToString())
 		{
 			case "acknowledge":
-				Link_UserID_To_WebsocketID(user_id, client_id);
+				Link_UserID_To_WebsocketID(player, client_id);
 				break;
 
 			case "chat":
@@ -104,7 +110,7 @@ internal class Websocket
 				break;
 
 			case "group":
-				await Group.HandleGroupAction(message, user_id);
+				await Group.HandleGroupAction(player, message);
 				break;
 
 			case "game":
@@ -112,7 +118,7 @@ internal class Websocket
 				break;
 
 			default:
-				await SendNotificationToUserID(user_id, "Unknown category");
+				await SendNotificationToPlayer(player, "Unknown category");
 				break;
 		}
 	}
@@ -123,20 +129,20 @@ internal class Websocket
 		await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 	}
 
-	public static async Task SendNotificationToUserID(int user_id, string message)
+	public static async Task SendNotificationToPlayer(Player player, string message)
 	{
-		if (SharedData.userIDToCliendIdMap.TryGetValue(user_id.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
 		{
 			byte[] bytes = Encoding.UTF8.GetBytes(message);
 			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 		}
 	}
 
-	public static async Task SendNotificationToGroupID(string group_id, string message)
+	public static async Task SendNotificationToGroup(Group group, string message)
 	{
-		foreach (int user_id in SharedData.groupMembers[group_id])
+		foreach (Player player in group.Members)
 		{
-			if (SharedData.userIDToCliendIdMap.TryGetValue(user_id.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+			if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
 			{
 				byte[] bytes = Encoding.UTF8.GetBytes(message);
 				await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
@@ -190,21 +196,10 @@ internal class Websocket
 		}
 	}
 
-	private static async void Link_UserID_To_WebsocketID(int user_id, string client_id)
+	private static async void Link_UserID_To_WebsocketID(Player player, string client_id)
 	{
-		SharedData.userIDToCliendIdMap[user_id.ToString()] = client_id;
-		Console.WriteLine("Associating sender: " + user_id + " with client ID: " + client_id);
-
-		Player player = new Player(user_id);
-		if (!SharedData.Players.ContainsKey(user_id))
-		{
-			SharedData.Players[user_id] = player;
-			Console.WriteLine($"Player created and added for USER_ID: {user_id}");
-		}
-		else
-		{
-			Console.WriteLine($"Player for USER_ID: {user_id} already exists.");
-		}
+		SharedData.userIDToCliendIdMap[player.User_ID.ToString()] = client_id;
+		Console.WriteLine("Associating sender: " + player.User_ID + " with client ID: " + client_id);
 
 		foreach (KeyValuePair<string, string> item in SharedData.userIDToCliendIdMap)
 		{
