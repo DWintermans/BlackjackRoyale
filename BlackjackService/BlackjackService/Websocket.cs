@@ -1,8 +1,10 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.WebSockets;
+using System.Numerics;
 using System.Security.Claims;
 using System.Text;
 
@@ -193,6 +195,26 @@ internal class Websocket
 		if (SharedData.userIDToCliendIdMap.TryGetValue(receiver_id.ToString(), out string receiver_client_id) && connectedClients.TryGetValue(receiver_client_id, out WebSocket receiverSocket))
 		{
 			await receiverSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+		}
+	}
+
+	public static async Task SendGameInfoToGroup(Group group, GameModel gameModel) 
+	{
+		//convert emuns to strings e.g. CARD_DRAWN instead of 0
+		var settings = new JsonSerializerSettings
+		{
+			Converters = new List<JsonConverter> { new StringEnumConverter() }
+		};
+
+		string Message = JsonConvert.SerializeObject(gameModel, settings);
+		byte[] bytes = Encoding.UTF8.GetBytes(Message);
+
+		foreach (Player player in group.Members)
+		{
+			if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+			{
+				await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+			}
 		}
 	}
 

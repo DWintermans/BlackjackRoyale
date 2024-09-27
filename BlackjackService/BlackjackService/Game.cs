@@ -1,4 +1,6 @@
-﻿namespace BlackjackService
+﻿using System.Numerics;
+
+namespace BlackjackService
 {
 	public class Game
 	{
@@ -106,7 +108,15 @@
 				await DealCard(player);
 			}
 
-			await Websocket.SendNotificationToGroup(group, $"Dealer was dealt CardDown.png");
+			GameModel model = new GameModel
+			{
+				User_ID = 0,
+				Action = GameAction.CARD_DRAWN,
+				Card = "CardDown.png",
+				Total = CalculateHandValue(group.DealerHand)
+			};
+
+			await Websocket.SendGameInfoToGroup(group, model);
 
 			await Websocket.SendNotificationToGroup(group, "Setup has ended");
 		}
@@ -144,9 +154,17 @@
 
 			player.Hand.Add(cardvalue.ToString());
 
-			await Websocket.SendNotificationToGroup(group, $"{player.User_ID} were dealt: {cardName}");
-			await Websocket.SendNotificationToGroup(group, $"{player.User_ID} value in hand: {CalculateHandValue(player.Hand)}");
-			Console.WriteLine($"{player.User_ID} received {cardName}");
+			GameModel model = new GameModel
+			{
+				User_ID = player.User_ID,
+				Action = GameAction.CARD_DRAWN,
+				Card = cardName,
+				Total = CalculateHandValue(player.Hand)
+			};
+
+			await Websocket.SendGameInfoToGroup(group, model);
+
+			Console.WriteLine($"{player.User_ID} received {cardName}, value in hand: {CalculateHandValue(player.Hand)}");
 		}
 
 		private static async Task DealCardToDealer(Group group)
@@ -163,9 +181,16 @@
 
 			group.DealerHand.Add(cardvalue.ToString());
 
-			await Websocket.SendNotificationToGroup(group, $"Dealer was dealt: {cardName}");
-			await Websocket.SendNotificationToGroup(group, $"Dealer value in hand: {CalculateHandValue(group.DealerHand)}");
-			Console.WriteLine($"{group.Group_ID} dealer received {cardName}");
+			GameModel model = new GameModel
+			{
+				User_ID = 0,
+				Action = GameAction.CARD_DRAWN,
+				Card = cardName,
+				Total = CalculateHandValue(group.DealerHand)
+			};
+
+			await Websocket.SendGameInfoToGroup(group, model);
+			Console.WriteLine($"{group.Group_ID} dealer received {cardName}, value in hand: {CalculateHandValue(group.DealerHand)}");
 		}
 
 		private static async Task Hit(Player player)
@@ -175,7 +200,18 @@
 		
 		private static async Task Stand(Player player)
 		{
-			await StartGame(SharedData.GetGroupForPlayer(player));
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			GameModel model = new GameModel
+			{
+				User_ID = 0,
+				Action = GameAction.STAND,
+				Total = CalculateHandValue(player.Hand)
+			};
+
+			await Websocket.SendGameInfoToGroup(group, model);
+
+			//await StartGame(SharedData.GetGroupForPlayer(player));
 		}
 
 		private static string CalculateHandValue(List<string> hand) 
