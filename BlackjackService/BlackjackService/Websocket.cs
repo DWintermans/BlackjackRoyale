@@ -93,8 +93,7 @@ internal class Websocket
 			return;
 		}
 
-		//create new Player if none exist for user_id
-		Player player = new Player(user_id);
+		Player player = SharedData.GetPlayerFromSharedData(user_id) ?? new Player(user_id);
 		if (!SharedData.Players.ContainsKey(user_id))
 		{
 			SharedData.Players[user_id] = player;

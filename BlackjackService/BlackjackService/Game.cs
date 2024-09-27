@@ -76,9 +76,10 @@
 
 			await Websocket.SendNotificationToGroup(group, "Place your bets now!");
 
+			//shuffle and play with two decks, when starting round and one deck is depleted start game with 2 new shuffled decks 
 			while (group.Deck.Count <= 52)
 			{
-				AddNewDeckToGroup(group);
+				RemoveOldDecksAndAddTwoDecksToGroup(group);
 			}
 
 			//clear player hand
@@ -105,21 +106,26 @@
 				await DealCard(player);
 			}
 
-			await Websocket.SendNotificationToGroup(group, "Setup has ended");
+			await Websocket.SendNotificationToGroup(group, $"Dealer was dealt CardDown.png");
 
-			//TODO: send message for displaying fake second card dealer after starting game
+			await Websocket.SendNotificationToGroup(group, "Setup has ended");
 		}
 
-		private static void AddNewDeckToGroup(Group group)
+		private static void RemoveOldDecksAndAddTwoDecksToGroup(Group group)
 		{
+			group.Deck.Clear();
+
 			Random rng = new Random();
-			List<string> newDeck = new List<string>(baseDeck);
-			newDeck = newDeck.OrderBy(card => rng.Next()).ToList();
 
-			//add deck to existing
-			group.Deck.AddRange(newDeck);
+			//add 2 shuffled decks
+			for (int i = 0; i < 2; i++)
+			{
+				List<string> newDeck = new List<string>(baseDeck);
+				newDeck = newDeck.OrderBy(card => rng.Next()).ToList();
+				group.Deck.AddRange(newDeck);
+			}
 
-			Console.WriteLine($"A new deck has been shuffled and added to group: {group.Group_ID}");
+			Console.WriteLine($"Two new decks have been shuffled and added to group: {group.Group_ID}");
 		}
 
 		private static async Task DealCard(Player player)
@@ -138,7 +144,8 @@
 
 			player.Hand.Add(cardvalue.ToString());
 
-			await Websocket.SendNotificationToPlayer(player, $"You were dealt: {cardName}");
+			await Websocket.SendNotificationToGroup(group, $"{player.User_ID} were dealt: {cardName}");
+			await Websocket.SendNotificationToGroup(group, $"{player.User_ID} value in hand: {CalculateHandValue(player.Hand)}");
 			Console.WriteLine($"{player.User_ID} received {cardName}");
 		}
 
@@ -154,9 +161,10 @@
 			cardToValueMap.TryGetValue(cardRank, out int cardvalue);
 			cardToNameMap.TryGetValue(card, out string cardName);
 
-			group.DealerHand.Add(card);
+			group.DealerHand.Add(cardvalue.ToString());
 
 			await Websocket.SendNotificationToGroup(group, $"Dealer was dealt: {cardName}");
+			await Websocket.SendNotificationToGroup(group, $"Dealer value in hand: {CalculateHandValue(group.DealerHand)}");
 			Console.WriteLine($"{group.Group_ID} dealer received {cardName}");
 		}
 
@@ -170,5 +178,35 @@
 			await StartGame(SharedData.GetGroupForPlayer(player));
 		}
 
+		private static string CalculateHandValue(List<string> hand) 
+		{
+			int totalValue = 0;
+			int acesCount = 0;
+
+			foreach (string card in hand)
+			{
+				switch (card)
+				{
+					case "11":
+						acesCount++;
+						break;
+					default:
+						totalValue += int.Parse(card);
+						break;
+				}
+			}
+
+			if (acesCount > 0)
+			{
+				int aceAsEleven = totalValue + acesCount + 10; 
+
+				if (aceAsEleven <= 21)
+				{
+					return $"{totalValue + acesCount}/{aceAsEleven}";
+				}
+			}
+
+			return (totalValue + acesCount).ToString();
+		}
 	}
 }

@@ -213,16 +213,10 @@
 				return;
 			}
 
-			//set status like this to prevent instance issues.
-			var groupPlayer = group.Members.FirstOrDefault(p => p.User_ID == player.User_ID);
-			if (groupPlayer != null)
-			{
-				groupPlayer.SetReadyStatus(isReady);
-				await Websocket.SendNotificationToPlayer(player, isReady ? "You are now ready." : "You are now unready.");
-			}
+			player.SetReadyStatus(isReady);
+			await Websocket.SendNotificationToPlayer(player, isReady ? "You are now ready." : "You are now unready.");			
 
 			await CheckVotesAndStartGame(group);
-
 		}
 
 		//check if majority is ready to play

@@ -20,5 +20,11 @@
 			return null;
 		}
 
+		public static Player GetPlayerFromSharedData(int user_id)
+		{
+			SharedData.Players.TryGetValue(user_id, out var player);
+			return player;
+		}
+
 	}
 }
