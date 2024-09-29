@@ -64,7 +64,7 @@
 		{
 			foreach (var member in group.Members)
 			{
-				await Websocket.SendChatMessageToPlayer(player, member.User_ID, chatMessage);
+				await Websocket.SendChatMessageToPlayer(player, member.User_ID, chatMessage, MessageType.GROUP);
 			}
 		}
 
@@ -78,7 +78,7 @@
 
 				if (!isInGroup)
 				{
-					await Websocket.SendChatMessageToPlayer(player, user.User_ID, chatMessage);
+					await Websocket.SendChatMessageToPlayer(player, user.User_ID, chatMessage, MessageType.GLOBAL);
 				}
 			}
 		}

@@ -37,7 +37,7 @@ namespace BlackjackAPI.Controllers
 				return Unauthorized(new { message = "Invalid credentials" });
 			}
 
-			string token = _accountLogic.CreateJWT(user_id);
+			string token = _accountLogic.CreateJWT(user_id, model.username);
 			return Ok(new { message = "Login successful", jwt = token });
 		}
 

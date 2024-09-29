@@ -29,7 +29,7 @@ namespace BlackjackLogic
 			public string? JWT { get; set; }
 		}
 
-		public string CreateJWT(int user_id)
+		public string CreateJWT(int user_id, string username)
 		{
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var key = Encoding.ASCII.GetBytes("ah48MZ4amGS3VqakPxjsYSekeg3yar6MbirervAigfquZkcF8wSCS3VKTWMaQCMR8dSJh3McMCcoT59rUnTxqKoSyAELPRcdZVF9wtB8XxhUPpTQUA5nWoGVSfd8R4Go");
@@ -37,7 +37,8 @@ namespace BlackjackLogic
 			{
 				Subject = new System.Security.Claims.ClaimsIdentity(new[]
 				{
-						new System.Security.Claims.Claim("user_id", user_id.ToString())
+						new System.Security.Claims.Claim("user_id", user_id.ToString()),
+						new System.Security.Claims.Claim("user_name", username.ToString())
 					}),
 				Expires = DateTime.UtcNow.AddDays(30),
 				Issuer = "Issuer",
@@ -99,7 +100,7 @@ namespace BlackjackLogic
 				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
 			}
 
-			string token = CreateJWT(user_id);
+			string token = CreateJWT(user_id, username);
 
 			if (token.Length <= 0)
 			{

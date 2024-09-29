@@ -4,7 +4,6 @@ using Newtonsoft.Json.Converters;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.WebSockets;
-using System.Numerics;
 using System.Security.Claims;
 using System.Text;
 
@@ -45,26 +44,33 @@ internal class Websocket
 		byte[] buffer = new byte[1024];
 		while (socket.State == WebSocketState.Open)
 		{
-			WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-			string receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-
-			//Console.WriteLine("Received message: " + receivedMessage);
-
-			RouteMessage(receivedMessage, client_id, socket);
-
-			if (result.MessageType == WebSocketMessageType.Close)
+			try
 			{
-				Console.WriteLine("WebSocket connection closed for client ID: " + client_id);
+				WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+				string receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
-				connectedClients.Remove(client_id);
+				//Console.WriteLine("Received message: " + receivedMessage);
 
-				string keyToRemove = SharedData.userIDToCliendIdMap.FirstOrDefault<KeyValuePair<string, string>>((KeyValuePair<string, string> x) => x.Value == client_id).Key;
-				if (keyToRemove != null)
+				RouteMessage(receivedMessage, client_id, socket);
+
+				if (result.MessageType == WebSocketMessageType.Close)
 				{
-					SharedData.userIDToCliendIdMap.Remove(keyToRemove);
+					Console.WriteLine("WebSocket connection closed for client ID: " + client_id);
+
+					connectedClients.Remove(client_id);
+
+					string keyToRemove = SharedData.userIDToCliendIdMap.FirstOrDefault<KeyValuePair<string, string>>((KeyValuePair<string, string> x) => x.Value == client_id).Key;
+					if (keyToRemove != null)
+					{
+						SharedData.userIDToCliendIdMap.Remove(keyToRemove);
+					}
+					break;
 				}
-				break;
 			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+			}		
 		}
 	}
 
@@ -156,13 +162,20 @@ internal class Websocket
 	{
 		MessageModel messageModel = new MessageModel
 		{
+			Type = MessageType.PRIVATE,
 			Sender = player.User_ID,
 			Receiver = receiver_id,
 			Message = message,
 			Datetime = DateTime.Now
 		};
 
-		string Message = JsonConvert.SerializeObject(messageModel);
+		//convert emuns to strings e.g. CARD_DRAWN instead of 0
+		var settings = new JsonSerializerSettings
+		{
+			Converters = new List<JsonConverter> { new StringEnumConverter() }
+		};
+
+		string Message = JsonConvert.SerializeObject(messageModel, settings);
 		byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
 		//send message to receiver when connected
@@ -178,17 +191,24 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendChatMessageToPlayer(Player player, int receiver_id, string message)
+	public static async Task SendChatMessageToPlayer(Player player, int receiver_id, string message, MessageType type)
 	{
 		MessageModel messageModel = new MessageModel
 		{
+			Type = type,
 			Sender = player.User_ID,
 			Receiver = receiver_id,
 			Message = message,
 			Datetime = DateTime.Now
 		};
 
-		string Message = JsonConvert.SerializeObject(messageModel);
+		//convert emuns to strings e.g. CARD_DRAWN instead of 0
+		var settings = new JsonSerializerSettings
+		{
+			Converters = new List<JsonConverter> { new StringEnumConverter() }
+		};
+
+		string Message = JsonConvert.SerializeObject(messageModel, settings);
 		byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
 		//send message to receiver when connected
