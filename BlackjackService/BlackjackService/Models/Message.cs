@@ -3,6 +3,7 @@
 	public class MessageModel
 	{
 		public required MessageType Type { get; set; }
+		public required string SenderName { get; set; }
 		public required int Sender { get; set; }
 		public required int Receiver { get; set; }
 		public required string Message { get; set; }

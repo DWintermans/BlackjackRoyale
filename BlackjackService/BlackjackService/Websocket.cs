@@ -4,6 +4,7 @@ using Newtonsoft.Json.Converters;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.WebSockets;
+using System.Numerics;
 using System.Security.Claims;
 using System.Text;
 
@@ -92,16 +93,17 @@ internal class Websocket
 			return;
 		}
 
-		//check if valid user_id is present
-		int user_id = 0;
-		user_id = GetUserIDFromJWT(message.token.ToString());
-		if (user_id <= 0)
+		string token = message.token.ToString();
+
+		//check if valid user_id/name is present
+		(int user_id, string user_name) = GetUserInfoFromJWT(token);
+		if (user_id <= 0 || user_name == null)
 		{
 			await SendNotificationToSocket(socket, "Invalid or expired token");
 			return;
 		}
 
-		Player player = SharedData.GetPlayerFromSharedData(user_id) ?? new Player(user_id);
+		Player player = SharedData.GetPlayerFromSharedData(user_id) ?? new Player(user_id, user_name);
 		if (!SharedData.Players.ContainsKey(user_id))
 		{
 			SharedData.Players[user_id] = player;
@@ -126,7 +128,7 @@ internal class Websocket
 				break;
 
 			default:
-				await SendNotificationToPlayer(player, "Unknown category");
+				await SendNotificationToPlayer(player, "Unknown category", NotificationType.TOAST, ToastType.ERROR);
 				break;
 		}
 	}
@@ -137,22 +139,52 @@ internal class Websocket
 		await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 	}
 
-	public static async Task SendNotificationToPlayer(Player player, string message)
+	public static async Task SendNotificationToPlayer(Player player, string message, NotificationType type, ToastType? toasttype = null)
 	{
+		NotificationModel notificationModel = new NotificationModel
+		{
+			Type = type,
+			Message = message,
+			ToastType = toasttype,
+		};
+
+		//convert emuns to strings e.g. CARD_DRAWN instead of 0
+		var settings = new JsonSerializerSettings
+		{
+			Converters = new List<JsonConverter> { new StringEnumConverter() }
+		};
+
+		string Message = JsonConvert.SerializeObject(notificationModel, settings);
+		byte[] bytes = Encoding.UTF8.GetBytes(Message);
+
 		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
 		{
-			byte[] bytes = Encoding.UTF8.GetBytes(message);
 			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 		}
 	}
 
-	public static async Task SendNotificationToGroup(Group group, string message)
+	public static async Task SendNotificationToGroup(Group group, string message, NotificationType type, ToastType? toasttype = null)
 	{
+		NotificationModel notificationModel = new NotificationModel
+		{
+			Type = type,
+			Message = message,
+			ToastType = toasttype,
+		};
+
+		//convert emuns to strings e.g. CARD_DRAWN instead of 0
+		var settings = new JsonSerializerSettings
+		{
+			Converters = new List<JsonConverter> { new StringEnumConverter() }
+		};
+
+		string Message = JsonConvert.SerializeObject(notificationModel, settings);
+		byte[] bytes = Encoding.UTF8.GetBytes(Message);
+
 		foreach (Player player in group.Members)
 		{
 			if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
-			{
-				byte[] bytes = Encoding.UTF8.GetBytes(message);
+			{		
 				await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 			}
 		}
@@ -163,6 +195,7 @@ internal class Websocket
 		MessageModel messageModel = new MessageModel
 		{
 			Type = MessageType.PRIVATE,
+			SenderName = player.Name,
 			Sender = player.User_ID,
 			Receiver = receiver_id,
 			Message = message,
@@ -196,6 +229,7 @@ internal class Websocket
 		MessageModel messageModel = new MessageModel
 		{
 			Type = type,
+			SenderName = player.Name,
 			Sender = player.User_ID,
 			Receiver = receiver_id,
 			Message = message,
@@ -238,6 +272,22 @@ internal class Websocket
 		}
 	}
 
+	public static async Task SendGroupInfoToPlayer(Player player, GroupModel groupModel)
+	{
+		var settings = new JsonSerializerSettings
+		{
+			Converters = new List<JsonConverter> { new StringEnumConverter() }
+		};
+
+		string Message = JsonConvert.SerializeObject(groupModel, settings);
+		byte[] bytes = Encoding.UTF8.GetBytes(Message);
+		
+		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+		{
+			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+		}
+	}
+
 	private static async void Link_UserID_To_WebsocketID(Player player, string client_id)
 	{
 		SharedData.userIDToCliendIdMap[player.User_ID.ToString()] = client_id;
@@ -250,7 +300,7 @@ internal class Websocket
 		}
 	}
 
-	private static int GetUserIDFromJWT(string token)
+	private static (int user_id, string user_name) GetUserInfoFromJWT(string token)
 	{
 		var tokenHandler = new JwtSecurityTokenHandler();
 		var validationParameters = new TokenValidationParameters
@@ -266,19 +316,18 @@ internal class Websocket
 		{
 			ClaimsPrincipal claimsPrincipal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
 			string value = claimsPrincipal.FindFirst("user_id")?.Value;
-
 			int user_id = 0;
-			if (Int32.TryParse(value, out user_id))
-			{
-				return user_id;
-			}
+			Int32.TryParse(value, out user_id);
 
-			return 0;
+			string user_name = claimsPrincipal.FindFirst("user_name")?.Value;
+
+
+			return (user_id, user_name);
 		}
 		catch (Exception ex)
 		{
 			Console.WriteLine("Token validation failed: " + ex.Message);
-			return 0;
+			return (0, null);
 		}
 	}
 }

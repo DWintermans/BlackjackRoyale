@@ -44,13 +44,13 @@ namespace BlackjackService
 
 			if (group == null)
 			{
-				await Websocket.SendNotificationToPlayer(player, "You must be part of a group to play the game.");
+				await Websocket.SendNotificationToPlayer(player, "You must be part of a group to play the game.", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
 			if (group.Deck.Count == 0) 
 			{
-				await Websocket.SendNotificationToPlayer(player, "The game has not started yet");
+				await Websocket.SendNotificationToPlayer(player, "The game has not started yet", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
@@ -68,7 +68,7 @@ namespace BlackjackService
 					break;
 
 				default:
-					await Websocket.SendNotificationToPlayer(player, "Unknown game action");
+					await Websocket.SendNotificationToPlayer(player, "Unknown game action", NotificationType.TOAST, ToastType.ERROR);
 					break;
 			}
 		}
@@ -76,7 +76,7 @@ namespace BlackjackService
 		{
 			await Group.MovePlayersFromWaitingRoom(group);
 
-			await Websocket.SendNotificationToGroup(group, "Place your bets now!");
+			await Websocket.SendNotificationToGroup(group, "Place your bets now!", NotificationType.GAME);
 
 			//shuffle and play with two decks, when starting round and one deck is depleted start game with 2 new shuffled decks 
 			while (group.Deck.Count <= 52)
@@ -118,7 +118,7 @@ namespace BlackjackService
 
 			await Websocket.SendGameInfoToGroup(group, model);
 
-			await Websocket.SendNotificationToGroup(group, "Setup has ended");
+			await Websocket.SendNotificationToGroup(group, "Setup has ended", NotificationType.GAME);
 		}
 
 		private static void RemoveOldDecksAndAddTwoDecksToGroup(Group group)

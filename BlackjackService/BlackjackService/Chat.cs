@@ -15,7 +15,7 @@
 					//await DeleteMessage();
 					break;
 				default:
-					await Websocket.SendNotificationToPlayer(player, "Unknown group action");
+					await Websocket.SendNotificationToPlayer(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
 					break;
 			}
 		}
@@ -32,7 +32,7 @@
 				}
 				else
 				{
-					await Websocket.SendNotificationToPlayer(player, $"As a member of this group, you can only send messages to this group.");
+					await Websocket.SendNotificationToPlayer(player, $"As a member of this group, you can only send messages to this group.", NotificationType.TOAST, ToastType.WARNING);
 				}
 			}
 			else if (receiver.ToString().ToUpper() == "GROUP") //group message
@@ -43,7 +43,7 @@
 				}
 				else
 				{
-					await Websocket.SendNotificationToPlayer(player, $"You are not a member of a group.");
+					await Websocket.SendNotificationToPlayer(player, $"You are not a member of a group.", NotificationType.TOAST, ToastType.WARNING);
 				}
 			}
 			else if (int.TryParse(receiver.ToString(), out int receiver_id)) //private message
@@ -56,7 +56,7 @@
 			}
 			else
 			{
-				await Websocket.SendNotificationToPlayer(player, $"Unexpected value received for 'receiver'.");
+				await Websocket.SendNotificationToPlayer(player, $"Unexpected value received for 'receiver'.", NotificationType.TOAST, ToastType.ERROR);
 			}
 		}
 
