@@ -77,7 +77,19 @@ internal class Websocket
 
 	private static async Task RouteMessage(string receivedMessage, string client_id, WebSocket socket)
 	{
-		dynamic message = JsonConvert.DeserializeObject(receivedMessage);
+		dynamic message;
+
+		try
+		{
+			message = JsonConvert.DeserializeObject(receivedMessage);
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Deserialization error: {e.Message}");
+
+			await SendNotificationToSocket(socket, "An error occurred, please try again later.");
+			return;
+		}
 
 		//check if category and action are present
 		if (string.IsNullOrEmpty(message.category.ToString()) && string.IsNullOrEmpty(message.action.ToString()))
@@ -280,6 +292,22 @@ internal class Websocket
 		};
 
 		string Message = JsonConvert.SerializeObject(groupModel, settings);
+		byte[] bytes = Encoding.UTF8.GetBytes(Message);
+		
+		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+		{
+			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
+		}
+	}
+
+	public static async Task SendLobbyInfoToPlayer(Player player, LobbyModel lobbyModel)
+	{
+		var settings = new JsonSerializerSettings
+		{
+			Converters = new List<JsonConverter> { new StringEnumConverter() }
+		};
+
+		string Message = JsonConvert.SerializeObject(lobbyModel, settings);	
 		byte[] bytes = Encoding.UTF8.GetBytes(Message);
 		
 		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))

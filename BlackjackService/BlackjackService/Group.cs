@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Numerics;
 using System.Reflection;
 
 namespace BlackjackService
@@ -24,74 +25,59 @@ namespace BlackjackService
 
 		public static async Task HandleGroupAction(Player player, dynamic message)
 		{
-			bool checkGroupCalled = false;
-
-			try
+			switch (message.action.ToString())
 			{
-				switch (message.action.ToString())
-				{
-					case "create_group":
-						await CreateGroup(player);
-						break;
+				case "create_group":
+					await CreateGroup(player);
+					await ForceShowLobby();
+					await ForceCheckGroup(player);
+					break;
 
-					case "join_group":
-						await JoinGroup(player, message.group_id.ToString());
-						break;
+				case "join_group":
+					await JoinGroup(player, message.group_id.ToString());
+					await ForceShowLobby();
+					await ForceCheckGroup(player);
+					break;
 
-					case "leave_group":
-						LeaveGroup(player);
-						break;
+				case "leave_group":
+					LeaveGroup(player);
+					await ForceShowLobby();
+					break;
 
-					case "ready":
-						await Ready(player);
-						break;
+				case "ready":
+					await Ready(player);
+					await ForceCheckGroup(player);
+					break;
 
-					case "unready":
-						await Unready(player);
-						break;
+				case "unready":
+					await Unready(player);
+					await ForceCheckGroup(player);
+					break;
 
-					case "check_group":
-						checkGroupCalled = true;
-						await CheckGroup(player);
-						break;
-
-					default:
-						await Websocket.SendNotificationToPlayer(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
-						return;
-				}	
-			}
-			finally
-			{
-				if (!checkGroupCalled)
-				{
-					checkGroupCalled = true;
+				case "check_group":
 					await CheckGroup(player);
-				}
-			}
+					break;
+
+				case "show_lobby":
+					await ShowLobby(player);
+					break;
+
+				default:
+					await Websocket.SendNotificationToPlayer(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+					return;
+			}		
 		}
 
-		private static async Task CheckGroup(Player player) 
+		private static async Task ForceCheckGroup(Player player) 
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
-			
-			GroupModel model;
 
-			if (group == null)
+			if (group != null)
 			{
-				model = new GroupModel
-				{
-					Group_ID = null,
-					Members = null
-				};
-
-				await Websocket.SendGroupInfoToPlayer(player, model);
-			}
-			else 
-			{
-				model = new GroupModel
+				GroupModel model = new GroupModel
 				{
 					Group_ID = group.Group_ID,
-					Members = new List<Member>() 
+					Members = new List<Member>()
 				};
 
 				foreach (Player member in group.Members)
@@ -111,6 +97,124 @@ namespace BlackjackService
 					await Websocket.SendGroupInfoToPlayer(member, model);
 				}
 			}
+			else 
+			{
+				GroupModel model = new GroupModel
+				{
+					Group_ID = null,
+					Members = null
+				};
+
+				await Websocket.SendGroupInfoToPlayer(player, model);
+			}
+		}
+
+		private static async Task ForceShowLobby() 
+		{
+			LobbyModel lobbyModel = new LobbyModel
+			{
+				Type = "LOBBY",
+				Lobby = new List<Lobby>()
+			};
+
+			foreach (var groupEntry in SharedData.Groups)
+			{
+				Group currentGroup = groupEntry.Value;
+
+				int memberCount = currentGroup.Members.Count;
+				int waitingRoomCount = currentGroup.WaitingRoom.Count;
+
+				Lobby lobby = new Lobby
+				{
+					Group_ID = currentGroup.Group_ID,
+					Members = memberCount + waitingRoomCount
+				};
+
+				lobbyModel.Lobby.Add(lobby);
+			}
+
+			foreach (var playerEntry in SharedData.Players)
+			{
+				Player player = playerEntry.Value;
+
+				Group group = SharedData.GetGroupForPlayer(player);
+				if (group == null)
+				{
+					await Websocket.SendLobbyInfoToPlayer(player, lobbyModel);
+				}
+			}
+		}
+
+		private static async Task ShowLobby(Player player)
+		{
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			//player in group? dont show lobby
+			if (group != null)
+			{
+				return;
+			}
+
+			LobbyModel lobbyModel = new LobbyModel
+			{
+				Type = "LOBBY", 
+				Lobby = new List<Lobby>()  
+			};
+
+			foreach (var groupEntry in SharedData.Groups)
+			{
+				Group currentGroup = groupEntry.Value;
+
+				int memberCount = currentGroup.Members.Count;
+				int waitingRoomCount = currentGroup.WaitingRoom.Count;
+
+				Lobby lobby = new Lobby
+				{
+					Group_ID = currentGroup.Group_ID, 
+					Members = memberCount + waitingRoomCount  
+				};
+
+				lobbyModel.Lobby.Add(lobby);
+			}
+
+			await Websocket.SendLobbyInfoToPlayer(player, lobbyModel);
+		}
+
+		private static async Task CheckGroup(Player player) 
+		{
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			GroupModel model;
+
+			if (group != null)
+			{
+				model = new GroupModel
+				{
+					Group_ID = group.Group_ID,
+					Members = new List<Member>()
+				};
+
+				foreach (Player member in group.Members)
+				{
+					var memberModel = new Member(
+						user_id: member.User_ID,
+						name: member.Name,
+						inWaitingRoom: group.WaitingRoom.Contains(member),
+						isReady: member.IsReady
+					);
+
+					model.Members.Add(memberModel);
+				}
+			}
+			else 
+			{
+				model = new GroupModel
+				{
+					Group_ID = null,
+					Members = null
+				};
+			}
+			await Websocket.SendGroupInfoToPlayer(player, model);
 		}
 
 		private static async Task CreateGroup(Player player)
@@ -141,31 +245,46 @@ namespace BlackjackService
 			await Websocket.SendNotificationToPlayer(player, $"You have joined group {group.Group_ID}.", NotificationType.TOAST, ToastType.INFO);
 		}
 
-		private static void LeaveGroup(Player player)
+		private static async Task LeaveGroup(Player player)
 		{
-			foreach (var group in SharedData.Groups.Values.ToList())
+			//save group to send groupinfo update to
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			//leave group
+			if (group != null) 
 			{
-				if (group.Members.Any(p => p.User_ID == player.User_ID))
+				foreach (var groups in SharedData.Groups.Values.ToList())
 				{
-					group.Members.RemoveAll(p => p.User_ID == player.User_ID);
-
-					player.ClearHand();
-					player.IsReady = false;
-
-					Websocket.SendNotificationToPlayer(player, $"You have left group '{group.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
-					Websocket.SendNotificationToGroup(group, $"{player.Name} left the group.", NotificationType.GROUP);
-
-					Console.WriteLine($"User {player.User_ID} left group {group.Group_ID}");
-
-					if (group.Members.Count == 0)
+					if (groups.Members.Any(p => p.User_ID == player.User_ID))
 					{
-						SharedData.Groups.Remove(group.Group_ID);
-						Console.WriteLine($"Group {group.Group_ID} has been removed as it is empty.");
-					}
+						groups.Members.RemoveAll(p => p.User_ID == player.User_ID);
 
-					break;
+						player.ClearHand();
+						player.IsReady = false;
+
+						Websocket.SendNotificationToPlayer(player, $"You have left group '{groups.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+						Websocket.SendNotificationToGroup(groups, $"{player.Name} left the group.", NotificationType.GROUP);
+
+						Console.WriteLine($"User {player.User_ID} left group {groups.Group_ID}");
+
+						if (group.Members.Count == 0)
+						{
+							SharedData.Groups.Remove(groups.Group_ID);
+							Console.WriteLine($"Group {groups.Group_ID} has been removed as it is empty.");
+						}
+
+						break;
+					}
 				}
-			}
+
+				await CheckGroup(player);
+
+				//send updated groupinfo to old group that player left, if group exists
+				foreach (Player member in group.Members)
+				{	
+					await ForceCheckGroup(member);
+				}
+			}	
 		}
 
 		private static async Task JoinGroup(Player player, string group_id)

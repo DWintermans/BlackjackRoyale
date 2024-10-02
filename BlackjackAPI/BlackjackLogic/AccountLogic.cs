@@ -37,17 +37,18 @@ namespace BlackjackLogic
 			{
 				Subject = new System.Security.Claims.ClaimsIdentity(new[]
 				{
-						new System.Security.Claims.Claim("user_id", user_id.ToString()),
-						new System.Security.Claims.Claim("user_name", username.ToString())
-					}),
+					new System.Security.Claims.Claim("user_id", user_id.ToString()),
+					new System.Security.Claims.Claim("user_name", username.ToString())
+				}),
+
 				Expires = DateTime.UtcNow.AddDays(30),
 				Issuer = "Issuer",
 				Audience = "Audience",
 				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
 			};
+
 			var token = tokenHandler.CreateToken(tokenDescriptor);
 			var jwt = tokenHandler.WriteToken(token);
-
 			return jwt;
 		}
 
