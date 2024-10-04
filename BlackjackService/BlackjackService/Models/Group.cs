@@ -18,7 +18,7 @@
 			User_ID = user_id;
 			Name = name;
 			InWaitingRoom = inWaitingRoom;
-			IsReady = isReady; 
+			IsReady = isReady;
 		}
 	}
 }

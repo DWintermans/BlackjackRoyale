@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace BlackjackService
+﻿namespace BlackjackService
 {
 	public class Game
 	{
@@ -48,7 +46,7 @@ namespace BlackjackService
 				return;
 			}
 
-			if (group.Deck.Count == 0) 
+			if (group.Deck.Count == 0)
 			{
 				await Websocket.SendNotificationToPlayer(player, "The game has not started yet", NotificationType.TOAST, ToastType.INFO);
 				return;
@@ -57,7 +55,7 @@ namespace BlackjackService
 			switch (message.action.ToString())
 			{
 				case "bet":
-					//await Bet(player, message.bet.ToString());
+				//await Bet(player, message.bet.ToString());
 
 				case "hit":
 					await Hit(player);
@@ -195,9 +193,9 @@ namespace BlackjackService
 
 		private static async Task Hit(Player player)
 		{
-			await DealCard(player);		
+			await DealCard(player);
 		}
-		
+
 		private static async Task Stand(Player player)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
@@ -214,7 +212,7 @@ namespace BlackjackService
 			//await StartGame(SharedData.GetGroupForPlayer(player));
 		}
 
-		private static string CalculateHandValue(List<string> hand) 
+		private static string CalculateHandValue(List<string> hand)
 		{
 			int totalValue = 0;
 			int acesCount = 0;
@@ -234,7 +232,7 @@ namespace BlackjackService
 
 			if (acesCount > 0)
 			{
-				int aceAsEleven = totalValue + acesCount + 10; 
+				int aceAsEleven = totalValue + acesCount + 10;
 
 				if (aceAsEleven <= 21)
 				{

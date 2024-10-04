@@ -70,7 +70,7 @@
 
 		public static async Task SendMessageGlobally(Player player, string chatMessage)
 		{
-			foreach (var userEntry in SharedData.Players) 
+			foreach (var userEntry in SharedData.Players)
 			{
 				Player user = userEntry.Value;
 

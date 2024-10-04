@@ -1,7 +1,5 @@
 ﻿using BlackjackCommon.Entities.Account;
 using BlackjackCommon.Interfaces.Repository;
-using BlackjackDAL;
-using MySql.Data.MySqlClient;
 
 namespace BlackjackDAL.Repositories
 {
@@ -13,7 +11,7 @@ namespace BlackjackDAL.Repositories
 		{
 			try
 			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString())) 
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
 				{
 					var user = context.User.SingleOrDefault(u => u.user_name == username);
 
@@ -73,8 +71,8 @@ namespace BlackjackDAL.Repositories
 						user_name = username,
 						user_passwordhash = hashed_password,
 						user_passwordsalt = salt,
-						user_is_moderator = false, 
-						user_status = UserStatus.active 
+						user_is_moderator = false,
+						user_status = UserStatus.active
 					};
 
 					context.User.Add(newUser);
@@ -121,7 +119,7 @@ namespace BlackjackDAL.Repositories
 
 						context.SaveChanges();
 
-						return true; 
+						return true;
 					}
 
 					return false;
@@ -144,15 +142,15 @@ namespace BlackjackDAL.Repositories
 
 					if (user != null)
 					{
-						user.user_passwordhash = hashed_password; 
-						user.user_passwordsalt = salt; 
+						user.user_passwordhash = hashed_password;
+						user.user_passwordsalt = salt;
 
 						context.SaveChanges();
 
-						return true; 
+						return true;
 					}
 
-					return false; 
+					return false;
 				}
 			}
 			catch (Exception ex)

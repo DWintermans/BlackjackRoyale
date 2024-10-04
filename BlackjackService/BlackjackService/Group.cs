@@ -1,8 +1,4 @@
-﻿using System.Linq;
-using System.Numerics;
-using System.Reflection;
-
-namespace BlackjackService
+﻿namespace BlackjackService
 {
 	public class Group
 	{
@@ -65,10 +61,10 @@ namespace BlackjackService
 				default:
 					await Websocket.SendNotificationToPlayer(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
 					return;
-			}		
+			}
 		}
 
-		private static async Task ForceCheckGroup(Player player) 
+		private static async Task ForceCheckGroup(Player player)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
@@ -97,7 +93,7 @@ namespace BlackjackService
 					await Websocket.SendGroupInfoToPlayer(member, model);
 				}
 			}
-			else 
+			else
 			{
 				GroupModel model = new GroupModel
 				{
@@ -109,7 +105,7 @@ namespace BlackjackService
 			}
 		}
 
-		private static async Task ForceShowLobby() 
+		private static async Task ForceShowLobby()
 		{
 			LobbyModel lobbyModel = new LobbyModel
 			{
@@ -157,8 +153,8 @@ namespace BlackjackService
 
 			LobbyModel lobbyModel = new LobbyModel
 			{
-				Type = "LOBBY", 
-				Lobby = new List<Lobby>()  
+				Type = "LOBBY",
+				Lobby = new List<Lobby>()
 			};
 
 			foreach (var groupEntry in SharedData.Groups)
@@ -170,8 +166,8 @@ namespace BlackjackService
 
 				Lobby lobby = new Lobby
 				{
-					Group_ID = currentGroup.Group_ID, 
-					Members = memberCount + waitingRoomCount  
+					Group_ID = currentGroup.Group_ID,
+					Members = memberCount + waitingRoomCount
 				};
 
 				lobbyModel.Lobby.Add(lobby);
@@ -180,7 +176,7 @@ namespace BlackjackService
 			await Websocket.SendLobbyInfoToPlayer(player, lobbyModel);
 		}
 
-		private static async Task CheckGroup(Player player) 
+		private static async Task CheckGroup(Player player)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
@@ -206,7 +202,7 @@ namespace BlackjackService
 					model.Members.Add(memberModel);
 				}
 			}
-			else 
+			else
 			{
 				model = new GroupModel
 				{
@@ -251,7 +247,7 @@ namespace BlackjackService
 			Group group = SharedData.GetGroupForPlayer(player);
 
 			//leave group
-			if (group != null) 
+			if (group != null)
 			{
 				foreach (var groups in SharedData.Groups.Values.ToList())
 				{
@@ -281,10 +277,10 @@ namespace BlackjackService
 
 				//send updated groupinfo to old group that player left, if group exists
 				foreach (Player member in group.Members)
-				{	
+				{
 					await ForceCheckGroup(member);
 				}
-			}	
+			}
 		}
 
 		private static async Task JoinGroup(Player player, string group_id)
@@ -397,14 +393,14 @@ namespace BlackjackService
 			}
 
 			player.SetReadyStatus(isReady);
-			await Websocket.SendNotificationToPlayer(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);			
+			await Websocket.SendNotificationToPlayer(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
 
 			await CheckVotesAndStartGame(group);
 		}
 
 		//check if majority is ready to play
 		private static async Task CheckVotesAndStartGame(Group group)
-		{	
+		{
 			//debug
 			foreach (var player in group.Members)
 			{
@@ -421,7 +417,7 @@ namespace BlackjackService
 			{
 				await Websocket.SendNotificationToGroup(group, "The game is starting now!", NotificationType.GROUP);
 				await Game.StartGame(group);
-			}			
+			}
 		}
 
 		private static string GenerateRandomGroupID()

@@ -37,7 +37,7 @@ namespace BlackjackCommon.Entities.Account
 		public int? user_total_earnings_amt { get; set; }
 
 		[Column("user_total_losses_amt")]
-		public int?	user_total_losses_amt { get; set; }
+		public int? user_total_losses_amt { get; set; }
 
 		[Column("user_avg_bet")]
 		public decimal? user_avg_bet { get; set; }

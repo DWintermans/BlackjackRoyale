@@ -4,7 +4,6 @@ using Newtonsoft.Json.Converters;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.WebSockets;
-using System.Numerics;
 using System.Security.Claims;
 using System.Text;
 
@@ -71,7 +70,7 @@ internal class Websocket
 			catch (Exception e)
 			{
 				Console.WriteLine(e.Message);
-			}		
+			}
 		}
 	}
 
@@ -196,7 +195,7 @@ internal class Websocket
 		foreach (Player player in group.Members)
 		{
 			if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
-			{		
+			{
 				await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 			}
 		}
@@ -264,7 +263,7 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendGameInfoToGroup(Group group, GameModel gameModel) 
+	public static async Task SendGameInfoToGroup(Group group, GameModel gameModel)
 	{
 		//convert emuns to strings e.g. CARD_DRAWN instead of 0
 		var settings = new JsonSerializerSettings
@@ -293,7 +292,7 @@ internal class Websocket
 
 		string Message = JsonConvert.SerializeObject(groupModel, settings);
 		byte[] bytes = Encoding.UTF8.GetBytes(Message);
-		
+
 		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
 		{
 			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
@@ -307,9 +306,9 @@ internal class Websocket
 			Converters = new List<JsonConverter> { new StringEnumConverter() }
 		};
 
-		string Message = JsonConvert.SerializeObject(lobbyModel, settings);	
+		string Message = JsonConvert.SerializeObject(lobbyModel, settings);
 		byte[] bytes = Encoding.UTF8.GetBytes(Message);
-		
+
 		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
 		{
 			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);

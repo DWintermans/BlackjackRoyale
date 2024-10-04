@@ -1,4 +1,4 @@
-﻿using BlackjackLogic.Interfaces.Repository;
+﻿using BlackjackCommon.Interfaces.Repository;
 
 namespace BlackjackTest.Account
 {
