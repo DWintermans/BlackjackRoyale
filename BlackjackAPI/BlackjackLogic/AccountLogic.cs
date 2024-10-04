@@ -1,5 +1,5 @@
-﻿using BlackjackLogic.Interfaces.Logic;
-using BlackjackLogic.Interfaces.Repository;
+﻿using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Interfaces.Repository;
 using Konscious.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -21,13 +21,6 @@ namespace BlackjackLogic
 		private const int DEGREE_OF_PARALLELISM = 16;
 		private const int NUMBER_OF_ITERATIONS = 4;
 		private const int MEMORY_TO_USE_IN_KB = 600000;
-
-		public class AccountResult
-		{
-			public required bool Success { get; set; }
-			public string? Message { get; set; }
-			public string? JWT { get; set; }
-		}
 
 		public string CreateJWT(int user_id, string username)
 		{

@@ -1,4 +1,4 @@
-﻿namespace BlackjackLogic.Interfaces.Repository
+﻿namespace BlackjackCommon.Interfaces.Repository
 {
 	public interface IAccountRepository
 	{

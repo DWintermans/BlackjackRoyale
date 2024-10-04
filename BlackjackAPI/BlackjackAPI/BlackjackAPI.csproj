@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BlackjackCommon\BlackjackCommon.csproj" />
     <ProjectReference Include="..\BlackjackDAL\BlackjackDAL.csproj" />
     <ProjectReference Include="..\BlackjackLogic\BlackjackLogic.csproj" />
   </ItemGroup>

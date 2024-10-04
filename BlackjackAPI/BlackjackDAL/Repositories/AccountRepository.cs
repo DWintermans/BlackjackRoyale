@@ -1,7 +1,9 @@
-﻿using BlackjackLogic.Interfaces.Repository;
+﻿using BlackjackCommon.Entities.Account;
+using BlackjackCommon.Interfaces.Repository;
+using BlackjackDAL;
 using MySql.Data.MySqlClient;
 
-namespace BlackjackDAL
+namespace BlackjackDAL.Repositories
 {
 	public class AccountRepository : IAccountRepository
 	{
@@ -11,31 +13,16 @@ namespace BlackjackDAL
 		{
 			try
 			{
-				using (MySqlConnection conn = new MySqlConnection(_DBConnection.ConnectionString()))
+				using (var context = new AppDbContext(_DBConnection.ConnectionString())) 
 				{
-					conn.Open();
+					var user = context.User.SingleOrDefault(u => u.user_name == username);
 
-					using (MySqlCommand cmd = new MySqlCommand())
+					if (user != null)
 					{
-						cmd.CommandText = "SELECT user_id, user_name, user_passwordhash, user_passwordsalt FROM user WHERE user_name = @user_name";
-						cmd.Parameters.AddWithValue("@user_name", username);
-						cmd.Connection = conn;
+						byte[] hashed_pw = Convert.FromBase64String(user.user_passwordhash);
+						byte[] salt = Convert.FromBase64String(user.user_passwordsalt);
 
-						using (MySqlDataReader reader = cmd.ExecuteReader())
-						{
-							if (reader.HasRows && reader.Read())
-							{
-								int user_id = Convert.ToInt32(reader["user_id"]);
-								string user_name = reader["user_name"].ToString();
-								string hashed_pwString = reader["user_passwordhash"].ToString();
-								string saltString = reader["user_passwordsalt"].ToString();
-
-								byte[] hashed_pw = Convert.FromBase64String(hashed_pwString);
-								byte[] salt = Convert.FromBase64String(saltString);
-
-								return (user_id, user_name, hashed_pw, salt);
-							}
-						}
+						return (user.user_id, user.user_name, hashed_pw, salt);
 					}
 				}
 			}
@@ -46,6 +33,46 @@ namespace BlackjackDAL
 
 			return (0, null, null, null);
 		}
+
+		//public (int user_id, string user_name, byte[] hashed_pw, byte[] salt) RetrieveLoginInformation(string username)
+		//{
+		//	try
+		//	{
+		//		using (MySqlConnection conn = new MySqlConnection(_DBConnection.ConnectionString()))
+		//		{
+		//			conn.Open();
+
+		//			using (MySqlCommand cmd = new MySqlCommand())
+		//			{
+		//				cmd.CommandText = "SELECT user_id, user_name, user_passwordhash, user_passwordsalt FROM user WHERE user_name = @user_name";
+		//				cmd.Parameters.AddWithValue("@user_name", username);
+		//				cmd.Connection = conn;
+
+		//				using (MySqlDataReader reader = cmd.ExecuteReader())
+		//				{
+		//					if (reader.HasRows && reader.Read())
+		//					{
+		//						int user_id = Convert.ToInt32(reader["user_id"]);
+		//						string user_name = reader["user_name"].ToString();
+		//						string hashed_pwString = reader["user_passwordhash"].ToString();
+		//						string saltString = reader["user_passwordsalt"].ToString();
+
+		//						byte[] hashed_pw = Convert.FromBase64String(hashed_pwString);
+		//						byte[] salt = Convert.FromBase64String(saltString);
+
+		//						return (user_id, user_name, hashed_pw, salt);
+		//					}
+		//				}
+		//			}
+		//		}
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		Console.WriteLine($"An error occurred: {ex.Message}");
+		//	}
+
+		//	return (0, null, null, null);
+		//}
 
 		public (byte[] hashed_pw, byte[] salt) RetrieveSalt_HashInformation(int user_id)
 		{
