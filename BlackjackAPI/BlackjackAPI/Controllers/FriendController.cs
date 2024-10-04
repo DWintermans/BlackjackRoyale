@@ -18,11 +18,11 @@ namespace BlackjackAPI.Controllers
 		}
 
 		/// <summary>
-		/// Request to become friends with anonther user.
+		/// Request to become friends with another user.
 		/// </summary>
 		[HttpPost]
 		[Route("Request")]
-		public IActionResult SendFriendRequest(FriendRequestModel model)
+		public IActionResult SendFriendRequest(RequestModel model)
 		{
 			var jwt_user_id = HttpContext.User.FindFirst("user_id");
 
@@ -38,28 +38,46 @@ namespace BlackjackAPI.Controllers
 				return BadRequest(new { message = "You can't befriend yourself." });
 			}
 
-			//var result = _friendLogic.Request(user_id, model.befriend_user_id);
-
-			//if (!result.Success)
-			//{
-			//	return BadRequest(new { message = result.Message });
-			//}
-
-			return Ok(new { message = "Friend request send." });
+			try
+			{
+				_friendLogic.RequestFriendship(user_id, model.befriend_user_id);
+				return Ok(new { message = "Friend request sent successfully." });
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+				return StatusCode(500, new { message = "An error occurred while processing your request." });
+			}
 		}
 
 		[HttpPut]
-		[Route("Request/Accept")]
-		public IActionResult AcceptFriendRequest(FriendRequestModel model)
+		[Route("Request/Status")]
+		public IActionResult UpdateFriendStatus(StatusModel model)
 		{
-			return Ok(new { message = "Friend request accepted." });
-		}
+			var jwt_user_id = HttpContext.User.FindFirst("user_id");
 
-		[HttpPut]
-		[Route("Request/Reject")]
-		public IActionResult RejectFriendRequest(FriendRequestModel model)
-		{
-			return Ok(new { message = "Friend request rejecetd." });
+			if (jwt_user_id == null)
+			{
+				return Unauthorized(new { message = "Invalid credentials" });
+			}
+
+			int user_id = int.Parse(jwt_user_id.Value);
+
+			if (model.status != "accepted" && model.status != "rejected")
+			{
+				return BadRequest(new { message = "Invalid status received." });
+			}
+
+			try
+			{
+				_friendLogic.UpdateFriendStatus(user_id, model.friend_user_id, model.status);
+				return Ok(new { message = $"Friend status successfully updated to '{model.status}'." });
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+				return StatusCode(500, new { message = "An error occurred while processing your request." });
+			}
 		}
 	}
 }

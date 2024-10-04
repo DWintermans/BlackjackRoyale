@@ -1,6 +1,6 @@
 ﻿namespace BlackjackAPI.Models.Friend
 {
-	public class FriendRequestModel
+	public class RequestModel
 	{
 		public int befriend_user_id { get; set; }
 	}

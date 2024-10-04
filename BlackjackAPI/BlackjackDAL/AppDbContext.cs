@@ -1,4 +1,5 @@
 ﻿using BlackjackCommon.Entities.Account;
+using BlackjackCommon.Entities.Friend;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlackjackDAL
@@ -11,13 +12,13 @@ namespace BlackjackDAL
 		{
 			_connectionString = connectionString;
 		}
-
-		public DbSet<User> User { get; set; }
-
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
 		}
+
+		public DbSet<User> User { get; set; }
+		public DbSet<Friend> Friend { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -31,6 +32,15 @@ namespace BlackjackDAL
 				.Property(u => u.user_status)
 				.HasConversion<string>()
 				.HasDefaultValue(UserStatus.active);
+
+			//composite key
+			modelBuilder.Entity<Friend>()
+				.HasKey(f => new { f.friend_user_id, f.friend_befriend_user_id });
+
+			//string conversion for enum
+			modelBuilder.Entity<Friend>()
+				.Property(f => f.friend_status)
+				.HasConversion<string>();
 
 			base.OnModelCreating(modelBuilder);
 		}
