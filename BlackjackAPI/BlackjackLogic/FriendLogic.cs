@@ -17,7 +17,7 @@ namespace BlackjackLogic
 			_friendDAL.RequestFriendship(user_id, befriend_user_id);
 		}
 
-		public void UpdateFriendStatus(int user_id, int friend_user_id, string status) 
+		public void UpdateFriendStatus(int user_id, int friend_user_id, string status)
 		{
 			_friendDAL.UpdateFriendStatus(user_id, friend_user_id, status);
 		}

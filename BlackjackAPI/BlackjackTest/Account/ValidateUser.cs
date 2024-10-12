@@ -1,18 +1,18 @@
 ﻿using BlackjackCommon.Interfaces.Repository;
 
-namespace BlackjackTest.Account
+namespace BlackjackTest.User
 {
 	[TestClass]
 	public class AttemptLogin
 	{
-		private Mock<IAccountRepository> _mockAccountRepository;
-		private AccountLogic _accountLogic;
+		private Mock<IUserRepository> _mockUserRepository;
+		private UserLogic _userLogic;
 
 		[TestInitialize]
 		public void Initialize()
 		{
-			_mockAccountRepository = new Mock<IAccountRepository>();
-			_accountLogic = new AccountLogic(_mockAccountRepository.Object);
+			_mockUserRepository = new Mock<IUserRepository>();
+			_userLogic = new UserLogic(_mockUserRepository.Object);
 		}
 
 		[TestMethod]
@@ -30,10 +30,10 @@ namespace BlackjackTest.Account
 			);
 
 			//mock repo
-			_mockAccountRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
+			_mockUserRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
 
 			// Act
-			int result = _accountLogic.ValidateUser("testuser", "password");
+			int result = _userLogic.ValidateUser("testuser", "password");
 
 			// Assert
 			Assert.AreEqual(1, result);
@@ -54,10 +54,10 @@ namespace BlackjackTest.Account
 			);
 
 			//mock repo
-			_mockAccountRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
+			_mockUserRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
 
 			// Act
-			int result = _accountLogic.ValidateUser("testuser", "PASSWORD");
+			int result = _userLogic.ValidateUser("testuser", "PASSWORD");
 
 			// Assert
 			Assert.AreEqual(0, result);
@@ -78,10 +78,10 @@ namespace BlackjackTest.Account
 			);
 
 			//mock repo
-			_mockAccountRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
+			_mockUserRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
 
 			// Act
-			int result = _accountLogic.ValidateUser("Testuser", "password");
+			int result = _userLogic.ValidateUser("Testuser", "password");
 
 			// Assert
 			Assert.AreEqual(0, result);

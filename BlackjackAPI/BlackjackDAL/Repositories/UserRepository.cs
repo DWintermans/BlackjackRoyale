@@ -1,9 +1,9 @@
-﻿using BlackjackCommon.Entities.Account;
+﻿using BlackjackCommon.Entities.User;
 using BlackjackCommon.Interfaces.Repository;
 
 namespace BlackjackDAL.Repositories
 {
-	public class AccountRepository : IAccountRepository
+	public class UserRepository : IUserRepository
 	{
 		private readonly DBConnection _DBConnection = new();
 

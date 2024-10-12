@@ -2,7 +2,7 @@
 {
 	public class StatusModel
 	{
-		public int friend_user_id {  get; set; }
+		public int friend_user_id { get; set; }
 		public string status { get; set; }
 	}
 }

@@ -1,8 +1,5 @@
-﻿using BlackjackCommon.Entities.Account;
-using BlackjackCommon.Entities.Friend;
+﻿using BlackjackCommon.Entities.Friend;
 using BlackjackCommon.Interfaces.Repository;
-using Google.Protobuf.Collections;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace BlackjackDAL.Repositories
 {
@@ -32,7 +29,7 @@ namespace BlackjackDAL.Repositories
 						};
 
 						context.Friend.Add(newFriendship);
-						context.SaveChanges(); 
+						context.SaveChanges();
 					}
 					else
 					{
@@ -47,7 +44,7 @@ namespace BlackjackDAL.Repositories
 			}
 		}
 
-		public void UpdateFriendStatus(int user_id, int friend_user_id, string status) 
+		public void UpdateFriendStatus(int user_id, int friend_user_id, string status)
 		{
 			try
 			{
@@ -56,10 +53,10 @@ namespace BlackjackDAL.Repositories
 					var friendship = context.Friend
 						.FirstOrDefault(f =>
 							(f.friend_user_id == friend_user_id && f.friend_befriend_user_id == user_id));
-					
+
 					if (friendship != null)
 					{
-						friendship.friend_status = Enum.Parse<FriendStatus>(status); 
+						friendship.friend_status = Enum.Parse<FriendStatus>(status);
 						context.SaveChanges();
 					}
 					else

@@ -1,6 +1,6 @@
 ﻿namespace BlackjackCommon.Interfaces.Logic
 {
-	public interface IAccountLogic
+	public interface IUserLogic
 	{
 		AccountResult CreateAccount(string username, string password);
 		int ValidateUser(string username, string password);

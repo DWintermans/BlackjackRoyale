@@ -9,13 +9,13 @@ using System.Text;
 
 namespace BlackjackLogic
 {
-	public class AccountLogic : IAccountLogic
+	public class UserLogic : IUserLogic
 	{
-		private readonly IAccountRepository _accountDAL;
+		private readonly IUserRepository _userDAL;
 
-		public AccountLogic(IAccountRepository accountDAL)
+		public UserLogic(IUserRepository userDAL)
 		{
-			_accountDAL = accountDAL;
+			_userDAL = userDAL;
 		}
 
 		private const int DEGREE_OF_PARALLELISM = 16;
@@ -79,7 +79,7 @@ namespace BlackjackLogic
 
 		public AccountResult CreateAccount(string username, string password)
 		{
-			if (_accountDAL.IsUsernameTaken(username))
+			if (_userDAL.IsUsernameTaken(username))
 			{
 				return new AccountResult { Success = false, Message = "Username is already in use." };
 			}
@@ -87,7 +87,7 @@ namespace BlackjackLogic
 			byte[] salt = CreateSalt();
 			byte[] hashed_password = HashPassword(password, salt);
 
-			int user_id = _accountDAL.CreateAccount(username, Convert.ToBase64String(hashed_password), Convert.ToBase64String(salt));
+			int user_id = _userDAL.CreateAccount(username, Convert.ToBase64String(hashed_password), Convert.ToBase64String(salt));
 
 			if (user_id <= 0)
 			{
@@ -108,7 +108,7 @@ namespace BlackjackLogic
 		public int ValidateUser(string username, string password)
 		{
 			//Get old password and salt from db based on username
-			var loginInfo = _accountDAL.RetrieveLoginInformation(username);
+			var loginInfo = _userDAL.RetrieveLoginInformation(username);
 
 			if (loginInfo.user_id != 0 && loginInfo.user_name != null && loginInfo.hashed_pw != null && loginInfo.salt != null)
 			{
@@ -139,7 +139,7 @@ namespace BlackjackLogic
 			}
 
 			//Get old password and salt from db based on user_id
-			var loginInfo = _accountDAL.RetrieveSalt_HashInformation(user_id);
+			var loginInfo = _userDAL.RetrieveSalt_HashInformation(user_id);
 
 			if (loginInfo.hashed_pw == null || loginInfo.hashed_pw.Length == 0 || loginInfo.salt == null || loginInfo.salt.Length == 0)
 			{
@@ -159,7 +159,7 @@ namespace BlackjackLogic
 			byte[] salt = CreateSalt();
 			byte[] hashed_password = HashPassword(new_password, salt);
 
-			if (!_accountDAL.UpdatePassword(user_id, Convert.ToBase64String(hashed_password), Convert.ToBase64String(salt)))
+			if (!_userDAL.UpdatePassword(user_id, Convert.ToBase64String(hashed_password), Convert.ToBase64String(salt)))
 			{
 				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
 			}
@@ -169,12 +169,12 @@ namespace BlackjackLogic
 
 		public AccountResult ChangeUsername(int user_id, string user_name)
 		{
-			if (_accountDAL.IsUsernameTaken(user_name))
+			if (_userDAL.IsUsernameTaken(user_name))
 			{
 				return new AccountResult { Success = false, Message = "Username already in use." };
 			}
 
-			if (!_accountDAL.UpdateUsername(user_id, user_name))
+			if (!_userDAL.UpdateUsername(user_id, user_name))
 			{
 				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
 			}

@@ -1,29 +1,29 @@
 ﻿using BlackjackCommon.Interfaces.Repository;
 
-namespace BlackjackTest.Account
+namespace BlackjackTest.User
 {
 	[TestClass]
 	public class ChangeUsername
 	{
-		private Mock<IAccountRepository> _mockAccountRepository;
-		private AccountLogic _accountLogic;
+		private Mock<IUserRepository> _mockUserRepository;
+		private UserLogic _userLogic;
 
 		[TestInitialize]
 		public void Initialize()
 		{
-			_mockAccountRepository = new Mock<IAccountRepository>();
-			_accountLogic = new AccountLogic(_mockAccountRepository.Object);
+			_mockUserRepository = new Mock<IUserRepository>();
+			_userLogic = new UserLogic(_mockUserRepository.Object);
 		}
 
 		[TestMethod]
 		public void ChangeUsername_SuccessfulUpdate_ReturnsTrue()
 		{
 			// Arrange
-			_mockAccountRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
-			_mockAccountRepository.Setup(dal => dal.UpdateUsername(1, It.IsAny<string>())).Returns(true);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.UpdateUsername(1, It.IsAny<string>())).Returns(true);
 
 			// Act
-			var result = _accountLogic.ChangeUsername(1, "newname");
+			var result = _userLogic.ChangeUsername(1, "newname");
 
 			// Assert
 			Assert.IsTrue(result.Success);
@@ -34,10 +34,10 @@ namespace BlackjackTest.Account
 		public void ChangeUsername_UsernameAlreadyTaken_ReturnsErrorMessage()
 		{
 			// Arrange
-			_mockAccountRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
 
 			// Act
-			var result = _accountLogic.ChangeUsername(1, "newname");
+			var result = _userLogic.ChangeUsername(1, "newname");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -48,11 +48,11 @@ namespace BlackjackTest.Account
 		public void ChangeUsername_DatabaseUpdateFails_ReturnsErrorMessage()
 		{
 			// Arrange
-			_mockAccountRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
-			_mockAccountRepository.Setup(dal => dal.UpdateUsername(1, It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.UpdateUsername(1, It.IsAny<string>())).Returns(false);
 
 			// Act
-			var result = _accountLogic.ChangeUsername(1, "newname");
+			var result = _userLogic.ChangeUsername(1, "newname");
 
 			// Assert
 			Assert.IsFalse(result.Success);

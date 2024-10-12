@@ -1,4 +1,4 @@
-﻿using BlackjackAPI.Models.Account;
+﻿using BlackjackAPI.Models.User;
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackDAL.Repositories;
 using BlackjackLogic;
@@ -9,13 +9,13 @@ namespace BlackjackAPI.Controllers
 {
 	[ApiController]
 	[Route("[controller]")]
-	public class AccountController : ControllerBase
+	public class UserController : ControllerBase
 	{
-		private readonly IAccountLogic _accountLogic;
+		private readonly IUserLogic _userLogic;
 
-		public AccountController()
+		public UserController()
 		{
-			_accountLogic = new AccountLogic(new AccountRepository());
+			_userLogic = new UserLogic(new UserRepository());
 		}
 
 		/// <summary>
@@ -30,14 +30,14 @@ namespace BlackjackAPI.Controllers
 		[Route("Login")]
 		public IActionResult Login(Login model)
 		{
-			int user_id = _accountLogic.ValidateUser(model.username, model.password);
+			int user_id = _userLogic.ValidateUser(model.username, model.password);
 
 			if (user_id <= 0)
 			{
 				return Unauthorized(new { message = "Invalid credentials" });
 			}
 
-			string token = _accountLogic.CreateJWT(user_id, model.username);
+			string token = _userLogic.CreateJWT(user_id, model.username);
 			return Ok(new { message = "Login successful", jwt = token });
 		}
 
@@ -58,7 +58,7 @@ namespace BlackjackAPI.Controllers
 				return BadRequest(ModelState);
 			}
 
-			var result = _accountLogic.CreateAccount(model.username, model.password);
+			var result = _userLogic.CreateAccount(model.username, model.password);
 
 			if (!result.Success)
 			{
@@ -90,7 +90,7 @@ namespace BlackjackAPI.Controllers
 
 			int user_id = int.Parse(jwt_user_id.Value);
 
-			var result = _accountLogic.ChangeUsername(user_id, model.username);
+			var result = _userLogic.ChangeUsername(user_id, model.username);
 
 			if (!result.Success)
 			{
@@ -122,7 +122,7 @@ namespace BlackjackAPI.Controllers
 
 			int user_id = int.Parse(jwt_user_id.Value);
 
-			var result = _accountLogic.ChangePassword(user_id, model.old_password, model.new_password, model.repeat_new_password);
+			var result = _userLogic.ChangePassword(user_id, model.old_password, model.new_password, model.repeat_new_password);
 
 			if (!result.Success)
 			{

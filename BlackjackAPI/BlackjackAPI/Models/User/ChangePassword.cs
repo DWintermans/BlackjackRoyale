@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BlackjackAPI.Models.Account
+namespace BlackjackAPI.Models.User
 {
 	public class ChangePassword
 	{

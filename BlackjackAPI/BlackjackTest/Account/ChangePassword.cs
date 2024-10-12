@@ -1,18 +1,18 @@
 ﻿using BlackjackCommon.Interfaces.Repository;
 
-namespace BlackjackTest.Account
+namespace BlackjackTest.User
 {
 	[TestClass]
 	public class ChangePassword
 	{
-		private Mock<IAccountRepository> _mockAccountRepository;
-		private AccountLogic _accountLogic;
+		private Mock<IUserRepository> _mockUserRepository;
+		private UserLogic _userLogic;
 
 		[TestInitialize]
 		public void Initialize()
 		{
-			_mockAccountRepository = new Mock<IAccountRepository>();
-			_accountLogic = new AccountLogic(_mockAccountRepository.Object);
+			_mockUserRepository = new Mock<IUserRepository>();
+			_userLogic = new UserLogic(_mockUserRepository.Object);
 		}
 
 		[TestMethod]
@@ -29,12 +29,12 @@ namespace BlackjackTest.Account
 				salt: salt
 			);
 
-			_mockAccountRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
-			_mockAccountRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
+			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
 
 			// Act
-			var result = _accountLogic.ChangePassword(1, "password", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
 
 			// Assert
 			Assert.IsTrue(result.Success);
@@ -45,7 +45,7 @@ namespace BlackjackTest.Account
 		public void ChangePassword_NewPasswordsDontMatch_ReturnsErrorMessage()
 		{
 			// Act
-			var result = _accountLogic.ChangePassword(1, "oldPass", "newPass123", "newPass456");
+			var result = _userLogic.ChangePassword(1, "oldPass", "newPass123", "newPass456");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -56,7 +56,7 @@ namespace BlackjackTest.Account
 		public void ChangePassword_NewPasswordSameAsOldPassword_ReturnsErrorMessage()
 		{
 			// Act
-			var result = _accountLogic.ChangePassword(1, "oldPass", "oldPass", "oldPass");
+			var result = _userLogic.ChangePassword(1, "oldPass", "oldPass", "oldPass");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -77,10 +77,10 @@ namespace BlackjackTest.Account
 				salt: salt
 			);
 
-			_mockAccountRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
+			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
 
 			// Act
-			var result = _accountLogic.ChangePassword(1, "passwordt", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "passwordt", "newPass", "newPass");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -101,11 +101,11 @@ namespace BlackjackTest.Account
 				salt: salt
 			);
 
-			_mockAccountRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
-			_mockAccountRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
+			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
 			// Act
-			var result = _accountLogic.ChangePassword(1, "password", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -126,11 +126,11 @@ namespace BlackjackTest.Account
 				salt: salt
 			);
 
-			_mockAccountRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
-			_mockAccountRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
+			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
 			// Act
-			var result = _accountLogic.ChangePassword(1, "password", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -150,11 +150,11 @@ namespace BlackjackTest.Account
 				salt: salt
 			);
 
-			_mockAccountRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
-			_mockAccountRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
+			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
 			// Act
-			var result = _accountLogic.ChangePassword(1, "password", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
 
 			// Assert
 			Assert.IsFalse(result.Success);

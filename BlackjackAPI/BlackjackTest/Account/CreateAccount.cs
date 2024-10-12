@@ -1,34 +1,34 @@
 ﻿using BlackjackCommon.Interfaces.Repository;
 
-namespace BlackjackTest.Account
+namespace BlackjackTest.User
 {
 	[TestClass]
 	public class CreateAccount
 	{
-		private Mock<IAccountRepository> _mockAccountRepository;
-		private AccountLogic _accountLogic;
+		private Mock<IUserRepository> _mockUserRepository;
+		private UserLogic _userLogic;
 
 		[TestInitialize]
 		public void Initialize()
 		{
-			_mockAccountRepository = new Mock<IAccountRepository>();
-			_accountLogic = new AccountLogic(_mockAccountRepository.Object);
+			_mockUserRepository = new Mock<IUserRepository>();
+			_userLogic = new UserLogic(_mockUserRepository.Object);
 		}
 
 		[TestMethod]
 		public void CreateAcccount_SuccessfulAccountCreation_Returns_JWT()
 		{
 			// Arrange
-			_mockAccountRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
-			_mockAccountRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(123);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(123);
 
 			// Act
-			var result = _accountLogic.CreateAccount("username", "password");
+			var result = _userLogic.CreateAccount("username", "password");
 
 			// Assert
 			Assert.IsTrue(result.Success);
 			Assert.AreEqual("Account created successfully", result.Message);
-			int user_id = _accountLogic.GetUserIDFromJWT(result.JWT);
+			int user_id = _userLogic.GetUserIDFromJWT(result.JWT);
 			Assert.AreEqual(123, user_id);
 		}
 
@@ -36,10 +36,10 @@ namespace BlackjackTest.Account
 		public void CreateAcccount_UsernameIsTaken_ReturnsErrorMessage()
 		{
 			// Arrange
-			_mockAccountRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
 
 			// Act
-			var result = _accountLogic.CreateAccount("username", "password");
+			var result = _userLogic.CreateAccount("username", "password");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -50,11 +50,11 @@ namespace BlackjackTest.Account
 		public void CreateAcccount_DatabaseAccountCreationFails_ReturnsErrorMessage()
 		{
 			// Arrange
-			_mockAccountRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
-			_mockAccountRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(0);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(0);
 
 			// Act
-			var result = _accountLogic.CreateAccount("username", "password");
+			var result = _userLogic.CreateAccount("username", "password");
 
 			// Assert
 			Assert.IsFalse(result.Success);

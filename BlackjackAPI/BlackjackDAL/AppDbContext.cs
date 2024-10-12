@@ -1,5 +1,5 @@
-﻿using BlackjackCommon.Entities.Account;
-using BlackjackCommon.Entities.Friend;
+﻿using BlackjackCommon.Entities.Friend;
+using BlackjackCommon.Entities.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlackjackDAL

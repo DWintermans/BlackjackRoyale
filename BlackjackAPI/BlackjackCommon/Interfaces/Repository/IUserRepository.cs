@@ -1,6 +1,6 @@
 ﻿namespace BlackjackCommon.Interfaces.Repository
 {
-	public interface IAccountRepository
+	public interface IUserRepository
 	{
 		(int user_id, string user_name, byte[] hashed_pw, byte[] salt) RetrieveLoginInformation(string username);
 		(byte[] hashed_pw, byte[] salt) RetrieveSalt_HashInformation(int user_id);
