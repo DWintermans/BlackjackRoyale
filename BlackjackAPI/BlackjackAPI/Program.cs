@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using BlackjackLogic;
+using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Interfaces.Repository;
+using BlackjackDAL.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +22,13 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+
+builder.Services.AddScoped<IUserLogic, UserLogic>();
+builder.Services.AddScoped<IFriendLogic, FriendLogic>();
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IFriendRepository, FriendRepository>();
 
 //add jwt bearer in header
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

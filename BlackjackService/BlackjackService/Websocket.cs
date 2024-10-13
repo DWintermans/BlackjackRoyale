@@ -6,12 +6,29 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Security.Claims;
 using System.Text;
+using BlackjackCommon.Interfaces.Logic;
+using BlackjackLogic;
+using BlackjackCommon.Models;
+using BlackjackCommon.Data.SharedData;
+using BlackjackCommon.ViewModels;
+using BlackjackCommon.Interfaces;
 
 
 namespace BlackjackService;
 
-internal class Websocket
+internal class Websocket : IWebsocket
 {
+	private readonly IChatLogic _chatLogic;
+	private readonly IGroupLogic _groupLogic;
+	private readonly IGameLogic _gameLogic;
+
+	public Websocket(IChatLogic chatLogic, IGroupLogic groupLogic, IGameLogic gameLogic)
+	{
+		_chatLogic = chatLogic;
+		_groupLogic = groupLogic;
+		_gameLogic = gameLogic;
+	}
+
 	private static Dictionary<string, WebSocket> connectedClients = new Dictionary<string, WebSocket>();
 
 	public async Task Run()
@@ -33,7 +50,7 @@ internal class Websocket
 		}
 	}
 
-	private static async void ProcessRequest(HttpListenerContext context)
+	private async void ProcessRequest(HttpListenerContext context)
 	{
 		WebSocket socket = (await context.AcceptWebSocketAsync(null)).WebSocket;
 		string client_id = Guid.NewGuid().ToString();
@@ -74,7 +91,7 @@ internal class Websocket
 		}
 	}
 
-	private static async Task RouteMessage(string receivedMessage, string client_id, WebSocket socket)
+	private async Task RouteMessage(string receivedMessage, string client_id, WebSocket socket)
 	{
 		dynamic message;
 
@@ -127,15 +144,15 @@ internal class Websocket
 				break;
 
 			case "chat":
-				await Chat.HandleChatAction(player, message);
+				await ChatLogic.HandleChatAction(player, message);
 				break;
 
 			case "group":
-				await Group.HandleGroupAction(player, message);
+				await GroupLogic.HandleGroupAction(player, message);
 				break;
 
 			case "game":
-				await Game.HandleGameAction(player, message);
+				await GameLogic.HandleGameAction(player, message);
 				break;
 
 			default:
@@ -144,13 +161,13 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendNotificationToSocket(WebSocket socket, string message)
+	public async Task SendNotificationToSocket(WebSocket socket, string message)
 	{
 		byte[] bytes = Encoding.UTF8.GetBytes(message);
 		await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 	}
 
-	public static async Task SendNotificationToPlayer(Player player, string message, NotificationType type, ToastType? toasttype = null)
+	public async Task SendNotificationToPlayer(Player player, string message, NotificationType type, ToastType? toasttype = null)
 	{
 		NotificationModel notificationModel = new NotificationModel
 		{
@@ -174,7 +191,7 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendNotificationToGroup(Group group, string message, NotificationType type, ToastType? toasttype = null)
+	public async Task SendNotificationToGroup(Group group, string message, NotificationType type, ToastType? toasttype = null)
 	{
 		NotificationModel notificationModel = new NotificationModel
 		{
@@ -201,7 +218,7 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendPrivateChatMessageToPlayer(Player player, int receiver_id, string message)
+	public async Task SendPrivateChatMessageToPlayer(Player player, int receiver_id, string message)
 	{
 		MessageModel messageModel = new MessageModel
 		{
@@ -235,7 +252,7 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendChatMessageToPlayer(Player player, int receiver_id, string message, MessageType type)
+	public async Task SendChatMessageToPlayer(Player player, int receiver_id, string message, MessageType type)
 	{
 		MessageModel messageModel = new MessageModel
 		{
@@ -263,7 +280,7 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendGameInfoToGroup(Group group, GameModel gameModel)
+	public async Task SendGameInfoToGroup(Group group, GameModel gameModel)
 	{
 		//convert emuns to strings e.g. CARD_DRAWN instead of 0
 		var settings = new JsonSerializerSettings
@@ -283,7 +300,7 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendGroupInfoToPlayer(Player player, GroupModel groupModel)
+	public async Task SendGroupInfoToPlayer(Player player, GroupModel groupModel)
 	{
 		var settings = new JsonSerializerSettings
 		{
@@ -299,7 +316,7 @@ internal class Websocket
 		}
 	}
 
-	public static async Task SendLobbyInfoToPlayer(Player player, LobbyModel lobbyModel)
+	public async Task SendLobbyInfoToPlayer(Player player, LobbyModel lobbyModel)
 	{
 		var settings = new JsonSerializerSettings
 		{

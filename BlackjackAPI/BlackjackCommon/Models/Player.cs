@@ -1,4 +1,6 @@
-﻿namespace BlackjackService
+﻿using BlackjackCommon.Models;
+
+namespace BlackjackCommon.Models
 {
 	public class Player
 	{
@@ -14,21 +16,5 @@
 			Hand = new List<string>();
 			IsReady = false;
 		}
-
-		public void AddCard(string card)
-		{
-			Hand.Add(card);
-		}
-
-		public void ClearHand()
-		{
-			Hand.Clear();
-		}
-
-		public void SetReadyStatus(bool status)
-		{
-			IsReady = status;
-		}
-
 	}
 }

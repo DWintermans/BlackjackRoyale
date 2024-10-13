@@ -12,9 +12,9 @@ namespace BlackjackAPI.Controllers
 	{
 		private readonly IFriendLogic _friendLogic;
 
-		public FriendController()
+		public FriendController(IFriendLogic friendLogic)
 		{
-			_friendLogic = new FriendLogic(new FriendRepository());
+			_friendLogic = friendLogic;
 		}
 
 		/// <summary>

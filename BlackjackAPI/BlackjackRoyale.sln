@@ -10,6 +10,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackAPI", "BlackjackAP
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackService", "..\BlackjackService\BlackjackService\BlackjackService.csproj", "{7E36542D-E658-4A25-84E0-8EE34CE150EC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2AE776E2-FC4D-4647-8AF8-C66F59BCA08D} = {2AE776E2-FC4D-4647-8AF8-C66F59BCA08D}
+		{5409DD26-B94D-45BB-8F0A-87E1D963969A} = {5409DD26-B94D-45BB-8F0A-87E1D963969A}
+		{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD} = {ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackLogic", "BlackjackLogic\BlackjackLogic.csproj", "{5409DD26-B94D-45BB-8F0A-87E1D963969A}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -26,9 +31,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackTest", "BlackjackT
 	ProjectSection(ProjectDependencies) = postProject
 		{5409DD26-B94D-45BB-8F0A-87E1D963969A} = {5409DD26-B94D-45BB-8F0A-87E1D963969A}
 		{68376027-C45D-4E76-B511-A273F03E1392} = {68376027-C45D-4E76-B511-A273F03E1392}
+		{7E36542D-E658-4A25-84E0-8EE34CE150EC} = {7E36542D-E658-4A25-84E0-8EE34CE150EC}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackjackCommon", "BlackjackCommon\BlackjackCommon.csproj", "{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackCommon", "BlackjackCommon\BlackjackCommon.csproj", "{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

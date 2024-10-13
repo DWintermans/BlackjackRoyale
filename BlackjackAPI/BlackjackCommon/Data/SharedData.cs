@@ -1,4 +1,6 @@
-﻿namespace BlackjackService
+﻿using BlackjackCommon.Models;
+
+namespace BlackjackCommon.Data.SharedData
 {
 	public static class SharedData
 	{

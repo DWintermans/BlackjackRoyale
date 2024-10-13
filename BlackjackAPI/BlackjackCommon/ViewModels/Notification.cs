@@ -1,4 +1,4 @@
-﻿namespace BlackjackService
+﻿namespace BlackjackCommon.ViewModels
 {
 	public class NotificationModel
 	{

@@ -13,9 +13,9 @@ namespace BlackjackAPI.Controllers
 	{
 		private readonly IUserLogic _userLogic;
 
-		public UserController()
+		public UserController(IUserLogic userLogic)
 		{
-			_userLogic = new UserLogic(new UserRepository());
+			_userLogic = userLogic;
 		}
 
 		/// <summary>

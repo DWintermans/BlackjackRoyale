@@ -1,7 +1,23 @@
-﻿namespace BlackjackService
+﻿using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Interfaces.Repository;
+using BlackjackCommon.Models;
+using Group = BlackjackCommon.Models.Group;
+using Player = BlackjackCommon.Models.Player;
+using BlackjackCommon.Data.SharedData;
+using BlackjackCommon.ViewModels;
+using BlackjackCommon.Interfaces;
+
+namespace BlackjackLogic
 {
-	public class Game
+	public class GameLogic : IGameLogic
 	{
+		private readonly IWebsocket _websocket;
+
+		public GameLogic(IWebsocket websocket)
+		{
+			_websocket = websocket;
+		}
+
 		static List<string> baseDeck = new List<string>
 		{
 			"H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H0", "HJ", "HK", "HQ", "HA",
@@ -35,20 +51,20 @@
 			{"HJ", "JackHearts.png"}, {"CJ", "JackClubs.png"}, {"DJ", "JackDiamonds.png"}, {"SJ", "JackSpades.png"}
 		};
 
-		public static async Task HandleGameAction(Player player, dynamic message)
+		public async Task HandleGameAction(Player player, dynamic message)
 		{
 			//check if group exists / if game has started (has received deck)
 			Group group = SharedData.GetGroupForPlayer(player);
 
 			if (group == null)
 			{
-				await Websocket.SendNotificationToPlayer(player, "You must be part of a group to play the game.", NotificationType.TOAST, ToastType.INFO);
+				await _websocket.SendNotificationToPlayer(player, "You must be part of a group to play the game.", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
 			if (group.Deck.Count == 0)
 			{
-				await Websocket.SendNotificationToPlayer(player, "The game has not started yet", NotificationType.TOAST, ToastType.INFO);
+				await _websocket.SendNotificationToPlayer(player, "The game has not started yet", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
@@ -66,15 +82,15 @@
 					break;
 
 				default:
-					await Websocket.SendNotificationToPlayer(player, "Unknown game action", NotificationType.TOAST, ToastType.ERROR);
+					await _websocket.SendNotificationToPlayer(player, "Unknown game action", NotificationType.TOAST, ToastType.ERROR);
 					break;
 			}
 		}
-		public static async Task StartGame(Group group)
+		public async Task StartGame(Group group)
 		{
-			await Group.MovePlayersFromWaitingRoom(group);
+			await GroupLogic.MovePlayersFromWaitingRoom(group);
 
-			await Websocket.SendNotificationToGroup(group, "Place your bets now!", NotificationType.GAME);
+			await _websocket.SendNotificationToGroup(group, "Place your bets now!", NotificationType.GAME);
 
 			//shuffle and play with two decks, when starting round and one deck is depleted start game with 2 new shuffled decks 
 			while (group.Deck.Count <= 52)
@@ -114,12 +130,12 @@
 				Total = CalculateHandValue(group.DealerHand)
 			};
 
-			await Websocket.SendGameInfoToGroup(group, model);
+			await _websocket.SendGameInfoToGroup(group, model);
 
-			await Websocket.SendNotificationToGroup(group, "Setup has ended", NotificationType.GAME);
+			await _websocket.SendNotificationToGroup(group, "Setup has ended", NotificationType.GAME);
 		}
 
-		private static void RemoveOldDecksAndAddTwoDecksToGroup(Group group)
+		private void RemoveOldDecksAndAddTwoDecksToGroup(Group group)
 		{
 			group.Deck.Clear();
 
@@ -136,7 +152,7 @@
 			Console.WriteLine($"Two new decks have been shuffled and added to group: {group.Group_ID}");
 		}
 
-		private static async Task DealCard(Player player)
+		private async Task DealCard(Player player)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
@@ -160,12 +176,12 @@
 				Total = CalculateHandValue(player.Hand)
 			};
 
-			await Websocket.SendGameInfoToGroup(group, model);
+			await _websocket.SendGameInfoToGroup(group, model);
 
 			Console.WriteLine($"{player.User_ID} received {cardName}, value in hand: {CalculateHandValue(player.Hand)}");
 		}
 
-		private static async Task DealCardToDealer(Group group)
+		private async Task DealCardToDealer(Group group)
 		{
 			if (group.Deck.Count == 0) return;
 
@@ -187,16 +203,16 @@
 				Total = CalculateHandValue(group.DealerHand)
 			};
 
-			await Websocket.SendGameInfoToGroup(group, model);
+			await _websocket.SendGameInfoToGroup(group, model);
 			Console.WriteLine($"{group.Group_ID} dealer received {cardName}, value in hand: {CalculateHandValue(group.DealerHand)}");
 		}
 
-		private static async Task Hit(Player player)
+		private async Task Hit(Player player)
 		{
 			await DealCard(player);
 		}
 
-		private static async Task Stand(Player player)
+		private async Task Stand(Player player)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
@@ -207,12 +223,12 @@
 				Total = CalculateHandValue(player.Hand)
 			};
 
-			await Websocket.SendGameInfoToGroup(group, model);
+			await _websocket.SendGameInfoToGroup(group, model);
 
 			//await StartGame(SharedData.GetGroupForPlayer(player));
 		}
 
-		private static string CalculateHandValue(List<string> hand)
+		private string CalculateHandValue(List<string> hand)
 		{
 			int totalValue = 0;
 			int acesCount = 0;

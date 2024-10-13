@@ -1,25 +1,25 @@
-﻿namespace BlackjackService
+﻿using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Data.SharedData;
+using BlackjackCommon.ViewModels;
+using BlackjackCommon.Interfaces;
+using System.Text.RegularExpressions;
+using BlackjackCommon.Models;
+using Group = BlackjackCommon.Models.Group;
+
+
+namespace BlackjackLogic
 {
-	public class Group
+	public class GroupLogic : IGroupLogic
 	{
+		private readonly IWebsocket _websocket;
 		private const int MaxGroupSize = 4;
 
-		public string Group_ID { get; private set; }
-		public List<Player> Members { get; private set; }
-		public List<string> Deck { get; private set; }
-		public List<string> DealerHand { get; private set; }
-		public List<Player> WaitingRoom { get; private set; }
-
-		public Group(string group_id)
+		public GroupLogic(IWebsocket websocket)
 		{
-			Group_ID = group_id;
-			Members = new List<Player>();
-			Deck = new List<string>();
-			DealerHand = new List<string>();
-			WaitingRoom = new List<Player>();
+			_websocket = websocket;
 		}
 
-		public static async Task HandleGroupAction(Player player, dynamic message)
+		public async Task HandleGroupAction(Player player, dynamic message)
 		{
 			switch (message.action.ToString())
 			{
@@ -59,14 +59,14 @@
 					break;
 
 				default:
-					await Websocket.SendNotificationToPlayer(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+					await _websocket.SendNotificationToPlayer(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
 					return;
 			}
 		}
 
-		private static async Task ForceCheckGroup(Player player)
+		private async Task ForceCheckGroup(Player player)
 		{
-			Group group = SharedData.GetGroupForPlayer(player);
+            Group group = SharedData.GetGroupForPlayer(player);
 
 			if (group != null)
 			{
@@ -90,7 +90,7 @@
 
 				foreach (Player member in group.Members)
 				{
-					await Websocket.SendGroupInfoToPlayer(member, model);
+					await _websocket.SendGroupInfoToPlayer(member, model);
 				}
 			}
 			else
@@ -101,11 +101,11 @@
 					Members = null
 				};
 
-				await Websocket.SendGroupInfoToPlayer(player, model);
+				await _websocket.SendGroupInfoToPlayer(player, model);
 			}
 		}
 
-		private static async Task ForceShowLobby()
+		private async Task ForceShowLobby()
 		{
 			LobbyModel lobbyModel = new LobbyModel
 			{
@@ -115,7 +115,7 @@
 
 			foreach (var groupEntry in SharedData.Groups)
 			{
-				Group currentGroup = groupEntry.Value;
+                BlackjackCommon.Models.Group currentGroup = groupEntry.Value;
 
 				int memberCount = currentGroup.Members.Count;
 				int waitingRoomCount = currentGroup.WaitingRoom.Count;
@@ -136,12 +136,12 @@
 				Group group = SharedData.GetGroupForPlayer(player);
 				if (group == null)
 				{
-					await Websocket.SendLobbyInfoToPlayer(player, lobbyModel);
+					await _websocket.SendLobbyInfoToPlayer(player, lobbyModel);
 				}
 			}
 		}
 
-		private static async Task ShowLobby(Player player)
+		private async Task ShowLobby(Player player)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
@@ -173,10 +173,10 @@
 				lobbyModel.Lobby.Add(lobby);
 			}
 
-			await Websocket.SendLobbyInfoToPlayer(player, lobbyModel);
+			await _websocket.SendLobbyInfoToPlayer(player, lobbyModel);
 		}
 
-		private static async Task CheckGroup(Player player)
+		private async Task CheckGroup(Player player)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
@@ -210,10 +210,10 @@
 					Members = null
 				};
 			}
-			await Websocket.SendGroupInfoToPlayer(player, model);
+			await _websocket.SendGroupInfoToPlayer(player, model);
 		}
 
-		private static async Task CreateGroup(Player player)
+		private async Task CreateGroup(Player player)
 		{
 			//leave current group if possible
 			LeaveGroup(player);
@@ -224,7 +224,10 @@
 				group_id = GenerateRandomGroupID();
 			}
 
-			Group group = new Group(group_id);
+			//create unique group id for database
+			string unique_id = $"{group_id}_{Guid.NewGuid().ToString()}";
+
+			Group group = new Group(group_id, unique_id);
 
 			//add to group
 			group.Members.Add(player);
@@ -234,14 +237,15 @@
 
 			foreach (var g in SharedData.Groups)
 			{
+				Console.WriteLine(group.Unique_Group_ID);
 				Console.WriteLine("Group_ID: " + g.Key + " | User_IDs: " + string.Join(", ", g.Value.Members.Select(m => m.User_ID)));
 			}
 
-			await Websocket.SendNotificationToPlayer(player, $"Group with ID {group.Group_ID} created.", NotificationType.TOAST, ToastType.SUCCESS);
-			await Websocket.SendNotificationToPlayer(player, $"You have joined group {group.Group_ID}.", NotificationType.TOAST, ToastType.INFO);
+			await _websocket.SendNotificationToPlayer(player, $"Group with ID {group.Group_ID} created.", NotificationType.TOAST, ToastType.SUCCESS);
+			await _websocket.SendNotificationToPlayer(player, $"You have joined group {group.Group_ID}.", NotificationType.TOAST, ToastType.INFO);
 		}
 
-		private static async Task LeaveGroup(Player player)
+		private async Task LeaveGroup(Player player)
 		{
 			//save group to send groupinfo update to
 			Group group = SharedData.GetGroupForPlayer(player);
@@ -258,8 +262,8 @@
 						player.ClearHand();
 						player.IsReady = false;
 
-						Websocket.SendNotificationToPlayer(player, $"You have left group '{groups.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
-						Websocket.SendNotificationToGroup(groups, $"{player.Name} left the group.", NotificationType.GROUP);
+						await _websocket.SendNotificationToPlayer(player, $"You have left group '{groups.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+						await _websocket.SendNotificationToGroup(groups, $"{player.Name} left the group.", NotificationType.GROUP);
 
 						Console.WriteLine($"User {player.User_ID} left group {groups.Group_ID}");
 
@@ -283,12 +287,12 @@
 			}
 		}
 
-		private static async Task JoinGroup(Player player, string group_id)
+		private async Task JoinGroup(Player player, string group_id)
 		{
 			//check if group exists
 			if (!SharedData.Groups.ContainsKey(group_id))
 			{
-				await Websocket.SendNotificationToPlayer(player, "Group does not exist.", NotificationType.TOAST, ToastType.WARNING);
+				await _websocket.SendNotificationToPlayer(player, "Group does not exist.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
@@ -297,14 +301,14 @@
 			//check if already in group
 			if (group.Members.Any(p => p.User_ID == player.User_ID))
 			{
-				await Websocket.SendNotificationToPlayer(player, "You are already in this group.", NotificationType.TOAST, ToastType.INFO);
+				await _websocket.SendNotificationToPlayer(player, "You are already in this group.", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
 			//cant join a full group
 			if (group.Members.Count >= MaxGroupSize)
 			{
-				await Websocket.SendNotificationToPlayer(player, $"Group '{group_id}' is full!", NotificationType.TOAST, ToastType.WARNING);
+				await _websocket.SendNotificationToPlayer(player, $"Group '{group_id}' is full!", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
@@ -330,8 +334,8 @@
 			}
 
 			Console.WriteLine($"User {player.User_ID} joined group {group_id}");
-			Websocket.SendNotificationToPlayer(player, $"You have joined group '{group_id}'.", NotificationType.TOAST, ToastType.INFO);
-			Websocket.SendNotificationToGroup(group, $"{player.Name} joined the group.", NotificationType.GROUP);
+			_websocket.SendNotificationToPlayer(player, $"You have joined group '{group_id}'.", NotificationType.TOAST, ToastType.INFO);
+			_websocket.SendNotificationToGroup(group, $"{player.Name} joined the group.", NotificationType.GROUP);
 
 			foreach (var grp in SharedData.Groups)
 			{
@@ -340,18 +344,18 @@
 
 		}
 
-		private static async Task AddPlayerToWaitingRoom(Group group, Player player)
+		private async Task AddPlayerToWaitingRoom(Group group, Player player)
 		{
 			if (!group.WaitingRoom.Contains(player))
 			{
 				group.WaitingRoom.Add(player);
 
-				await Websocket.SendNotificationToPlayer(player, "You have joined the waiting room. You will enter the game when the current round is over.", NotificationType.TOAST, ToastType.INFO);
-				await Websocket.SendNotificationToGroup(group, $"{player.Name} is waiting and will join next round.", NotificationType.GROUP);
+				await _websocket.SendNotificationToPlayer(player, "You have joined the waiting room. You will enter the game when the current round is over.", NotificationType.TOAST, ToastType.INFO);
+				await _websocket.SendNotificationToGroup(group, $"{player.Name} is waiting and will join next round.", NotificationType.GROUP);
 			}
 		}
 
-		public static async Task MovePlayersFromWaitingRoom(Group group)
+		public async Task MovePlayersFromWaitingRoom(Group group)
 		{
 			if (group.WaitingRoom.Count > 0)
 			{
@@ -359,47 +363,47 @@
 				{
 					group.Members.Add(player);
 
-					await Websocket.SendNotificationToPlayer(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);
+					await _websocket.SendNotificationToPlayer(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);
 				}
 				group.WaitingRoom.Clear();
 			}
 		}
 
-		private static async Task Ready(Player player)
+		private async Task Ready(Player player)
 		{
 			await SetReadyStatus(player, true);
 		}
 
-		private static async Task Unready(Player player)
+		private async Task Unready(Player player)
 		{
 			await SetReadyStatus(player, false);
 		}
 
-		private static async Task SetReadyStatus(Player player, bool isReady)
+		private async Task SetReadyStatus(Player player, bool isReady)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
 			if (group == null)
 			{
-				await Websocket.SendNotificationToPlayer(player, "You must be part of a group to set your readiness.", NotificationType.TOAST, ToastType.WARNING);
+				await _websocket.SendNotificationToPlayer(player, "You must be part of a group to set your readiness.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
 			//if game has already started, dont allow ready/unready commands
 			if (group.Deck.Count > 0)
 			{
-				await Websocket.SendNotificationToPlayer(player, "The game has already started. You cannot change your ready status now.", NotificationType.TOAST, ToastType.WARNING);
+				await _websocket.SendNotificationToPlayer(player, "The game has already started. You cannot change your ready status now.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
 			player.SetReadyStatus(isReady);
-			await Websocket.SendNotificationToPlayer(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
+			await _websocket.SendNotificationToPlayer(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
 
 			await CheckVotesAndStartGame(group);
 		}
 
 		//check if majority is ready to play
-		private static async Task CheckVotesAndStartGame(Group group)
+		private async Task CheckVotesAndStartGame(Group group)
 		{
 			//debug
 			foreach (var player in group.Members)
@@ -411,16 +415,16 @@
 			int readyCount = group.Members.Count(player => player.IsReady);
 			int totalMembers = group.Members.Count;
 
-			await Websocket.SendNotificationToGroup(group, $"{readyCount}/{totalMembers} players are ready.", NotificationType.GROUP);
+			await _websocket.SendNotificationToGroup(group, $"{readyCount}/{totalMembers} players are ready.", NotificationType.GROUP);
 
 			if (readyCount > totalMembers / 2)
 			{
-				await Websocket.SendNotificationToGroup(group, "The game is starting now!", NotificationType.GROUP);
-				await Game.StartGame(group);
+				await _websocket.SendNotificationToGroup(group, "The game is starting now!", NotificationType.GROUP);
+				await _gameLogic.StartGame(group);
 			}
 		}
 
-		private static string GenerateRandomGroupID()
+		private string GenerateRandomGroupID()
 		{
 			const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 			Random random = new Random();
