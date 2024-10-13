@@ -15,6 +15,9 @@ internal class Program
 		serviceCollection.AddScoped<IPlayerLogic, PlayerLogic>();
 		serviceCollection.AddScoped<IGameLogic, GameLogic>();
 
+		serviceCollection.AddTransient<Lazy<IGroupLogic>>(provider => new Lazy<IGroupLogic>(() => provider.GetRequiredService<IGroupLogic>()));
+		serviceCollection.AddTransient<Lazy<IPlayerLogic>>(provider => new Lazy<IPlayerLogic>(() => provider.GetRequiredService<IPlayerLogic>()));
+
 		serviceCollection.AddScoped<IWebsocket, Websocket>();
 
 		var serviceProvider = serviceCollection.BuildServiceProvider();

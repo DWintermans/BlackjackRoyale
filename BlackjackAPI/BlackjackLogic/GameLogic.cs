@@ -12,10 +12,10 @@ namespace BlackjackLogic
 		public event Func<Group, string, NotificationType, ToastType?, Task> OnGroupNotification;
 		public event Func<Group, GameModel, Task>? OnGameInfoToGroup;
 
-		private readonly IGroupLogic _groupLogic;
-		private readonly IPlayerLogic _playerLogic;
+		private readonly Lazy<IGroupLogic> _groupLogic;
+		private readonly Lazy<IPlayerLogic> _playerLogic;
 
-		public GameLogic(IGroupLogic groupLogic, IPlayerLogic playerLogic)
+		public GameLogic(Lazy<IGroupLogic> groupLogic, Lazy<IPlayerLogic> playerLogic)
 		{
 			_groupLogic = groupLogic;
 			_playerLogic = playerLogic;
@@ -91,7 +91,7 @@ namespace BlackjackLogic
 		}
 		public async Task StartGame(Group group)
 		{
-			await _groupLogic.MovePlayersFromWaitingRoom(group);
+			await _groupLogic.Value.MovePlayersFromWaitingRoom(group);
 
 			await OnGroupNotification?.Invoke(group, "Place your bets now!", NotificationType.GAME, default);
 
@@ -104,7 +104,7 @@ namespace BlackjackLogic
 			//clear player hand
 			foreach (var player in group.Members)
 			{
-				_playerLogic.ClearHand(player);
+				_playerLogic.Value.ClearHand(player);
 			}
 
 			//clear dealer hand
