@@ -1,21 +1,24 @@
-﻿using BlackjackCommon.Interfaces.Logic;
-using BlackjackCommon.Interfaces.Repository;
-using BlackjackCommon.Models;
+﻿using BlackjackCommon.Data.SharedData;
+using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.ViewModels;
 using Group = BlackjackCommon.Models.Group;
 using Player = BlackjackCommon.Models.Player;
-using BlackjackCommon.Data.SharedData;
-using BlackjackCommon.ViewModels;
-using BlackjackCommon.Interfaces;
 
 namespace BlackjackLogic
 {
 	public class GameLogic : IGameLogic
 	{
-		private readonly IWebsocket _websocket;
+		public event Func<Player, string, NotificationType, ToastType?, Task>? OnNotification;
+		public event Func<Group, string, NotificationType, ToastType?, Task> OnGroupNotification;
+		public event Func<Group, GameModel, Task>? OnGameInfoToGroup;
 
-		public GameLogic(IWebsocket websocket)
+		private readonly IGroupLogic _groupLogic;
+		private readonly IPlayerLogic _playerLogic;
+
+		public GameLogic(IGroupLogic groupLogic, IPlayerLogic playerLogic)
 		{
-			_websocket = websocket;
+			_groupLogic = groupLogic;
+			_playerLogic = playerLogic;
 		}
 
 		static List<string> baseDeck = new List<string>
@@ -58,13 +61,13 @@ namespace BlackjackLogic
 
 			if (group == null)
 			{
-				await _websocket.SendNotificationToPlayer(player, "You must be part of a group to play the game.", NotificationType.TOAST, ToastType.INFO);
+				await OnNotification?.Invoke(player, "You must be part of a group to play the game.", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
 			if (group.Deck.Count == 0)
 			{
-				await _websocket.SendNotificationToPlayer(player, "The game has not started yet", NotificationType.TOAST, ToastType.INFO);
+				await OnNotification?.Invoke(player, "The game has not started yet", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
@@ -82,15 +85,15 @@ namespace BlackjackLogic
 					break;
 
 				default:
-					await _websocket.SendNotificationToPlayer(player, "Unknown game action", NotificationType.TOAST, ToastType.ERROR);
+					await OnNotification?.Invoke(player, "Unknown game action", NotificationType.TOAST, ToastType.ERROR);
 					break;
 			}
 		}
 		public async Task StartGame(Group group)
 		{
-			await GroupLogic.MovePlayersFromWaitingRoom(group);
+			await _groupLogic.MovePlayersFromWaitingRoom(group);
 
-			await _websocket.SendNotificationToGroup(group, "Place your bets now!", NotificationType.GAME);
+			await OnGroupNotification?.Invoke(group, "Place your bets now!", NotificationType.GAME, default);
 
 			//shuffle and play with two decks, when starting round and one deck is depleted start game with 2 new shuffled decks 
 			while (group.Deck.Count <= 52)
@@ -101,7 +104,7 @@ namespace BlackjackLogic
 			//clear player hand
 			foreach (var player in group.Members)
 			{
-				player.ClearHand();
+				_playerLogic.ClearHand(player);
 			}
 
 			//clear dealer hand
@@ -130,9 +133,9 @@ namespace BlackjackLogic
 				Total = CalculateHandValue(group.DealerHand)
 			};
 
-			await _websocket.SendGameInfoToGroup(group, model);
+			await OnGameInfoToGroup?.Invoke(group, model);
 
-			await _websocket.SendNotificationToGroup(group, "Setup has ended", NotificationType.GAME);
+			await OnGroupNotification?.Invoke(group, "Setup has ended", NotificationType.GAME, default);
 		}
 
 		private void RemoveOldDecksAndAddTwoDecksToGroup(Group group)
@@ -176,7 +179,7 @@ namespace BlackjackLogic
 				Total = CalculateHandValue(player.Hand)
 			};
 
-			await _websocket.SendGameInfoToGroup(group, model);
+			await OnGameInfoToGroup?.Invoke(group, model);
 
 			Console.WriteLine($"{player.User_ID} received {cardName}, value in hand: {CalculateHandValue(player.Hand)}");
 		}
@@ -203,7 +206,7 @@ namespace BlackjackLogic
 				Total = CalculateHandValue(group.DealerHand)
 			};
 
-			await _websocket.SendGameInfoToGroup(group, model);
+			await OnGameInfoToGroup?.Invoke(group, model);
 			Console.WriteLine($"{group.Group_ID} dealer received {cardName}, value in hand: {CalculateHandValue(group.DealerHand)}");
 		}
 
@@ -223,7 +226,7 @@ namespace BlackjackLogic
 				Total = CalculateHandValue(player.Hand)
 			};
 
-			await _websocket.SendGameInfoToGroup(group, model);
+			await OnGameInfoToGroup?.Invoke(group, model);
 
 			//await StartGame(SharedData.GetGroupForPlayer(player));
 		}

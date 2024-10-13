@@ -1,22 +1,28 @@
-﻿using BlackjackCommon.Interfaces.Logic;
-using BlackjackCommon.Data.SharedData;
-using BlackjackCommon.ViewModels;
-using BlackjackCommon.Interfaces;
-using System.Text.RegularExpressions;
+﻿using BlackjackCommon.Data.SharedData;
+using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Models;
+using BlackjackCommon.ViewModels;
 using Group = BlackjackCommon.Models.Group;
-
 
 namespace BlackjackLogic
 {
 	public class GroupLogic : IGroupLogic
 	{
-		private readonly IWebsocket _websocket;
+		public event Func<Player, string, NotificationType, ToastType?, Task>? OnNotification;
+		public event Func<Group, string, NotificationType, ToastType?, Task>? OnGroupNotification;
+		public event Func<Player, GroupModel, Task>? OnGroupInfoToPlayer;
+		public event Func<Player, LobbyModel, Task>? OnLobbyInfoToPlayer;
+
 		private const int MaxGroupSize = 4;
 
-		public GroupLogic(IWebsocket websocket)
+		private readonly IPlayerLogic _playerLogic;
+		private readonly IGameLogic _gameLogic;
+
+
+		public GroupLogic(IPlayerLogic playerLogic, IGameLogic gameLogic)
 		{
-			_websocket = websocket;
+			_playerLogic = playerLogic;
+			_gameLogic = gameLogic;
 		}
 
 		public async Task HandleGroupAction(Player player, dynamic message)
@@ -59,14 +65,14 @@ namespace BlackjackLogic
 					break;
 
 				default:
-					await _websocket.SendNotificationToPlayer(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+					await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
 					return;
 			}
 		}
 
 		private async Task ForceCheckGroup(Player player)
 		{
-            Group group = SharedData.GetGroupForPlayer(player);
+			Group group = SharedData.GetGroupForPlayer(player);
 
 			if (group != null)
 			{
@@ -90,7 +96,7 @@ namespace BlackjackLogic
 
 				foreach (Player member in group.Members)
 				{
-					await _websocket.SendGroupInfoToPlayer(member, model);
+					await OnGroupInfoToPlayer?.Invoke(member, model);
 				}
 			}
 			else
@@ -101,7 +107,7 @@ namespace BlackjackLogic
 					Members = null
 				};
 
-				await _websocket.SendGroupInfoToPlayer(player, model);
+				await OnGroupInfoToPlayer?.Invoke(player, model);
 			}
 		}
 
@@ -115,7 +121,7 @@ namespace BlackjackLogic
 
 			foreach (var groupEntry in SharedData.Groups)
 			{
-                BlackjackCommon.Models.Group currentGroup = groupEntry.Value;
+				BlackjackCommon.Models.Group currentGroup = groupEntry.Value;
 
 				int memberCount = currentGroup.Members.Count;
 				int waitingRoomCount = currentGroup.WaitingRoom.Count;
@@ -136,7 +142,7 @@ namespace BlackjackLogic
 				Group group = SharedData.GetGroupForPlayer(player);
 				if (group == null)
 				{
-					await _websocket.SendLobbyInfoToPlayer(player, lobbyModel);
+					await OnLobbyInfoToPlayer?.Invoke(player, lobbyModel);
 				}
 			}
 		}
@@ -173,7 +179,7 @@ namespace BlackjackLogic
 				lobbyModel.Lobby.Add(lobby);
 			}
 
-			await _websocket.SendLobbyInfoToPlayer(player, lobbyModel);
+			await OnLobbyInfoToPlayer?.Invoke(player, lobbyModel);
 		}
 
 		private async Task CheckGroup(Player player)
@@ -210,7 +216,7 @@ namespace BlackjackLogic
 					Members = null
 				};
 			}
-			await _websocket.SendGroupInfoToPlayer(player, model);
+			await OnGroupInfoToPlayer?.Invoke(player, model);
 		}
 
 		private async Task CreateGroup(Player player)
@@ -241,8 +247,8 @@ namespace BlackjackLogic
 				Console.WriteLine("Group_ID: " + g.Key + " | User_IDs: " + string.Join(", ", g.Value.Members.Select(m => m.User_ID)));
 			}
 
-			await _websocket.SendNotificationToPlayer(player, $"Group with ID {group.Group_ID} created.", NotificationType.TOAST, ToastType.SUCCESS);
-			await _websocket.SendNotificationToPlayer(player, $"You have joined group {group.Group_ID}.", NotificationType.TOAST, ToastType.INFO);
+			await OnNotification?.Invoke(player, $"Group with ID {group.Group_ID} created.", NotificationType.TOAST, ToastType.SUCCESS);
+			await OnNotification?.Invoke(player, $"You have joined group {group.Group_ID}.", NotificationType.TOAST, ToastType.INFO);
 		}
 
 		private async Task LeaveGroup(Player player)
@@ -259,11 +265,11 @@ namespace BlackjackLogic
 					{
 						groups.Members.RemoveAll(p => p.User_ID == player.User_ID);
 
-						player.ClearHand();
+						_playerLogic.ClearHand(player);
 						player.IsReady = false;
 
-						await _websocket.SendNotificationToPlayer(player, $"You have left group '{groups.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
-						await _websocket.SendNotificationToGroup(groups, $"{player.Name} left the group.", NotificationType.GROUP);
+						await OnNotification?.Invoke(player, $"You have left group '{groups.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+						await OnGroupNotification?.Invoke(groups, $"{player.Name} left the group.", NotificationType.GROUP, default);
 
 						Console.WriteLine($"User {player.User_ID} left group {groups.Group_ID}");
 
@@ -292,7 +298,7 @@ namespace BlackjackLogic
 			//check if group exists
 			if (!SharedData.Groups.ContainsKey(group_id))
 			{
-				await _websocket.SendNotificationToPlayer(player, "Group does not exist.", NotificationType.TOAST, ToastType.WARNING);
+				await OnNotification?.Invoke(player, "Group does not exist.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
@@ -301,14 +307,14 @@ namespace BlackjackLogic
 			//check if already in group
 			if (group.Members.Any(p => p.User_ID == player.User_ID))
 			{
-				await _websocket.SendNotificationToPlayer(player, "You are already in this group.", NotificationType.TOAST, ToastType.INFO);
+				await OnNotification?.Invoke(player, "You are already in this group.", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
 			//cant join a full group
 			if (group.Members.Count >= MaxGroupSize)
 			{
-				await _websocket.SendNotificationToPlayer(player, $"Group '{group_id}' is full!", NotificationType.TOAST, ToastType.WARNING);
+				await OnNotification?.Invoke(player, $"Group '{group_id}' is full!", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
@@ -334,8 +340,8 @@ namespace BlackjackLogic
 			}
 
 			Console.WriteLine($"User {player.User_ID} joined group {group_id}");
-			_websocket.SendNotificationToPlayer(player, $"You have joined group '{group_id}'.", NotificationType.TOAST, ToastType.INFO);
-			_websocket.SendNotificationToGroup(group, $"{player.Name} joined the group.", NotificationType.GROUP);
+			OnNotification?.Invoke(player, $"You have joined group '{group_id}'.", NotificationType.TOAST, ToastType.INFO);
+			OnGroupNotification?.Invoke(group, $"{player.Name} joined the group.", NotificationType.GROUP, default);
 
 			foreach (var grp in SharedData.Groups)
 			{
@@ -350,8 +356,8 @@ namespace BlackjackLogic
 			{
 				group.WaitingRoom.Add(player);
 
-				await _websocket.SendNotificationToPlayer(player, "You have joined the waiting room. You will enter the game when the current round is over.", NotificationType.TOAST, ToastType.INFO);
-				await _websocket.SendNotificationToGroup(group, $"{player.Name} is waiting and will join next round.", NotificationType.GROUP);
+				await OnNotification?.Invoke(player, "You have joined the waiting room. You will enter the game when the current round is over.", NotificationType.TOAST, ToastType.INFO);
+				await OnGroupNotification?.Invoke(group, $"{player.Name} is waiting and will join next round.", NotificationType.GROUP, default);
 			}
 		}
 
@@ -363,7 +369,7 @@ namespace BlackjackLogic
 				{
 					group.Members.Add(player);
 
-					await _websocket.SendNotificationToPlayer(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);
+					await OnNotification?.Invoke(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);
 				}
 				group.WaitingRoom.Clear();
 			}
@@ -385,19 +391,19 @@ namespace BlackjackLogic
 
 			if (group == null)
 			{
-				await _websocket.SendNotificationToPlayer(player, "You must be part of a group to set your readiness.", NotificationType.TOAST, ToastType.WARNING);
+				await OnNotification?.Invoke(player, "You must be part of a group to set your readiness.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
 			//if game has already started, dont allow ready/unready commands
 			if (group.Deck.Count > 0)
 			{
-				await _websocket.SendNotificationToPlayer(player, "The game has already started. You cannot change your ready status now.", NotificationType.TOAST, ToastType.WARNING);
+				await OnNotification?.Invoke(player, "The game has already started. You cannot change your ready status now.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
-			player.SetReadyStatus(isReady);
-			await _websocket.SendNotificationToPlayer(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
+			_playerLogic.SetReadyStatus(player, isReady);
+			await OnNotification?.Invoke(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
 
 			await CheckVotesAndStartGame(group);
 		}
@@ -415,11 +421,11 @@ namespace BlackjackLogic
 			int readyCount = group.Members.Count(player => player.IsReady);
 			int totalMembers = group.Members.Count;
 
-			await _websocket.SendNotificationToGroup(group, $"{readyCount}/{totalMembers} players are ready.", NotificationType.GROUP);
+			await OnGroupNotification?.Invoke(group, $"{readyCount}/{totalMembers} players are ready.", NotificationType.GROUP, default);
 
 			if (readyCount > totalMembers / 2)
 			{
-				await _websocket.SendNotificationToGroup(group, "The game is starting now!", NotificationType.GROUP);
+				await OnGroupNotification?.Invoke(group, "The game is starting now!", NotificationType.GROUP, default);
 				await _gameLogic.StartGame(group);
 			}
 		}

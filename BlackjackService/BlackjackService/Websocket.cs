@@ -1,4 +1,9 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using BlackjackCommon.Data.SharedData;
+using BlackjackCommon.Interfaces;
+using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Models;
+using BlackjackCommon.ViewModels;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,13 +11,6 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Security.Claims;
 using System.Text;
-using BlackjackCommon.Interfaces.Logic;
-using BlackjackLogic;
-using BlackjackCommon.Models;
-using BlackjackCommon.Data.SharedData;
-using BlackjackCommon.ViewModels;
-using BlackjackCommon.Interfaces;
-
 
 namespace BlackjackService;
 
@@ -25,8 +23,55 @@ internal class Websocket : IWebsocket
 	public Websocket(IChatLogic chatLogic, IGroupLogic groupLogic, IGameLogic gameLogic)
 	{
 		_chatLogic = chatLogic;
+		_chatLogic.OnNotification += HandleNotification;
+		_chatLogic.OnMessage += HandleMessage;
+		_chatLogic.OnPrivateMessage += HandePrivateMessage;
+
 		_groupLogic = groupLogic;
+		_groupLogic.OnNotification += HandleNotification;
+		_groupLogic.OnGroupNotification += HandleGroupNotification;
+		_groupLogic.OnGroupInfoToPlayer += HandleGroupInfoToPlayer;
+		_groupLogic.OnLobbyInfoToPlayer += HandleLobbyInfoToPlayer;
+
 		_gameLogic = gameLogic;
+		_gameLogic.OnNotification += HandleNotification;
+		_gameLogic.OnGroupNotification += HandleGroupNotification;
+		_gameLogic.OnGameInfoToGroup += HandleGameInfoToGroup;
+	}
+
+	private async Task HandleGameInfoToGroup(Group group, GameModel gameModel)
+	{
+		await SendGameInfoToGroup(group, gameModel);
+	}
+
+	private async Task HandleGroupInfoToPlayer(Player player, GroupModel groupModel)
+	{
+		await SendGroupInfoToPlayer(player, groupModel);
+	}
+
+	private async Task HandleLobbyInfoToPlayer(Player player, LobbyModel lobbyModel)
+	{
+		await SendLobbyInfoToPlayer(player, lobbyModel);
+	}
+
+	private async Task HandleNotification(Player player, string message, NotificationType notificationType, ToastType? toastType)
+	{
+		await SendNotificationToPlayer(player, message, notificationType, toastType);
+	}
+	
+	private async Task HandleGroupNotification(Group group, string message, NotificationType notificationType, ToastType? toastType)
+	{
+		await SendNotificationToGroup(group, message, notificationType, toastType);
+	}
+
+	private async Task HandleMessage(Player player, int receiver_id, string message, MessageType type)
+	{
+		await SendChatMessageToPlayer(player, receiver_id, message, type);
+	}
+
+	private async Task HandePrivateMessage(Player player, int receiver_id, string message)
+	{
+		await SendPrivateChatMessageToPlayer(player, receiver_id, message);
 	}
 
 	private static Dictionary<string, WebSocket> connectedClients = new Dictionary<string, WebSocket>();
@@ -131,7 +176,7 @@ internal class Websocket : IWebsocket
 			return;
 		}
 
-		Player player = SharedData.GetPlayerFromSharedData(user_id) ?? new Player(user_id, user_name);
+		Player player = SharedData.TryGetExistingPlayer(user_id) ?? new Player(user_id, user_name);
 		if (!SharedData.Players.ContainsKey(user_id))
 		{
 			SharedData.Players[user_id] = player;
@@ -144,15 +189,15 @@ internal class Websocket : IWebsocket
 				break;
 
 			case "chat":
-				await ChatLogic.HandleChatAction(player, message);
+				await _chatLogic.HandleChatAction(player, message);
 				break;
 
 			case "group":
-				await GroupLogic.HandleGroupAction(player, message);
+				await _groupLogic.HandleGroupAction(player, message);
 				break;
 
 			case "game":
-				await GameLogic.HandleGameAction(player, message);
+				//await _gameLogic.HandleGameAction(player, message);
 				break;
 
 			default:

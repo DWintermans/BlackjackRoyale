@@ -12,4 +12,10 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\BlackjackAPI\BlackjackCommon\BlackjackCommon.csproj" />
+    <ProjectReference Include="..\..\BlackjackAPI\BlackjackDAL\BlackjackDAL.csproj" />
+    <ProjectReference Include="..\..\BlackjackAPI\BlackjackLogic\BlackjackLogic.csproj" />
+  </ItemGroup>
+
 </Project>

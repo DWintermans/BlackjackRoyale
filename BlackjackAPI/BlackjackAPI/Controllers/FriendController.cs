@@ -1,7 +1,5 @@
 ﻿using BlackjackAPI.Models.Friend;
 using BlackjackCommon.Interfaces.Logic;
-using BlackjackDAL.Repositories;
-using BlackjackLogic;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlackjackAPI.Controllers

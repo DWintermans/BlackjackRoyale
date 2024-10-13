@@ -1,35 +1,24 @@
 ﻿using BlackjackCommon.Interfaces.Logic;
-using BlackjackCommon.Interfaces.Repository;
-using BlackjackCommon.Models;
-using Group = BlackjackCommon.Models.Group;
 using Player = BlackjackCommon.Models.Player;
-using BlackjackCommon.Data.SharedData;
 
 
 namespace BlackjackLogic
 {
-	public class PlayerLogic: IPlayerLogic
+	public class PlayerLogic : IPlayerLogic
 	{
-		private readonly BlackjackCommon.Models.Player _player;
-
-		public PlayerLogic(Player player)
+		public void AddCard(Player player, string card)
 		{
-			_player = player;
+			player.Hand.Add(card);
 		}
 
-		public void AddCard(string card)
+		public void ClearHand(Player player)
 		{
-			_player.Hand.Add(card);
+			player.Hand.Clear();
 		}
 
-		public void ClearHand()
+		public void SetReadyStatus(Player player, bool status)
 		{
-			_player.Hand.Clear();
-		}
-
-		public void SetReadyStatus(bool status)
-		{
-			_player.IsReady = status;
+			player.IsReady = status;
 		}
 
 	}

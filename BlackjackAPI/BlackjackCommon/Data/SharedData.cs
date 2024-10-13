@@ -22,7 +22,7 @@ namespace BlackjackCommon.Data.SharedData
 			return null;
 		}
 
-		public static Player GetPlayerFromSharedData(int user_id)
+		public static Player TryGetExistingPlayer(int user_id)
 		{
 			SharedData.Players.TryGetValue(user_id, out var player);
 			return player;

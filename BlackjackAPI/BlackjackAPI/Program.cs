@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using BlackjackLogic;
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Interfaces.Repository;
 using BlackjackDAL.Repositories;
+using BlackjackLogic;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 

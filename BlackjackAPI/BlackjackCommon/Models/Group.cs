@@ -1,6 +1,4 @@
-﻿using BlackjackCommon.Models;
-
-namespace BlackjackCommon.Models
+﻿namespace BlackjackCommon.Models
 {
 	public class Group
 	{

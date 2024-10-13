@@ -1,22 +1,18 @@
-﻿using BlackjackCommon.Interfaces.Logic;
-using BlackjackCommon.Interfaces.Repository;
+﻿using BlackjackCommon.Data.SharedData;
+using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.ViewModels;
 using Group = BlackjackCommon.Models.Group;
 using Player = BlackjackCommon.Models.Player;
-using BlackjackCommon.Data.SharedData;
-using BlackjackCommon.ViewModels;
-using BlackjackCommon.Interfaces;
 
 namespace BlackjackLogic
 {
 	public class ChatLogic : IChatLogic
 	{
-		private readonly IWebsocket _websocket;
 		private const int MaxGroupSize = 4;
 
-		public ChatLogic(IWebsocket websocket)
-		{
-			_websocket = websocket;
-		}
+		public event Func<Player, string, NotificationType, ToastType?, Task>? OnNotification;
+		public event Func<Player, int, string, MessageType, Task>? OnMessage;
+		public event Func<Player, int, string, Task>? OnPrivateMessage;
 
 		public async Task HandleChatAction(Player player, dynamic message)
 		{
@@ -31,7 +27,7 @@ namespace BlackjackLogic
 					//await DeleteMessage();
 					break;
 				default:
-					await _websocket.SendNotificationToPlayer(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+					await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
 					break;
 			}
 		}
@@ -48,7 +44,7 @@ namespace BlackjackLogic
 				}
 				else
 				{
-					await _websocket.SendNotificationToPlayer(player, $"As a member of this group, you can only send messages to this group.", NotificationType.TOAST, ToastType.WARNING);
+					await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);				
 				}
 			}
 			else if (receiver.ToString().ToUpper() == "GROUP") //group message
@@ -59,7 +55,7 @@ namespace BlackjackLogic
 				}
 				else
 				{
-					await _websocket.SendNotificationToPlayer(player, $"You are not a member of a group.", NotificationType.TOAST, ToastType.WARNING);
+					await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);	
 				}
 			}
 			else if (int.TryParse(receiver.ToString(), out int receiver_id)) //private message
@@ -67,12 +63,12 @@ namespace BlackjackLogic
 				//cant send private message to yourself
 				if (player.User_ID != receiver_id)
 				{
-					await _websocket.SendPrivateChatMessageToPlayer(player, receiver_id, chatMessage);
+					await OnPrivateMessage?.Invoke(player, receiver_id, chatMessage);
 				}
 			}
 			else
-			{
-				await _websocket.SendNotificationToPlayer(player, $"Unexpected value received for 'receiver'.", NotificationType.TOAST, ToastType.ERROR);
+			{	
+				await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);				
 			}
 		}
 
@@ -80,7 +76,7 @@ namespace BlackjackLogic
 		{
 			foreach (var member in group.Members)
 			{
-				await _websocket.SendChatMessageToPlayer(player, member.User_ID, chatMessage, MessageType.GROUP);
+				await OnMessage?.Invoke(player, member.User_ID, chatMessage, MessageType.GROUP);
 			}
 		}
 
@@ -94,7 +90,7 @@ namespace BlackjackLogic
 
 				if (!isInGroup)
 				{
-					await _websocket.SendChatMessageToPlayer(player, user.User_ID, chatMessage, MessageType.GLOBAL);
+					await OnMessage?.Invoke(player, user.User_ID, chatMessage, MessageType.GLOBAL);
 				}
 			}
 		}
