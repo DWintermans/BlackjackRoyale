@@ -1,5 +1,6 @@
 ﻿using BlackjackCommon.Entities.User;
 using BlackjackCommon.Interfaces.Repository;
+using BlackjackCommon.Models;
 
 namespace BlackjackDAL.Repositories
 {
@@ -105,7 +106,7 @@ namespace BlackjackDAL.Repositories
 			}
 		}
 
-		public bool UpdateUsername(int user_id, string user_name)
+		public void UpdateUsername(int user_id, string user_name)
 		{
 			try
 			{
@@ -118,21 +119,17 @@ namespace BlackjackDAL.Repositories
 						user.user_name = user_name;
 
 						context.SaveChanges();
-
-						return true;
 					}
-
-					return false;
 				}
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine($"An error occurred: {ex.Message}");
-				return false;
+				throw;
 			}
 		}
 
-		public bool UpdatePassword(int user_id, string hashed_password, string salt)
+		public void UpdatePassword(int user_id, string hashed_password, string salt)
 		{
 			try
 			{
@@ -146,17 +143,13 @@ namespace BlackjackDAL.Repositories
 						user.user_passwordsalt = salt;
 
 						context.SaveChanges();
-
-						return true;
 					}
-
-					return false;
 				}
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine($"An error occurred: {ex.Message}");
-				return false;
+				throw;
 			}
 		}
 

@@ -7,7 +7,7 @@ namespace BlackjackDAL.Repositories
 	{
 		private readonly DBConnection _DBConnection = new();
 
-		public void RequestFriendship(int user_id, int befriend_user_id)
+		public bool FriendshipExists(int user_id, int befriend_user_id) 
 		{
 			try
 			{
@@ -19,22 +19,31 @@ namespace BlackjackDAL.Repositories
 							(f.friend_user_id == befriend_user_id && f.friend_befriend_user_id == user_id) ||
 							(f.friend_user_id == user_id && f.friend_befriend_user_id == befriend_user_id));
 
-					if (existingFriendship == null)
-					{
-						var newFriendship = new Friend
-						{
-							friend_user_id = user_id,
-							friend_befriend_user_id = befriend_user_id,
-							friend_status = FriendStatus.pending
-						};
+					return existingFriendship != null;
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
 
-						context.Friend.Add(newFriendship);
-						context.SaveChanges();
-					}
-					else
+		public void RequestFriendship(int user_id, int befriend_user_id)
+		{
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					var newFriendship = new Friend
 					{
-						throw new InvalidOperationException("Friendship request already exists between these users.");
-					}
+						friend_user_id = user_id,
+						friend_befriend_user_id = befriend_user_id,
+						friend_status = FriendStatus.pending
+					};
+
+					context.Friend.Add(newFriendship);
+					context.SaveChanges();
 				}
 			}
 			catch (Exception ex)
@@ -54,15 +63,8 @@ namespace BlackjackDAL.Repositories
 						.FirstOrDefault(f =>
 							(f.friend_user_id == friend_user_id && f.friend_befriend_user_id == user_id));
 
-					if (friendship != null)
-					{
-						friendship.friend_status = Enum.Parse<FriendStatus>(status);
-						context.SaveChanges();
-					}
-					else
-					{
-						throw new InvalidOperationException("Friendship does not exist between these users.");
-					}
+					friendship.friend_status = Enum.Parse<FriendStatus>(status);
+					context.SaveChanges();
 				}
 			}
 			catch (Exception ex)

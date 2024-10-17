@@ -22,11 +22,6 @@ internal class Program
 
 		var serviceProvider = serviceCollection.BuildServiceProvider();
 
-		var chatLogic = serviceProvider.GetService<IChatLogic>();
-		var groupLogic = serviceProvider.GetService<IGroupLogic>();
-		var playerLogic = serviceProvider.GetService<IPlayerLogic>();
-		var gameLogic = serviceProvider.GetService<IGameLogic>();
-
 		var websocket = serviceProvider.GetService<IWebsocket>();
 
 		// Run the websocket service

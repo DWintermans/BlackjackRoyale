@@ -1,5 +1,6 @@
 ﻿using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Interfaces.Repository;
+using BlackjackCommon.Models;
 using Konscious.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -77,11 +78,11 @@ namespace BlackjackLogic
 			}
 		}
 
-		public AccountResult CreateAccount(string username, string password)
+		public Response CreateAccount(string username, string password)
 		{
 			if (_userDAL.IsUsernameTaken(username))
 			{
-				return new AccountResult { Success = false, Message = "Username is already in use." };
+				return new Response("UsernameAlreadyTaken");
 			}
 
 			byte[] salt = CreateSalt();
@@ -91,17 +92,17 @@ namespace BlackjackLogic
 
 			if (user_id <= 0)
 			{
-				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
+				return new Response("default");
 			}
 
 			string token = CreateJWT(user_id, username);
 
 			if (token.Length <= 0)
 			{
-				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
+				return new Response("default");
 			}
 
-			return new AccountResult { Success = true, Message = "Account created successfully", JWT = token };
+			return new Response(token, "SuccessfullAccountCreation");
 		}
 
 		//ref: https://security.stackexchange.com/questions/228993/argon2id-configuration
@@ -126,16 +127,16 @@ namespace BlackjackLogic
 			return 0;
 		}
 
-		public AccountResult ChangePassword(int user_id, string old_password, string new_password, string repeat_new_password)
+		public Response ChangePassword(int user_id, string old_password, string new_password, string repeat_new_password)
 		{
 			if (new_password != repeat_new_password)
 			{
-				return new AccountResult { Success = false, Message = "New passwords don't match" };
+				return new Response("NewPasswordsDontMatch");
 			}
 
 			if (old_password == new_password)
 			{
-				return new AccountResult { Success = false, Message = "New password can't be the same as old password!" };
+				return new Response("RepeatedPasswords");
 			}
 
 			//Get old password and salt from db based on user_id
@@ -143,7 +144,7 @@ namespace BlackjackLogic
 
 			if (loginInfo.hashed_pw == null || loginInfo.hashed_pw.Length == 0 || loginInfo.salt == null || loginInfo.salt.Length == 0)
 			{
-				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
+				return new Response("Default");
 			}
 			else
 			{
@@ -152,34 +153,27 @@ namespace BlackjackLogic
 
 				if (!VerifyHash(old_password, db_salt, db_hashed_pw))
 				{
-					return new AccountResult { Success = false, Message = "Old passwords don't match" };
+					return new Response("OldPasswordsDontMatch");
 				}
 			}
 
 			byte[] salt = CreateSalt();
 			byte[] hashed_password = HashPassword(new_password, salt);
 
-			if (!_userDAL.UpdatePassword(user_id, Convert.ToBase64String(hashed_password), Convert.ToBase64String(salt)))
-			{
-				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
-			}
-
-			return new AccountResult { Success = true };
+			_userDAL.UpdatePassword(user_id, Convert.ToBase64String(hashed_password), Convert.ToBase64String(salt));
+			
+			return new Response();
 		}
 
-		public AccountResult ChangeUsername(int user_id, string user_name)
+		public Response ChangeUsername(int user_id, string user_name)
 		{
 			if (_userDAL.IsUsernameTaken(user_name))
 			{
-				return new AccountResult { Success = false, Message = "Username already in use." };
+				return new Response("UsernameAlreadyTaken");
 			}
 
-			if (!_userDAL.UpdateUsername(user_id, user_name))
-			{
-				return new AccountResult { Success = false, Message = "An error occurred. Please try again later." };
-			}
-
-			return new AccountResult { Success = true };
+			_userDAL.UpdateUsername(user_id, user_name);
+			return new Response();
 		}
 
 		private static byte[] CreateSalt()
