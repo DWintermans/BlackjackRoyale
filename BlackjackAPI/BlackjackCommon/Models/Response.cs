@@ -10,6 +10,7 @@
 			{ "RepeatedPasswords", "New password can't be the same as old password." },
 			{ "UserNotFound", "User not found." },
 			{ "UsernameAlreadyTaken", "Username already in use." },
+			{ "UsernameAlreadyTakenByUser", "You already have this username." },
 			{ "FriendshipExists", "Friendship request already exists between these users." },
 
 			//returns jwt and message

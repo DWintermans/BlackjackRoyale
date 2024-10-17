@@ -106,6 +106,22 @@ namespace BlackjackDAL.Repositories
 			}
 		}
 
+		public bool IsUsernameTakenByCurrentUser(int user_id, string username)
+		{
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					return context.User.Any(u => u.user_name == username && u.user_id == user_id);
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				return false;
+			}
+		}
+
 		public void UpdateUsername(int user_id, string user_name)
 		{
 			try

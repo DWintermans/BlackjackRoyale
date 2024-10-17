@@ -167,6 +167,11 @@ namespace BlackjackLogic
 
 		public Response ChangeUsername(int user_id, string user_name)
 		{
+			if (_userDAL.IsUsernameTakenByCurrentUser(user_id, user_name))
+			{
+				return new Response("UsernameAlreadyTakenByUser");
+			}
+
 			if (_userDAL.IsUsernameTaken(user_name))
 			{
 				return new Response("UsernameAlreadyTaken");

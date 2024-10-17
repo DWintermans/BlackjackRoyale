@@ -20,6 +20,7 @@ namespace BlackjackTest.User
 		{
 			// Arrange
 			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTakenByCurrentUser(It.IsAny<int>(), It.IsAny<string>())).Returns(false);
 			_mockUserRepository.Setup(dal => dal.UpdateUsername(1, It.IsAny<string>()));
 
 			// Act
@@ -35,6 +36,7 @@ namespace BlackjackTest.User
 		{
 			// Arrange
 			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTakenByCurrentUser(It.IsAny<int>(), It.IsAny<string>())).Returns(false);
 
 			// Act
 			var result = _userLogic.ChangeUsername(1, "newname");
@@ -42,6 +44,22 @@ namespace BlackjackTest.User
 			// Assert
 			Assert.IsFalse(result.Success);
 			Assert.AreEqual("Username already in use.", result.Message);
+		}
+
+		[TestMethod]
+		public void ChangeUsername_UsernameAlreadyTakenByCurrentUser_ReturnsErrorMessage()
+		{
+			// Arrange
+			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
+			_mockUserRepository.Setup(dal => dal.IsUsernameTakenByCurrentUser(It.IsAny<int>(), It.IsAny<string>())).Returns(true);
+
+
+			// Act
+			var result = _userLogic.ChangeUsername(1, "newname");
+
+			// Assert
+			Assert.IsFalse(result.Success);
+			Assert.AreEqual("You already have this username.", result.Message);
 		}
 	}
 }
