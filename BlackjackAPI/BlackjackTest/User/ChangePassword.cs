@@ -30,7 +30,7 @@ namespace BlackjackTest.User
 			);
 
 			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
-			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>()));
 
 
 			// Act
@@ -49,7 +49,7 @@ namespace BlackjackTest.User
 
 			// Assert
 			Assert.IsFalse(result.Success);
-			Assert.AreEqual(result.Message, "New passwords don't match");
+			Assert.AreEqual("New passwords don't match.", result.Message);
 		}
 
 		[TestMethod]
@@ -60,7 +60,7 @@ namespace BlackjackTest.User
 
 			// Assert
 			Assert.IsFalse(result.Success);
-			Assert.AreEqual(result.Message, "New password can't be the same as old password!");
+			Assert.AreEqual("New password can't be the same as old password.", result.Message);
 		}
 
 		[TestMethod]
@@ -84,33 +84,7 @@ namespace BlackjackTest.User
 
 			// Assert
 			Assert.IsFalse(result.Success);
-			Assert.AreEqual(result.Message, "Old passwords don't match");
-		}
-
-		[TestMethod]
-		public void ChangePassword_DatabaseUpdateFails_ReturnsErrorMessage()
-		{
-			// Arrange
-			//salt and hash for 'password'
-			byte[] hashedPassword = Convert.FromBase64String("2WG9Qvv+Mg4OElDUfZQOBA==");
-			byte[] salt = Convert.FromBase64String("p/o/W2ZF/F0y9Om3pyjVew==");
-
-			var fakeSaltHashInfo =
-			(
-				hashed_pw: hashedPassword,
-				salt: salt
-			);
-
-			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
-			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
-
-			// Act
-			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
-
-			// Assert
-			Assert.IsFalse(result.Success);
-			Assert.AreEqual(result.Message, "An error occurred. Please try again later.");
-
+			Assert.AreEqual("Old passwords don't match.", result.Message);
 		}
 
 		[TestMethod]
@@ -127,14 +101,14 @@ namespace BlackjackTest.User
 			);
 
 			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
-			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>()));
 
 			// Act
 			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
 
 			// Assert
 			Assert.IsFalse(result.Success);
-			Assert.AreEqual(result.Message, "An error occurred. Please try again later.");
+			Assert.AreEqual("An unexpected error occurred.", result.Message);
 		}
 
 		[TestMethod]
@@ -151,14 +125,14 @@ namespace BlackjackTest.User
 			);
 
 			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
-			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>())).Returns(false);
+			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>()));
 
 			// Act
 			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
 
 			// Assert
 			Assert.IsFalse(result.Success);
-			Assert.AreEqual(result.Message, "An error occurred. Please try again later.");
+			Assert.AreEqual("An unexpected error occurred.", result.Message);
 
 		}
 	}

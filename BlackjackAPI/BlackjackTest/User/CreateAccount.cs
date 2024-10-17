@@ -1,4 +1,5 @@
 ﻿using BlackjackCommon.Interfaces.Repository;
+using BlackjackCommon.Models;
 
 namespace BlackjackTest.User
 {
@@ -16,49 +17,55 @@ namespace BlackjackTest.User
 		}
 
 		[TestMethod]
-		public void CreateAcccount_SuccessfulAccountCreation_Returns_JWT()
+		[DataRow("username1", "password1", 1)]
+		[DataRow("username2", "password2", 2)]
+		public void CreateAccount_SuccessfulAccountCreation_Returns_JWT(string username, string password, int user_id)
 		{
 			// Arrange
 			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
-			_mockUserRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(123);
+			_mockUserRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(user_id);
 
 			// Act
-			var result = _userLogic.CreateAccount("username", "password");
+			var result = _userLogic.CreateAccount(username, password);
 
 			// Assert
 			Assert.IsTrue(result.Success);
-			Assert.AreEqual("Account created successfully", result.Message);
-			int user_id = _userLogic.GetUserIDFromJWT(result.JWT);
-			Assert.AreEqual(123, user_id);
+			Assert.AreEqual("Account created successfully.", result.Message);
+
+			int jwt_user_id = _userLogic.GetUserIDFromJWT(result.JWT);
+			Assert.AreEqual(user_id, jwt_user_id);
 		}
 
 		[TestMethod]
-		public void CreateAcccount_UsernameIsTaken_ReturnsErrorMessage()
+		[DataRow("existingUser")]
+		public void CreateAccount_UsernameIsTaken_ReturnsErrorMessage(string username)
 		{
 			// Arrange
 			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
 
 			// Act
-			var result = _userLogic.CreateAccount("username", "password");
+			var result = _userLogic.CreateAccount(username, "password");
 
 			// Assert
 			Assert.IsFalse(result.Success);
-			Assert.AreEqual("Username is already in use.", result.Message);
+			Assert.AreEqual("Username already in use.", result.Message);
+
 		}
 
 		[TestMethod]
-		public void CreateAcccount_DatabaseAccountCreationFails_ReturnsErrorMessage()
+		[DataRow("newUser", "password")]
+		public void CreateAccount_DatabaseAccountCreationFails_ReturnsErrorMessage(string username, string password)
 		{
 			// Arrange
 			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
 			_mockUserRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(0);
 
 			// Act
-			var result = _userLogic.CreateAccount("username", "password");
+			var result = _userLogic.CreateAccount(username, password);
 
 			// Assert
 			Assert.IsFalse(result.Success);
-			Assert.AreEqual("An error occurred. Please try again later.", result.Message);
+			Assert.AreEqual("An unexpected error occurred.", result.Message);
 		}
 	}
 }
