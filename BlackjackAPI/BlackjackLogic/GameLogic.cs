@@ -2,6 +2,7 @@
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
+using System.Numerics;
 using System.Threading.Tasks.Dataflow;
 using Group = BlackjackCommon.Models.Group;
 using Player = BlackjackCommon.Models.Player;
@@ -13,6 +14,7 @@ namespace BlackjackLogic
 		public event Func<Player, string, NotificationType, ToastType?, Task>? OnNotification;
 		public event Func<Group, string, NotificationType, ToastType?, Task> OnGroupNotification;
 		public event Func<Group, GameModel, Task>? OnGameInfoToGroup;
+		public event Func<Player, GameModel, Task>? OnGameInfoToPlayer;
 
 		private readonly Lazy<IGroupLogic> _groupLogic;
 		private readonly Lazy<IPlayerLogic> _playerLogic;
@@ -80,13 +82,19 @@ namespace BlackjackLogic
 					break;
 
 				case "hit":
-					await CheckPlayingOrder(player);
-					await Hit(player);
+					if (await IsCurrentPlayersTurn(player, group))
+					{ 
+						await Hit(player);
+						await TryToFinishGame(group);
+					}
 					break;
 
 				case "stand":
-					await CheckPlayingOrder(player);
-					await Stand(player);
+					if (await IsCurrentPlayersTurn(player, group))
+					{
+						await Stand(player);
+						await TryToFinishGame(group);
+					}
 					break;
 
 				default:
@@ -95,9 +103,155 @@ namespace BlackjackLogic
 			}
 		}
 
-		public async Task CheckPlayingOrder(Player player) 
+		private async Task TryToFinishGame(Group group) 
 		{
-			
+			foreach (var member in group.Members)
+			{
+				if (!member.HasFinished)
+				{
+					return;
+				}
+			}
+
+			while (int.Parse(CalculateHandValue(group.DealerHand)) <= 16) 
+			{
+				await DealCardToDealer(group);
+			}
+
+			foreach (var member in group.Members)
+			{
+				int memberHand = int.Parse(CalculateHandValue(member.Hand));
+				int dealerHand = int.Parse(CalculateHandValue(group.DealerHand));
+
+				//push / tie
+				if (memberHand == dealerHand)
+				{
+					group.Bets.TryGetValue(member, out int bet);
+					member.Credits += bet;
+
+					GameModel model = new GameModel
+					{
+						User_ID = member.User_ID,
+						Action = GameAction.GAME_FINISHED,
+						Result = GameResult.PUSH
+					};
+
+					await OnGameInfoToGroup?.Invoke(group, model);
+					continue;
+				}
+
+				//bust
+				if (memberHand > 21) 
+				{
+					GameModel model = new GameModel
+					{
+						User_ID = member.User_ID,
+						Action = GameAction.GAME_FINISHED,
+						Result = GameResult.BUSTED
+					};
+
+					await OnGameInfoToGroup?.Invoke(group, model);
+					continue;
+				}
+
+				//blackjack pays 3 to 2 (a.k.a. * 1.5)
+				if (memberHand == 21)
+				{
+					group.Bets.TryGetValue(member, out int bet);
+
+					int bonus = (int)(bet * 1.5);
+					member.Credits += bonus;
+
+					GameModel model = new GameModel
+					{
+						User_ID = member.User_ID,
+						Action = GameAction.GAME_FINISHED,
+						Result = GameResult.PUSH
+					};
+
+					await OnGameInfoToGroup?.Invoke(group, model);
+					continue;
+				}
+
+				//lose
+				if (dealerHand > memberHand && dealerHand <= 21) 
+				{
+					GameModel model = new GameModel
+					{
+						User_ID = member.User_ID,
+						Action = GameAction.GAME_FINISHED,
+						Result = GameResult.LOSE
+					};
+
+					await OnGameInfoToGroup?.Invoke(group, model);
+					continue;
+				}
+
+				//win
+				if (memberHand > dealerHand || dealerHand > 21)
+				{
+					group.Bets.TryGetValue(member, out int bet);
+
+					int bonus = (int)(bet * 2);
+					member.Credits += bonus;
+
+					GameModel model = new GameModel
+					{
+						User_ID = member.User_ID,
+						Action = GameAction.GAME_FINISHED,
+						Result = GameResult.WIN
+					};
+
+					await OnGameInfoToGroup?.Invoke(group, model);
+					continue;
+				}
+			}
+
+			//send credits update privately
+			foreach (var member in group.Members) 
+			{
+				GameModel model = new GameModel
+				{
+					User_ID = member.User_ID,
+					Action = GameAction.CREDITS_UPDATE,
+					Credits = member.Credits
+				};
+
+				await OnGameInfoToPlayer?.Invoke(member, model);
+			}
+
+			group.Status = Group.GroupStatus.BETTING;
+			StartBetting(group);
+		}
+
+		private async Task<bool> IsCurrentPlayersTurn(Player player, Group group)
+		{
+			if (group.Status != Group.GroupStatus.PLAYING) return false;
+
+			if (player.HasFinished) 
+			{
+				await OnNotification?.Invoke(player, "You have already finished your turn.", NotificationType.TOAST, ToastType.INFO);
+				return false;
+			}
+
+			foreach (var member in group.Members)
+			{
+				if (member == player)
+				{
+					return true;
+				} 
+				else
+				{	
+					if (!member.HasFinished)
+					{
+						await OnNotification?.Invoke(player, "You must wait for other players to finish their turn.", NotificationType.TOAST, ToastType.WARNING);
+						return false;
+					}
+				}
+			}
+
+			Console.WriteLine($"{player.Name} is not part of {group.Group_ID}");
+			return false;
 		}
 
 		public async Task StartBetting(Group group) 
@@ -105,6 +259,12 @@ namespace BlackjackLogic
 			await _groupLogic.Value.MovePlayersFromWaitingRoom(group);
 
 			await OnGroupNotification?.Invoke(group, "Place your bets now!", NotificationType.GAME, default);
+
+			group.Bets.Clear();
+			foreach (var member in group.Members)
+			{
+				member.HasFinished = false;
+			}
 		}
 
 		public async Task StartGame(Group group)
@@ -147,7 +307,7 @@ namespace BlackjackLogic
 				User_ID = 0,
 				Action = GameAction.CARD_DRAWN,
 				Card = "CardDown.png",
-				Total = CalculateHandValue(group.DealerHand)
+				Total_Card_Value = CalculateHandValue(group.DealerHand)
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
@@ -187,16 +347,32 @@ namespace BlackjackLogic
 			cardToNameMap.TryGetValue(card, out string cardName);
 
 			player.Hand.Add(cardvalue.ToString());
+			
+			string totalHandValue = CalculateHandValue(player.Hand);
 
 			GameModel model = new GameModel
 			{
 				User_ID = player.User_ID,
-				Action = GameAction.CARD_DRAWN,
+				Action = player.Hand.Count > 2 ? GameAction.HIT : GameAction.CARD_DRAWN,
 				Card = cardName,
-				Total = CalculateHandValue(player.Hand)
+				Total_Card_Value = totalHandValue
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
+
+			//end turn for player if above or equal to 21
+			if (int.Parse(totalHandValue) > 21 || int.Parse(totalHandValue) == 21) 
+			{
+				player.HasFinished = true;
+				GameModel finishedModel = new GameModel
+				{
+					User_ID = player.User_ID,
+					Action = GameAction.PLAYER_FINISHED,
+				};
+
+				//notify about game-action (player finished playing)
+				await OnGameInfoToGroup?.Invoke(group, finishedModel);
+			}
 
 			Console.WriteLine($"{player.User_ID} received {cardName}, value in hand: {CalculateHandValue(player.Hand)}");
 		}
@@ -220,7 +396,7 @@ namespace BlackjackLogic
 				User_ID = 0,
 				Action = GameAction.CARD_DRAWN,
 				Card = cardName,
-				Total = CalculateHandValue(group.DealerHand)
+				Total_Card_Value = CalculateHandValue(group.DealerHand)
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
@@ -238,12 +414,23 @@ namespace BlackjackLogic
 
 			GameModel model = new GameModel
 			{
-				User_ID = 0,
+				User_ID = player.User_ID,
 				Action = GameAction.STAND,
-				Total = CalculateHandValue(player.Hand)
+				Total_Card_Value = CalculateHandValue(player.Hand)
 			};
 
+			//notify about game-action (stand)
 			await OnGameInfoToGroup?.Invoke(group, model);
+
+			player.HasFinished = true;
+			GameModel model2 = new GameModel
+			{
+				User_ID = player.User_ID,
+				Action = GameAction.PLAYER_FINISHED,
+			};
+			
+			//notify about game-action (player finished playing)
+			await OnGameInfoToGroup?.Invoke(group, model2);
 		}
 
 		private async Task Bet(Player player, string bet_amount) 
@@ -286,7 +473,7 @@ namespace BlackjackLogic
 
 			await OnGameInfoToGroup?.Invoke(group, model);
 
-			//all bets locked? start game
+			//all bets locked in? start game
 			if (group.Bets.Count == group.Members.Count)
 			{
 				group.Status = Group.GroupStatus.PLAYING;

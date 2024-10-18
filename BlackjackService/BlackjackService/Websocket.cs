@@ -55,10 +55,16 @@ internal class Websocket : IWebsocket
 		_gameLogic.OnNotification += HandleNotification;
 		_gameLogic.OnGroupNotification += HandleGroupNotification;
 		_gameLogic.OnGameInfoToGroup += HandleGameInfoToGroup;
+		_gameLogic.OnGameInfoToPlayer += HandleGameInfoToPlayer;
 	}
 	#endregion
 
 	#region event handlers
+	private async Task HandleGameInfoToPlayer(Player player, GameModel gameModel)
+	{
+		await SendGameInfoToPlayer(player, gameModel);
+	}
+
 	private async Task HandleGameInfoToGroup(Group group, GameModel gameModel)
 	{
 		await SendGameInfoToGroup(group, gameModel);
@@ -375,6 +381,24 @@ internal class Websocket : IWebsocket
 			{
 				await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 			}
+		}
+	}
+
+	//send credits update to specific player only.
+	public async Task SendGameInfoToPlayer(Player player, GameModel gameModel)
+	{
+		//convert emuns to strings e.g. CARD_DRAWN instead of 0
+		var settings = new JsonSerializerSettings
+		{
+			Converters = new List<JsonConverter> { new StringEnumConverter() }
+		};
+
+		string Message = JsonConvert.SerializeObject(gameModel, settings);
+		byte[] bytes = Encoding.UTF8.GetBytes(Message);
+
+		if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+		{
+			await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
 		}
 	}
 

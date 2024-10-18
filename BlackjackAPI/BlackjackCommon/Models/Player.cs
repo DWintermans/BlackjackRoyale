@@ -7,6 +7,7 @@
 		public List<string> Hand { get; private set; }
 		public bool IsReady { get; set; }
 		public int Credits { get; set; }
+		public bool HasFinished { get; set; }
 
 		public Player(int user_id, string name)
 		{
@@ -14,6 +15,7 @@
 			Name = name;
 			Hand = new List<string>();
 			IsReady = false;
+			HasFinished = false;
 		}
 	}
 }
