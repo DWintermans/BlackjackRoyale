@@ -7,5 +7,6 @@ namespace BlackjackCommon.Interfaces.Logic
 		void AddCard(Player player, string card);
 		void ClearHand(Player player);
 		void SetReadyStatus(Player player, bool status);
+		void RetrieveCredits(Player player);
 	}
 }

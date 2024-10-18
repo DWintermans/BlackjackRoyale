@@ -3,6 +3,7 @@ using BlackjackCommon.Interfaces;
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
+using BlackjackLogic;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -19,26 +20,45 @@ internal class Websocket : IWebsocket
 	private readonly IChatLogic _chatLogic;
 	private readonly IGroupLogic _groupLogic;
 	private readonly IGameLogic _gameLogic;
+	private readonly IPlayerLogic _playerLogic;
 
-	public Websocket(IChatLogic chatLogic, IGroupLogic groupLogic, IGameLogic gameLogic)
+	public Websocket(IChatLogic chatLogic, IGroupLogic groupLogic, IGameLogic gameLogic, IPlayerLogic playerLogic)
 	{
 		_chatLogic = chatLogic;
+		_groupLogic = groupLogic;
+		_gameLogic = gameLogic;
+		_playerLogic = playerLogic;
+
+		SubscribeToChatEvents();
+		SubscribeToGroupEvents();
+		SubscribeToGameEvents();
+	}
+
+	#region event subscriptions
+	private void SubscribeToChatEvents()
+	{
 		_chatLogic.OnNotification += HandleNotification;
 		_chatLogic.OnMessage += HandleMessage;
-		_chatLogic.OnPrivateMessage += HandePrivateMessage;
+		_chatLogic.OnPrivateMessage += HandlePrivateMessage; 
+	}
 
-		_groupLogic = groupLogic;
+	private void SubscribeToGroupEvents()
+	{
 		_groupLogic.OnNotification += HandleNotification;
 		_groupLogic.OnGroupNotification += HandleGroupNotification;
 		_groupLogic.OnGroupInfoToPlayer += HandleGroupInfoToPlayer;
 		_groupLogic.OnLobbyInfoToPlayer += HandleLobbyInfoToPlayer;
+	}
 
-		_gameLogic = gameLogic;
+	private void SubscribeToGameEvents()
+	{
 		_gameLogic.OnNotification += HandleNotification;
 		_gameLogic.OnGroupNotification += HandleGroupNotification;
 		_gameLogic.OnGameInfoToGroup += HandleGameInfoToGroup;
 	}
+	#endregion
 
+	#region event handlers
 	private async Task HandleGameInfoToGroup(Group group, GameModel gameModel)
 	{
 		await SendGameInfoToGroup(group, gameModel);
@@ -69,10 +89,11 @@ internal class Websocket : IWebsocket
 		await SendChatMessageToPlayer(player, receiver_id, message, type);
 	}
 
-	private async Task HandePrivateMessage(Player player, int receiver_id, string message)
+	private async Task HandlePrivateMessage(Player player, int receiver_id, string message)
 	{
 		await SendPrivateChatMessageToPlayer(player, receiver_id, message);
 	}
+	#endregion
 
 	private static Dictionary<string, WebSocket> connectedClients = new Dictionary<string, WebSocket>();
 
@@ -176,7 +197,19 @@ internal class Websocket : IWebsocket
 			return;
 		}
 
-		Player player = SharedData.TryGetExistingPlayer(user_id) ?? new Player(user_id, user_name);
+		//Player player = SharedData.TryGetExistingPlayer(user_id) ?? new Player(user_id, user_name);
+		Player player;
+
+		if (SharedData.TryGetExistingPlayer(user_id) != null)
+		{
+			player = SharedData.TryGetExistingPlayer(user_id);
+		}
+		else
+		{
+			player = new Player(user_id, user_name);
+			_playerLogic.RetrieveCredits(player);
+		}
+
 		if (!SharedData.Players.ContainsKey(user_id))
 		{
 			SharedData.Players[user_id] = player;
@@ -197,7 +230,7 @@ internal class Websocket : IWebsocket
 				break;
 
 			case "game":
-				//await _gameLogic.HandleGameAction(player, message);
+				await _gameLogic.HandleGameAction(player, message);
 				break;
 
 			default:

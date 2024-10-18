@@ -6,6 +6,7 @@
 		public string Name { get; private set; }
 		public List<string> Hand { get; private set; }
 		public bool IsReady { get; set; }
+		public int Credits { get; set; }
 
 		public Player(int user_id, string name)
 		{

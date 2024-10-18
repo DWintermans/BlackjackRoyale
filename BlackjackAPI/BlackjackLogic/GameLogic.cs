@@ -1,6 +1,8 @@
 ﻿using BlackjackCommon.Data.SharedData;
 using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
+using System.Threading.Tasks.Dataflow;
 using Group = BlackjackCommon.Models.Group;
 using Player = BlackjackCommon.Models.Player;
 
@@ -65,7 +67,7 @@ namespace BlackjackLogic
 				return;
 			}
 
-			if (group.Deck.Count == 0)
+			if (group.Status == Group.GroupStatus.WAITING)
 			{
 				await OnNotification?.Invoke(player, "The game has not started yet", NotificationType.TOAST, ToastType.INFO);
 				return;
@@ -74,13 +76,16 @@ namespace BlackjackLogic
 			switch (message.action.ToString())
 			{
 				case "bet":
-				//await Bet(player, message.bet.ToString());
+					await Bet(player, message.bet.ToString());
+					break;
 
 				case "hit":
+					await CheckPlayingOrder(player);
 					await Hit(player);
 					break;
 
 				case "stand":
+					await CheckPlayingOrder(player);
 					await Stand(player);
 					break;
 
@@ -89,11 +94,22 @@ namespace BlackjackLogic
 					break;
 			}
 		}
-		public async Task StartGame(Group group)
+
+		public async Task CheckPlayingOrder(Player player) 
+		{
+			
+		}
+
+		public async Task StartBetting(Group group) 
 		{
 			await _groupLogic.Value.MovePlayersFromWaitingRoom(group);
 
 			await OnGroupNotification?.Invoke(group, "Place your bets now!", NotificationType.GAME, default);
+		}
+
+		public async Task StartGame(Group group)
+		{
+			await OnGroupNotification?.Invoke(group, "Game is starting now!", NotificationType.GAME, default);
 
 			//shuffle and play with two decks, when starting round and one deck is depleted start game with 2 new shuffled decks 
 			while (group.Deck.Count <= 52)
@@ -125,6 +141,7 @@ namespace BlackjackLogic
 				await DealCard(player);
 			}
 
+			//give faced down card to dealer
 			GameModel model = new GameModel
 			{
 				User_ID = 0,
@@ -159,7 +176,7 @@ namespace BlackjackLogic
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
-			if (group.Deck.Count == 0) return;
+			if (group.Status != Group.GroupStatus.PLAYING) return;
 
 			string card = group.Deck[0];
 			group.Deck.RemoveAt(0);
@@ -186,7 +203,7 @@ namespace BlackjackLogic
 
 		private async Task DealCardToDealer(Group group)
 		{
-			if (group.Deck.Count == 0) return;
+			if (group.Status != Group.GroupStatus.PLAYING) return;
 
 			string card = group.Deck[0];
 			group.Deck.RemoveAt(0);
@@ -227,8 +244,54 @@ namespace BlackjackLogic
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
+		}
 
-			//await StartGame(SharedData.GetGroupForPlayer(player));
+		private async Task Bet(Player player, string bet_amount) 
+		{
+			if (!int.TryParse(bet_amount, out int bet)) {
+				await OnNotification?.Invoke(player, "Unexpected bet value received", NotificationType.TOAST, ToastType.ERROR);
+				return;
+			}
+
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			if (group.Status != Group.GroupStatus.BETTING)
+			{
+				await OnNotification?.Invoke(player, "Betting is not allowed at this stage.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			if (group.Bets.ContainsKey(player))
+			{
+				await OnNotification?.Invoke(player, "You have already placed your bet.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			if (player.Credits < bet) 
+			{
+				await OnNotification?.Invoke(player, $"You can't bet more than you have. You have {player.Credits} credits remaining.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			group.Bets.Add(player, bet);
+
+			player.Credits -= bet;
+
+			GameModel model = new GameModel
+			{
+				User_ID = player.User_ID,
+				Action = GameAction.BET_PLACED,
+				Bet = bet,
+			};
+
+			await OnGameInfoToGroup?.Invoke(group, model);
+
+			//all bets locked? start game
+			if (group.Bets.Count == group.Members.Count)
+			{
+				group.Status = Group.GroupStatus.PLAYING;
+				StartGame(group);
+			}
 		}
 
 		private string CalculateHandValue(List<string> hand)

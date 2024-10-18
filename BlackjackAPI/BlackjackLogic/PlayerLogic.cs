@@ -1,7 +1,6 @@
 ﻿using BlackjackCommon.Interfaces.Logic;
 using Player = BlackjackCommon.Models.Player;
 
-
 namespace BlackjackLogic
 {
 	public class PlayerLogic : IPlayerLogic
@@ -19,6 +18,12 @@ namespace BlackjackLogic
 		public void SetReadyStatus(Player player, bool status)
 		{
 			player.IsReady = status;
+		}
+
+		public void RetrieveCredits(Player player)
+		{
+			//make db call
+			player.Credits = 100;
 		}
 
 	}

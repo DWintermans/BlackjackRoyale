@@ -9,8 +9,8 @@ namespace BlackjackCommon.Interfaces.Logic
 		event Func<Group, string, NotificationType, ToastType?, Task> OnGroupNotification;
 		event Func<Group, GameModel, Task>? OnGameInfoToGroup;
 
-
 		Task HandleGameAction(Player player, dynamic message);
+		Task StartBetting(Group group);
 		Task StartGame(Group group);
 	}
 }

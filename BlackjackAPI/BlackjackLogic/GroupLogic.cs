@@ -326,7 +326,7 @@ namespace BlackjackLogic
 			}
 
 			//game has started -> add to waitingroom 
-			if (group.Deck.Count > 0 && (group.Members.Count + group.WaitingRoom.Count < MaxGroupSize))
+			if ((group.Status == Group.GroupStatus.BETTING || group.Status == Group.GroupStatus.PLAYING) && (group.Members.Count + group.WaitingRoom.Count < MaxGroupSize))
 			{
 				await AddPlayerToWaitingRoom(group, player);
 				return;
@@ -396,7 +396,7 @@ namespace BlackjackLogic
 			}
 
 			//if game has already started, dont allow ready/unready commands
-			if (group.Deck.Count > 0)
+			if (group.Status != Group.GroupStatus.WAITING)
 			{
 				await OnNotification?.Invoke(player, "The game has already started. You cannot change your ready status now.", NotificationType.TOAST, ToastType.WARNING);
 				return;
@@ -405,11 +405,11 @@ namespace BlackjackLogic
 			_playerLogic.SetReadyStatus(player, isReady);
 			await OnNotification?.Invoke(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
 
-			await CheckVotesAndStartGame(group);
+			await CheckVotesAndStartBetting(group);
 		}
 
 		//check if majority is ready to play
-		private async Task CheckVotesAndStartGame(Group group)
+		private async Task CheckVotesAndStartBetting(Group group)
 		{
 			//debug
 			foreach (var player in group.Members)
@@ -425,8 +425,8 @@ namespace BlackjackLogic
 
 			if (readyCount > totalMembers / 2)
 			{
-				await OnGroupNotification?.Invoke(group, "The game is starting now!", NotificationType.GROUP, default);
-				await _gameLogic.StartGame(group);
+				group.Status = Group.GroupStatus.BETTING;
+				await _gameLogic.StartBetting(group);
 			}
 		}
 
