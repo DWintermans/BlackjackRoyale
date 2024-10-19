@@ -12,13 +12,15 @@
 		public string Name { get; set; }
 		public bool InWaitingRoom { get; set; }
 		public bool IsReady { get; set; }
+		public int? Credits { get; set; }
 
-		public Member(int user_id, string name, bool inWaitingRoom, bool isReady)
+		public Member(int user_id, string name, bool inWaitingRoom, bool isReady, int? credits)
 		{
 			User_ID = user_id;
 			Name = name;
 			InWaitingRoom = inWaitingRoom;
 			IsReady = isReady;
+			Credits = credits;
 		}
 	}
 }

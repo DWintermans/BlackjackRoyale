@@ -88,7 +88,8 @@ namespace BlackjackLogic
 						user_id: member.User_ID,
 						name: member.Name,
 						inWaitingRoom: group.WaitingRoom.Contains(member),
-						isReady: member.IsReady
+						isReady: member.IsReady,
+						credits: member.User_ID == player.User_ID ? member.Credits : (int?)null
 					);
 
 					model.Members.Add(memberModel);
@@ -202,7 +203,8 @@ namespace BlackjackLogic
 						user_id: member.User_ID,
 						name: member.Name,
 						inWaitingRoom: group.WaitingRoom.Contains(member),
-						isReady: member.IsReady
+						isReady: member.IsReady,
+						credits: member.User_ID == player.User_ID ? member.Credits : (int?)null
 					);
 
 					model.Members.Add(memberModel);

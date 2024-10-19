@@ -113,15 +113,15 @@ namespace BlackjackLogic
 				}
 			}
 
-			while (int.Parse(CalculateHandValue(group.DealerHand)) <= 16) 
+			while (GetBestHandValue((CalculateHandValue(group.DealerHand))) <= 16) 
 			{
 				await DealCardToDealer(group);
 			}
 
 			foreach (var member in group.Members)
 			{
-				int memberHand = int.Parse(CalculateHandValue(member.Hand));
-				int dealerHand = int.Parse(CalculateHandValue(group.DealerHand));
+				int memberHand = GetBestHandValue((CalculateHandValue(member.Hand)));
+				int dealerHand = GetBestHandValue((CalculateHandValue(group.DealerHand)));
 
 				//push / tie
 				if (memberHand == dealerHand)
@@ -154,8 +154,8 @@ namespace BlackjackLogic
 					continue;
 				}
 
-				//blackjack pays 3 to 2 (a.k.a. * 1.5)
-				if (memberHand == 21)
+				//blackjack pays 3 to 2 (a.k.a. * 1.5), only counts as blackjack if 21 is achieved with 2 cards
+				if (memberHand == 21 && member.Hand.Count == 2)
 				{
 					group.Bets.TryGetValue(member, out int bet);
 
@@ -166,7 +166,7 @@ namespace BlackjackLogic
 					{
 						User_ID = member.User_ID,
 						Action = GameAction.GAME_FINISHED,
-						Result = GameResult.PUSH
+						Result = GameResult.BLACKJACK
 					};
 
 					await OnGameInfoToGroup?.Invoke(group, model);
@@ -222,6 +222,21 @@ namespace BlackjackLogic
 
 			group.Status = Group.GroupStatus.BETTING;
 			StartBetting(group);
+		}
+
+		private int GetBestHandValue(string handValue)
+		{
+			if (handValue.Contains("/"))
+			{
+				var values = handValue.Split('/');
+				int lowest = int.Parse(values[0]);
+				int highest = int.Parse(values[1]);
+
+				//return best value for player
+				return highest <= 21 ? highest : lowest;
+			}
+
+			return int.Parse(handValue);
 		}
 
 		private async Task<bool> IsCurrentPlayersTurn(Player player, Group group)
@@ -313,6 +328,9 @@ namespace BlackjackLogic
 			await OnGameInfoToGroup?.Invoke(group, model);
 
 			await OnGroupNotification?.Invoke(group, "Setup has ended", NotificationType.GAME, default);
+
+			//in case player gets blackjack, check if already done
+			await TryToFinishGame(group);
 		}
 
 		private void RemoveOldDecksAndAddTwoDecksToGroup(Group group)
@@ -361,7 +379,7 @@ namespace BlackjackLogic
 			await OnGameInfoToGroup?.Invoke(group, model);
 
 			//end turn for player if above or equal to 21
-			if (int.Parse(totalHandValue) > 21 || int.Parse(totalHandValue) == 21) 
+			if (GetBestHandValue(totalHandValue) > 21 || GetBestHandValue(totalHandValue) == 21) 
 			{
 				player.HasFinished = true;
 				GameModel finishedModel = new GameModel

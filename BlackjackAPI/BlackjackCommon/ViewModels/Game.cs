@@ -30,6 +30,7 @@
 		WIN,
 		LOSE,
 		PUSH, //tie
+		BLACKJACK, //21 with 2 cards
 	}
 }
 
