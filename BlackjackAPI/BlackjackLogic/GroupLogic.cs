@@ -2,6 +2,7 @@
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
+using System.Net.WebSockets;
 using Group = BlackjackCommon.Models.Group;
 
 namespace BlackjackLogic
@@ -89,7 +90,7 @@ namespace BlackjackLogic
 						name: member.Name,
 						inWaitingRoom: group.WaitingRoom.Contains(member),
 						isReady: member.IsReady,
-						credits: member.User_ID == player.User_ID ? member.Credits : (int?)null
+						credits: null //add per member
 					);
 
 					model.Members.Add(memberModel);
@@ -97,7 +98,26 @@ namespace BlackjackLogic
 
 				foreach (Player member in group.Members)
 				{
-					await OnGroupInfoToPlayer?.Invoke(member, model);
+					var specificMemberModel = new GroupModel
+					{
+						Group_ID = model.Group_ID,
+						Members = new List<Member>()
+					};
+
+					foreach (Member m in model.Members)
+					{
+						var specificMemberInfo = new Member(
+							user_id: m.User_ID,
+							name: m.Name,
+							inWaitingRoom: m.InWaitingRoom,
+							isReady: m.IsReady,
+							credits: member.User_ID == m.User_ID ? member.Credits : (int?)null
+						);
+
+						specificMemberModel.Members.Add(specificMemberInfo);
+					}
+
+					await OnGroupInfoToPlayer?.Invoke(member, specificMemberModel);
 				}
 			}
 			else
@@ -261,27 +281,37 @@ namespace BlackjackLogic
 			//leave group
 			if (group != null)
 			{
-				foreach (var groups in SharedData.Groups.Values.ToList())
+				group.Members.RemoveAll(p => p.User_ID == player.User_ID);
+
+				_playerLogic.ClearHand(player);
+				player.IsReady = false;
+
+				await OnNotification?.Invoke(player, $"You have left group '{group.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+				
+				await OnGroupNotification?.Invoke(group, $"{player.Name} left the group.", NotificationType.GROUP, default);
+
+				Console.WriteLine($"User {player.User_ID} left group {group.Group_ID}");
+
+				if (group.Members.Count == 0)
 				{
-					if (groups.Members.Any(p => p.User_ID == player.User_ID))
+					if (group.WaitingRoom.Count > 0)
 					{
-						groups.Members.RemoveAll(p => p.User_ID == player.User_ID);
-
-						_playerLogic.ClearHand(player);
-						player.IsReady = false;
-
-						await OnNotification?.Invoke(player, $"You have left group '{groups.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
-						await OnGroupNotification?.Invoke(groups, $"{player.Name} left the group.", NotificationType.GROUP, default);
-
-						Console.WriteLine($"User {player.User_ID} left group {groups.Group_ID}");
-
-						if (group.Members.Count == 0)
+						foreach (var member in group.WaitingRoom.ToList())
 						{
-							SharedData.Groups.Remove(groups.Group_ID);
-							Console.WriteLine($"Group {groups.Group_ID} has been removed as it is empty.");
+							await OnNotification?.Invoke(member, "The group you were in the waitingroom for no longer exists.", NotificationType.TOAST, ToastType.INFO);
 						}
+					}
 
-						break;
+					SharedData.Groups.Remove(group.Group_ID);
+					Console.WriteLine($"Group {group.Group_ID} has been removed as it is empty.");
+				}
+				else 
+				{
+					//left while betting? start game if possible
+					if (group.Status == Group.GroupStatus.BETTING && group.Bets.Count == group.Members.Count)
+					{
+						group.Status = Group.GroupStatus.PLAYING;
+						await _gameLogic.StartGame(group);
 					}
 				}
 
@@ -292,6 +322,20 @@ namespace BlackjackLogic
 				{
 					await ForceCheckGroup(member);
 				}
+			}
+
+			//if in waiting room
+			Group waitingRoomGroup = SharedData.GetGroupForWaitingroomPlayer(player);
+			if (waitingRoomGroup != null) 
+			{
+				await OnNotification?.Invoke(player, $"You have left the waitingroom for group '{waitingRoomGroup.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+
+				await OnGroupNotification?.Invoke(waitingRoomGroup, $"{player.Name} left the waitingroom.", NotificationType.GROUP, default);
+				
+				Console.WriteLine($"User {player.User_ID} left group {waitingRoomGroup.Group_ID} waitingroom.");
+
+				waitingRoomGroup.WaitingRoom.Remove(player);
+				Console.WriteLine(waitingRoomGroup);
 			}
 		}
 
@@ -322,12 +366,13 @@ namespace BlackjackLogic
 
 			//leave current group is possible
 			Group oldGroup = SharedData.GetGroupForPlayer(player);
-			if (oldGroup != null && oldGroup.Group_ID != group.Group_ID)
+			Group oldWaitingroomGroup = SharedData.GetGroupForWaitingroomPlayer(player);
+			if ((oldGroup != null && oldGroup.Group_ID != group.Group_ID) || (oldWaitingroomGroup != null && oldWaitingroomGroup.Group_ID != group.Group_ID))
 			{
 				LeaveGroup(player);
 			}
 
-			//game has started -> add to waitingroom 
+			//if game has started -> add to waitingroom 
 			if ((group.Status == Group.GroupStatus.BETTING || group.Status == Group.GroupStatus.PLAYING) && (group.Members.Count + group.WaitingRoom.Count < MaxGroupSize))
 			{
 				await AddPlayerToWaitingRoom(group, player);
@@ -370,8 +415,10 @@ namespace BlackjackLogic
 				foreach (var player in group.WaitingRoom.ToList())
 				{
 					group.Members.Add(player);
+					await ForceCheckGroup(player);
 
 					await OnNotification?.Invoke(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);
+					await OnGroupNotification?.Invoke(group, $"{player.Name} joined the group.", NotificationType.GROUP, default);
 				}
 				group.WaitingRoom.Clear();
 			}

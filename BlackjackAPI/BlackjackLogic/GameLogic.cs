@@ -103,12 +103,32 @@ namespace BlackjackLogic
 			}
 		}
 
+		private async Task WhoseTurnIsIt(Group group) 
+		{
+			foreach (var member in group.Members)
+			{
+				if (!member.HasFinished)
+				{
+					GameModel model = new GameModel
+					{
+						User_ID = member.User_ID,
+						Action = GameAction.TURN,
+					};
+
+					await OnGameInfoToGroup?.Invoke(group, model);
+
+					return;
+				}
+			}
+		}
+
 		private async Task TryToFinishGame(Group group) 
 		{
 			foreach (var member in group.Members)
 			{
 				if (!member.HasFinished)
 				{
+					WhoseTurnIsIt(group);
 					return;
 				}
 			}
@@ -116,6 +136,7 @@ namespace BlackjackLogic
 			while (GetBestHandValue((CalculateHandValue(group.DealerHand))) <= 16) 
 			{
 				await DealCardToDealer(group);
+				//await Task.Delay(1000);
 			}
 
 			foreach (var member in group.Members)
@@ -241,6 +262,13 @@ namespace BlackjackLogic
 
 		private async Task<bool> IsCurrentPlayersTurn(Player player, Group group)
 		{
+			//prevent spamming cards and ruining the delayed cards.
+			if (group.DealerHand.Count < 2) 
+			{
+				await OnNotification?.Invoke(player, "You must wait for everyone to receive their cards.", NotificationType.TOAST, ToastType.WARNING);
+				return false;
+			}
+
 			if (group.Status != Group.GroupStatus.PLAYING) return false;
 
 			if (player.HasFinished) 
@@ -305,25 +333,33 @@ namespace BlackjackLogic
 			foreach (var player in group.Members)
 			{
 				await DealCard(player);
+				//await Task.Delay(1000);
 			}
 
 			//give dealer a card
 			await DealCardToDealer(group);
+			//await Task.Delay(1000);
 
 			//give each player a second card
 			foreach (var player in group.Members)
 			{
 				await DealCard(player);
+				//await Task.Delay(1000);
 			}
 
-			//give faced down card to dealer
+			//give faced down card to dealer, pretend that a card is removed from the deck
 			GameModel model = new GameModel
 			{
 				User_ID = 0,
 				Action = GameAction.CARD_DRAWN,
 				Card = "CardDown.png",
-				Total_Card_Value = CalculateHandValue(group.DealerHand)
+				Total_Card_Value = CalculateHandValue(group.DealerHand),
+				Cards_In_Deck = Math.Max(1, group.Deck.Count - 1)
 			};
+
+			//give dealer 0 in hand to prevent spamming hit without everone receiving their cards
+			//gives it 2 cards in hand, allow hit/stand when 2 cards are in hand of dealer
+			group.DealerHand.Add("0");
 
 			await OnGameInfoToGroup?.Invoke(group, model);
 
@@ -333,7 +369,7 @@ namespace BlackjackLogic
 			await TryToFinishGame(group);
 		}
 
-		private void RemoveOldDecksAndAddTwoDecksToGroup(Group group)
+		private async void RemoveOldDecksAndAddTwoDecksToGroup(Group group)
 		{
 			group.Deck.Clear();
 
@@ -348,6 +384,8 @@ namespace BlackjackLogic
 			}
 
 			Console.WriteLine($"Two new decks have been shuffled and added to group: {group.Group_ID}");
+			await OnGroupNotification?.Invoke(group, "Two new decks have been shuffled and added.", NotificationType.GAME, default);
+
 		}
 
 		private async Task DealCard(Player player)
@@ -373,7 +411,8 @@ namespace BlackjackLogic
 				User_ID = player.User_ID,
 				Action = player.Hand.Count > 2 ? GameAction.HIT : GameAction.CARD_DRAWN,
 				Card = cardName,
-				Total_Card_Value = totalHandValue
+				Total_Card_Value = totalHandValue,
+				Cards_In_Deck = group.Deck.Count
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
@@ -414,7 +453,8 @@ namespace BlackjackLogic
 				User_ID = 0,
 				Action = GameAction.CARD_DRAWN,
 				Card = cardName,
-				Total_Card_Value = CalculateHandValue(group.DealerHand)
+				Total_Card_Value = CalculateHandValue(group.DealerHand),
+				Cards_In_Deck = group.Deck.Count
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);

@@ -7,6 +7,7 @@ using BlackjackLogic;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System.Dynamic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.WebSockets;
@@ -82,7 +83,14 @@ internal class Websocket : IWebsocket
 
 	private async Task HandleNotification(Player player, string message, NotificationType notificationType, ToastType? toastType)
 	{
-		await SendNotificationToPlayer(player, message, notificationType, toastType);
+		if (SharedData.userIDToCliendIdMap.ContainsKey(player.User_ID.ToString()))
+		{
+			await SendNotificationToPlayer(player, message, notificationType, toastType);
+		}
+		else
+		{
+			Console.WriteLine($"[{player.User_ID}] {player.Name} left without saying goodbye.");
+		}
 	}
 	
 	private async Task HandleGroupNotification(Group group, string message, NotificationType notificationType, ToastType? toastType)
@@ -146,12 +154,32 @@ internal class Websocket : IWebsocket
 				{
 					Console.WriteLine("WebSocket connection closed for client ID: " + client_id);
 
+					//get user_id before removing it
+					string userID = SharedData.userIDToCliendIdMap.FirstOrDefault(x => x.Value == client_id).Key;
+
+					//get key to remove
+					string keyToRemove = SharedData.userIDToCliendIdMap.FirstOrDefault<KeyValuePair<string, string>>((KeyValuePair<string, string> x) => x.Value == client_id).Key;
+
+					//remove client_id to socket connection from list
 					connectedClients.Remove(client_id);
 
-					string keyToRemove = SharedData.userIDToCliendIdMap.FirstOrDefault<KeyValuePair<string, string>>((KeyValuePair<string, string> x) => x.Value == client_id).Key;
+					//remove from user_id to client_id list
 					if (keyToRemove != null)
 					{
 						SharedData.userIDToCliendIdMap.Remove(keyToRemove);
+					}
+
+					//leave group on socket disconnect.
+					if (Int32.TryParse(userID, out int user_id))
+					{
+						Player player = SharedData.TryGetExistingPlayer(user_id);
+						if (player != null)
+						{
+							dynamic message = new ExpandoObject();
+							message.action = "leave_group";
+
+							await _groupLogic.HandleGroupAction(player, message);
+						}
 					}
 					break;
 				}

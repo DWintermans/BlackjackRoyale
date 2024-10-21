@@ -22,6 +22,19 @@ namespace BlackjackCommon.Data.SharedData
 			return null;
 		}
 
+		public static Group GetGroupForWaitingroomPlayer(Player player)
+		{
+			foreach (var group in Groups.Values)
+			{
+				if (group.WaitingRoom.Any(p => p.User_ID == player.User_ID))
+				{
+					return group;
+				}
+			}
+
+			return null;
+		}
+
 		public static Player TryGetExistingPlayer(int user_id)
 		{
 			SharedData.Players.TryGetValue(user_id, out var player);
