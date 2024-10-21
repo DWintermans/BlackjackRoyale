@@ -305,15 +305,6 @@ namespace BlackjackLogic
 					SharedData.Groups.Remove(group.Group_ID);
 					Console.WriteLine($"Group {group.Group_ID} has been removed as it is empty.");
 				}
-				else 
-				{
-					//left while betting? start game if possible
-					if (group.Status == Group.GroupStatus.BETTING && group.Bets.Count == group.Members.Count)
-					{
-						group.Status = Group.GroupStatus.PLAYING;
-						await _gameLogic.StartGame(group);
-					}
-				}
 
 				await CheckGroup(player);
 
@@ -321,6 +312,16 @@ namespace BlackjackLogic
 				foreach (Player member in group.Members)
 				{
 					await ForceCheckGroup(member);
+				}
+
+				//left while betting? start game if possible
+				if (group.Members.Count != 0) 
+				{
+					if (group.Status == Group.GroupStatus.BETTING && group.Bets.Count == group.Members.Count)
+					{
+						group.Status = Group.GroupStatus.PLAYING;
+						await _gameLogic.StartGame(group);
+					}
 				}
 			}
 

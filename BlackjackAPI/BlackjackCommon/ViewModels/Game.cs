@@ -19,6 +19,7 @@
 		CARD_DRAWN, //the default 2 cards given to every player
 		BET_PLACED,
 		GAME_FINISHED,
+		GAME_STARTED,
 		PLAYER_FINISHED,
 		HIT,
 		STAND,

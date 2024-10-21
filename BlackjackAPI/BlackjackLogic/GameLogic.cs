@@ -136,7 +136,7 @@ namespace BlackjackLogic
 			while (GetBestHandValue((CalculateHandValue(group.DealerHand))) <= 16) 
 			{
 				await DealCardToDealer(group);
-				//await Task.Delay(1000);
+				await Task.Delay(1000);
 			}
 
 			foreach (var member in group.Members)
@@ -312,7 +312,20 @@ namespace BlackjackLogic
 
 		public async Task StartGame(Group group)
 		{
+			//remove later
 			await OnGroupNotification?.Invoke(group, "Game is starting now!", NotificationType.GAME, default);
+
+			foreach (var member in group.Members)
+			{
+				GameModel startModel = new GameModel
+				{
+					User_ID = member.User_ID,
+					Action = GameAction.GAME_STARTED,
+					Result = GameResult.PUSH
+				};
+
+				await OnGameInfoToGroup?.Invoke(group, startModel);
+			}
 
 			//shuffle and play with two decks, when starting round and one deck is depleted start game with 2 new shuffled decks 
 			while (group.Deck.Count <= 52)
@@ -330,21 +343,33 @@ namespace BlackjackLogic
 			group.DealerHand.Clear();
 
 			//give each player a card
-			foreach (var player in group.Members)
+			foreach (var player in group.Members.ToList()) 
 			{
+				if (!group.Members.Contains(player)) 
+				{
+					Console.WriteLine($"Player {player.User_ID} has left the group during the card distribution.");
+					continue; 
+				}
+
 				await DealCard(player);
-				//await Task.Delay(1000);
+				await Task.Delay(1000);
 			}
 
 			//give dealer a card
 			await DealCardToDealer(group);
-			//await Task.Delay(1000);
+			await Task.Delay(1000);
 
 			//give each player a second card
-			foreach (var player in group.Members)
+			foreach (var player in group.Members.ToList())
 			{
+				if (!group.Members.Contains(player))
+				{
+					Console.WriteLine($"Player {player.User_ID} has left the group during the card distribution.");
+					continue;
+				}
+
 				await DealCard(player);
-				//await Task.Delay(1000);
+				await Task.Delay(1000);
 			}
 
 			//give faced down card to dealer, pretend that a card is removed from the deck
