@@ -26,6 +26,7 @@
 		SPLIT,
 		INSURE,	
 		DOUBLE,
+		SURRENDER,
 	}
 
 	public enum GameResult
@@ -35,6 +36,7 @@
 		LOSE,
 		PUSH, //tie
 		BLACKJACK, //21 with 2 cards
+		SURRENDER,
 	}
 }
 

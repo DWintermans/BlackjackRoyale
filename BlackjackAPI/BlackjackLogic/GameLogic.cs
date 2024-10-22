@@ -97,6 +97,22 @@ namespace BlackjackLogic
 					}
 					break;
 
+				case "double":
+					if (await IsCurrentPlayersTurn(player, group))
+					{
+						await Double(player);
+						await TryToFinishGame(group);
+					}
+					break;
+
+				case "surrender":
+					if (await IsCurrentPlayersTurn(player, group))
+					{
+						await Surrender(player);
+						await TryToFinishGame(group);
+					}
+					break;
+
 				default:
 					await OnNotification?.Invoke(player, "Unknown game action", NotificationType.TOAST, ToastType.ERROR);
 					break;
@@ -143,6 +159,20 @@ namespace BlackjackLogic
 			{
 				int memberHand = GetBestHandValue((CalculateHandValue(member.Hand)));
 				int dealerHand = GetBestHandValue((CalculateHandValue(group.DealerHand)));
+
+				//surrendered? no cards so value is 0
+				if (memberHand == 0)
+				{
+					GameModel model = new GameModel
+					{
+						User_ID = member.User_ID,
+						Action = GameAction.GAME_FINISHED,
+						Result = GameResult.SURRENDER
+					};
+
+					await OnGameInfoToGroup?.Invoke(group, model);
+					continue;
+				}
 
 				//push / tie
 				if (memberHand == dealerHand)
@@ -262,6 +292,12 @@ namespace BlackjackLogic
 
 		private async Task<bool> IsCurrentPlayersTurn(Player player, Group group)
 		{
+			if (group.Status != Group.GroupStatus.PLAYING) 
+			{
+				await OnNotification?.Invoke(player, "You must wait for the game to start to perform this action.", NotificationType.TOAST, ToastType.WARNING);
+				return false;
+			}
+
 			//prevent spamming cards and ruining the delayed cards.
 			if (group.DealerHand.Count < 2) 
 			{
@@ -514,6 +550,110 @@ namespace BlackjackLogic
 			
 			//notify about game-action (player finished playing)
 			await OnGameInfoToGroup?.Invoke(group, model2);
+		}
+
+		private async Task Double(Player player)
+		{
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			if (group.Status != Group.GroupStatus.PLAYING) return;
+
+			if (player.Hand.Count != 2) 
+			{
+				await OnNotification?.Invoke(player, "You can only double down on the first 2 cards.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			group.Bets.TryGetValue(player, out int bet);
+
+			if (player.Credits < bet)
+			{
+				await OnNotification?.Invoke(player, "You don't have enough credits to double down.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			player.Credits -= bet;
+
+			group.Bets[player] += bet;
+
+			string card = group.Deck[0];
+			group.Deck.RemoveAt(0);
+
+			//remove first character (e.g. H9 > 9, HK > 10, H0 > 10)
+			char cardRank = card[1];
+			cardToValueMap.TryGetValue(cardRank, out int cardvalue);
+			cardToNameMap.TryGetValue(card, out string cardName);
+
+			player.Hand.Add(cardvalue.ToString());
+
+			string totalHandValue = CalculateHandValue(player.Hand);
+
+			GameModel model = new GameModel
+			{
+				User_ID = player.User_ID,
+				Action = GameAction.DOUBLE,
+				Card = cardName,
+				Total_Card_Value = totalHandValue,
+				Cards_In_Deck = group.Deck.Count,
+				Credits = player.Credits,
+				Bet = group.Bets[player],
+			};
+
+			await OnGameInfoToGroup?.Invoke(group, model);
+	
+			player.HasFinished = true;
+			GameModel finishedModel = new GameModel
+			{
+				User_ID = player.User_ID,
+				Action = GameAction.PLAYER_FINISHED,
+			};
+
+			//notify about game-action (player finished playing)
+			await OnGameInfoToGroup?.Invoke(group, finishedModel);
+			
+			Console.WriteLine($"{player.User_ID} doubled down, betting {group.Bets[player]} and received {cardName}, value in hand: {CalculateHandValue(player.Hand)}");
+		}
+
+		private async Task Surrender(Player player)
+		{
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			if (group.Status != Group.GroupStatus.PLAYING) return;
+
+			group.Bets.TryGetValue(player, out int bet);
+
+			if (player.Credits < bet)
+			{
+				await OnNotification?.Invoke(player, "You don't have enough credits to double down.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			//give back half. The full bet will be removed on game end.
+			player.Credits += bet / 2;
+
+			player.Hand.Clear();
+
+			GameModel model = new GameModel
+			{
+				User_ID = player.User_ID,
+				Action = GameAction.SURRENDER,
+				Total_Card_Value = "0",
+				Credits = player.Credits,
+			};
+
+			await OnGameInfoToGroup?.Invoke(group, model);
+
+			player.HasFinished = true;
+			GameModel finishedModel = new GameModel
+			{
+				User_ID = player.User_ID,
+				Action = GameAction.PLAYER_FINISHED,
+			};
+
+			//notify about game-action (player finished playing)
+			await OnGameInfoToGroup?.Invoke(group, finishedModel);
+
+			Console.WriteLine($"{player.User_ID} surrendered.");
 		}
 
 		private async Task Bet(Player player, string bet_amount) 
