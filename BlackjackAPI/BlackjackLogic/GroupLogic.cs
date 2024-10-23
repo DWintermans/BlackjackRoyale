@@ -283,7 +283,7 @@ namespace BlackjackLogic
 			{
 				group.Members.RemoveAll(p => p.User_ID == player.User_ID);
 
-				_playerLogic.ClearHand(player);
+				player.Hands.Clear(); 
 				player.IsReady = false;
 
 				await OnNotification?.Invoke(player, $"You have left group '{group.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
@@ -452,7 +452,7 @@ namespace BlackjackLogic
 				return;
 			}
 
-			_playerLogic.SetReadyStatus(player, isReady);
+			player.IsReady = isReady;
 			await OnNotification?.Invoke(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
 
 			await CheckVotesAndStartBetting(group);

@@ -4,6 +4,7 @@
 	{
 		public GameAction Action { get; set; }
 		public int User_ID { get; set; } //0 for dealer, otherwise user_id
+		public int? Hand {  get; set; } //min 1 to max 4 (if split)
 		public string? Card { get; set; }
 		public string? Total_Card_Value { get; set; }
 		public int? Bet { get; set; }

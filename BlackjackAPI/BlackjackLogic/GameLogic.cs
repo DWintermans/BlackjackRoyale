@@ -113,6 +113,22 @@ namespace BlackjackLogic
 					}
 					break;
 
+				case "insure":
+					if (await IsCurrentPlayersTurn(player, group))
+					{
+						await Insure(player);
+						await TryToFinishGame(group);
+					}
+					break;
+
+				case "split":
+					if (await IsCurrentPlayersTurn(player, group))
+					{
+						await Split(player);
+						await TryToFinishGame(group);
+					}
+					break;
+
 				default:
 					await OnNotification?.Invoke(player, "Unknown game action", NotificationType.TOAST, ToastType.ERROR);
 					break;
@@ -125,10 +141,20 @@ namespace BlackjackLogic
 			{
 				if (!member.HasFinished)
 				{
+					var (activeHand, index) = GetActiveHand(member);
+
+					if (activeHand == null)
+					{
+						await OnGroupNotification?.Invoke(group, "An error occured, please try again later.", NotificationType.GAME, default);
+						Console.WriteLine($"{member.User_ID} has no active hands to deal a card.");
+						return;
+					}
+
 					GameModel model = new GameModel
 					{
 						User_ID = member.User_ID,
 						Action = GameAction.TURN,
+						Hand = index + 1
 					};
 
 					await OnGameInfoToGroup?.Invoke(group, model);
@@ -157,104 +183,115 @@ namespace BlackjackLogic
 
 			foreach (var member in group.Members)
 			{
-				int memberHand = GetBestHandValue((CalculateHandValue(member.Hand)));
-				int dealerHand = GetBestHandValue((CalculateHandValue(group.DealerHand)));
-
-				//surrendered? no cards so value is 0
-				if (memberHand == 0)
+				for (int i = 0; i < member.Hands.Count; i++)
 				{
-					GameModel model = new GameModel
+					var hand = member.Hands[i];
+
+					int memberHand = GetBestHandValue(CalculateHandValue(hand.Cards));
+					int dealerHand = GetBestHandValue((CalculateHandValue(group.DealerHand)));
+
+					//surrendered? no cards so value is 0
+					if (memberHand == 0)
 					{
-						User_ID = member.User_ID,
-						Action = GameAction.GAME_FINISHED,
-						Result = GameResult.SURRENDER
-					};
+						GameModel model = new GameModel
+						{
+							User_ID = member.User_ID,
+							Action = GameAction.GAME_FINISHED,
+							Result = GameResult.SURRENDER,
+							Hand = i + 1
+						};
 
-					await OnGameInfoToGroup?.Invoke(group, model);
-					continue;
-				}
+						await OnGameInfoToGroup?.Invoke(group, model);
+						continue;
+					}
 
-				//push / tie
-				if (memberHand == dealerHand)
-				{
-					group.Bets.TryGetValue(member, out int bet);
-					member.Credits += bet;
-
-					GameModel model = new GameModel
+					//push / tie
+					if (memberHand == dealerHand)
 					{
-						User_ID = member.User_ID,
-						Action = GameAction.GAME_FINISHED,
-						Result = GameResult.PUSH
-					};
+						group.Bets.TryGetValue(member, out int bet);
+						member.Credits += bet;
 
-					await OnGameInfoToGroup?.Invoke(group, model);
-					continue;
-				}
+						GameModel model = new GameModel
+						{
+							User_ID = member.User_ID,
+							Action = GameAction.GAME_FINISHED,
+							Result = GameResult.PUSH,
+							Hand = i + 1
+						};
 
-				//bust
-				if (memberHand > 21) 
-				{
-					GameModel model = new GameModel
+						await OnGameInfoToGroup?.Invoke(group, model);
+						continue;
+					}
+
+					//bust
+					if (memberHand > 21)
 					{
-						User_ID = member.User_ID,
-						Action = GameAction.GAME_FINISHED,
-						Result = GameResult.BUSTED
-					};
+						GameModel model = new GameModel
+						{
+							User_ID = member.User_ID,
+							Action = GameAction.GAME_FINISHED,
+							Result = GameResult.BUSTED,
+							Hand = i + 1
+						};
 
-					await OnGameInfoToGroup?.Invoke(group, model);
-					continue;
-				}
+						await OnGameInfoToGroup?.Invoke(group, model);
+						continue;
+					}
 
-				//blackjack pays 3 to 2 (a.k.a. * 1.5), only counts as blackjack if 21 is achieved with 2 cards
-				if (memberHand == 21 && member.Hand.Count == 2)
-				{
-					group.Bets.TryGetValue(member, out int bet);
-
-					int bonus = (int)(bet * 1.5);
-					member.Credits += bonus;
-
-					GameModel model = new GameModel
+					//blackjack pays 3 to 2 (a.k.a. * 1.5), only counts as blackjack if 21 is achieved with 2 cards
+					if (memberHand == 21 && hand.Cards.Count == 2)
 					{
-						User_ID = member.User_ID,
-						Action = GameAction.GAME_FINISHED,
-						Result = GameResult.BLACKJACK
-					};
+						group.Bets.TryGetValue(member, out int bet);
 
-					await OnGameInfoToGroup?.Invoke(group, model);
-					continue;
-				}
+						int bonus = (int)(bet * 1.5);
+						member.Credits += bonus;
 
-				//lose
-				if (dealerHand > memberHand && dealerHand <= 21) 
-				{
-					GameModel model = new GameModel
+						GameModel model = new GameModel
+						{
+							User_ID = member.User_ID,
+							Action = GameAction.GAME_FINISHED,
+							Result = GameResult.BLACKJACK,
+							Hand = i + 1
+						};
+
+						await OnGameInfoToGroup?.Invoke(group, model);
+						continue;
+					}
+
+					//lose
+					if (dealerHand > memberHand && dealerHand <= 21)
 					{
-						User_ID = member.User_ID,
-						Action = GameAction.GAME_FINISHED,
-						Result = GameResult.LOSE
-					};
+						GameModel model = new GameModel
+						{
+							User_ID = member.User_ID,
+							Action = GameAction.GAME_FINISHED,
+							Result = GameResult.LOSE,
+							Hand = i + 1
+						};
 
-					await OnGameInfoToGroup?.Invoke(group, model);
-					continue;
-				}
+						await OnGameInfoToGroup?.Invoke(group, model);
+						continue;
+					}
 
-				//win
-				if (memberHand > dealerHand || dealerHand > 21)
-				{
-					group.Bets.TryGetValue(member, out int bet);
-
-					int bonus = (int)(bet * 2);
-					member.Credits += bonus;
-
-					GameModel model = new GameModel
+					//win
+					if (memberHand > dealerHand || dealerHand > 21)
 					{
-						User_ID = member.User_ID,
-						Action = GameAction.GAME_FINISHED,
-						Result = GameResult.WIN
-					};
+						group.Bets.TryGetValue(member, out int bet);
 
-					await OnGameInfoToGroup?.Invoke(group, model);
-					continue;
+						int bonus = (int)(bet * 2);
+						member.Credits += bonus;
+
+						GameModel model = new GameModel
+						{
+							User_ID = member.User_ID,
+							Action = GameAction.GAME_FINISHED,
+							Result = GameResult.WIN,
+							Hand = i + 1
+						};
+
+						await OnGameInfoToGroup?.Invoke(group, model);
+						continue;
+					}
 				}
 			}
 
@@ -357,7 +394,6 @@ namespace BlackjackLogic
 				{
 					User_ID = member.User_ID,
 					Action = GameAction.GAME_STARTED,
-					Result = GameResult.PUSH
 				};
 
 				await OnGameInfoToGroup?.Invoke(group, startModel);
@@ -372,7 +408,8 @@ namespace BlackjackLogic
 			//clear player hand
 			foreach (var player in group.Members)
 			{
-				_playerLogic.Value.ClearHand(player);
+				player.Hands.Clear();
+				player.Hands.Add(new Player.Hand());
 			}
 
 			//clear dealer hand
@@ -415,7 +452,8 @@ namespace BlackjackLogic
 				Action = GameAction.CARD_DRAWN,
 				Card = "CardDown.png",
 				Total_Card_Value = CalculateHandValue(group.DealerHand),
-				Cards_In_Deck = Math.Max(1, group.Deck.Count - 1)
+				Cards_In_Deck = Math.Max(1, group.Deck.Count - 1),
+				Hand = 1
 			};
 
 			//give dealer 0 in hand to prevent spamming hit without everone receiving their cards
@@ -449,11 +487,33 @@ namespace BlackjackLogic
 
 		}
 
+		private (Player.Hand hand, int index) GetActiveHand(Player player)
+		{
+			for (int i = 0; i < player.Hands.Count; i++)
+			{
+				if (!player.Hands[i].IsFinished)
+				{
+					return (player.Hands[i], i);
+				}
+			}
+
+			return (null, -1);
+		}
+
 		private async Task DealCard(Player player)
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
 			if (group.Status != Group.GroupStatus.PLAYING) return;
+
+			var (activeHand, index) = GetActiveHand(player);
+
+			if (activeHand == null)
+			{
+				await OnGroupNotification?.Invoke(group, "An error occured, please try again later.", NotificationType.GAME, default);
+				Console.WriteLine($"{player.User_ID} has no active hands to deal a card.");
+				return;
+			}
 
 			string card = group.Deck[0];
 			group.Deck.RemoveAt(0);
@@ -463,17 +523,18 @@ namespace BlackjackLogic
 			cardToValueMap.TryGetValue(cardRank, out int cardvalue);
 			cardToNameMap.TryGetValue(card, out string cardName);
 
-			player.Hand.Add(cardvalue.ToString());
+			activeHand.Cards.Add(cardvalue.ToString());
 			
-			string totalHandValue = CalculateHandValue(player.Hand);
+			string totalHandValue = CalculateHandValue(activeHand.Cards);
 
 			GameModel model = new GameModel
 			{
 				User_ID = player.User_ID,
-				Action = player.Hand.Count > 2 ? GameAction.HIT : GameAction.CARD_DRAWN,
+				Action = activeHand.Cards.Count > 2 ? GameAction.HIT : GameAction.CARD_DRAWN,
 				Card = cardName,
 				Total_Card_Value = totalHandValue,
-				Cards_In_Deck = group.Deck.Count
+				Cards_In_Deck = group.Deck.Count,
+				Hand = index + 1
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
@@ -481,18 +542,25 @@ namespace BlackjackLogic
 			//end turn for player if above or equal to 21
 			if (GetBestHandValue(totalHandValue) > 21 || GetBestHandValue(totalHandValue) == 21) 
 			{
-				player.HasFinished = true;
-				GameModel finishedModel = new GameModel
-				{
-					User_ID = player.User_ID,
-					Action = GameAction.PLAYER_FINISHED,
-				};
+				activeHand.IsFinished = true;
 
-				//notify about game-action (player finished playing)
-				await OnGameInfoToGroup?.Invoke(group, finishedModel);
+				//no more hands left
+				if (GetActiveHand(player).hand == null)
+				{
+					player.HasFinished = true;
+
+					GameModel finishedModel = new GameModel
+					{
+						User_ID = player.User_ID,
+						Action = GameAction.PLAYER_FINISHED,
+					};
+
+					//notify about game-action (player finished playing)
+					await OnGameInfoToGroup?.Invoke(group, finishedModel);
+				}
 			}
 
-			Console.WriteLine($"{player.User_ID} received {cardName}, value in hand: {CalculateHandValue(player.Hand)}");
+			Console.WriteLine($"{player.User_ID} received {cardName}, value in hand: {CalculateHandValue(activeHand.Cards)}");
 		}
 
 		private async Task DealCardToDealer(Group group)
@@ -515,7 +583,8 @@ namespace BlackjackLogic
 				Action = GameAction.CARD_DRAWN,
 				Card = cardName,
 				Total_Card_Value = CalculateHandValue(group.DealerHand),
-				Cards_In_Deck = group.Deck.Count
+				Cards_In_Deck = group.Deck.Count,
+				Hand = 1
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
@@ -531,25 +600,41 @@ namespace BlackjackLogic
 		{
 			Group group = SharedData.GetGroupForPlayer(player);
 
+			var (activeHand, index) = GetActiveHand(player);
+
+			if (activeHand == null)
+			{
+				await OnGroupNotification?.Invoke(group, "An error occured, please try again later.", NotificationType.GAME, default);
+				Console.WriteLine($"{player.User_ID} has no active hands to deal a card.");
+				return;
+			}
+
 			GameModel model = new GameModel
 			{
 				User_ID = player.User_ID,
 				Action = GameAction.STAND,
-				Total_Card_Value = CalculateHandValue(player.Hand)
+				Total_Card_Value = CalculateHandValue(activeHand.Cards),
+				Hand = index + 1
 			};
 
 			//notify about game-action (stand)
 			await OnGameInfoToGroup?.Invoke(group, model);
 
-			player.HasFinished = true;
-			GameModel model2 = new GameModel
+			activeHand.IsFinished = true;
+
+			//no more hands left
+			if (GetActiveHand(player).hand == null)
 			{
-				User_ID = player.User_ID,
-				Action = GameAction.PLAYER_FINISHED,
-			};
-			
-			//notify about game-action (player finished playing)
-			await OnGameInfoToGroup?.Invoke(group, model2);
+				player.HasFinished = true;
+				GameModel finishModel = new GameModel
+				{
+					User_ID = player.User_ID,
+					Action = GameAction.PLAYER_FINISHED,
+				};
+
+				//notify about game-action (player finished playing)
+				await OnGameInfoToGroup?.Invoke(group, finishModel);
+			}
 		}
 
 		private async Task Double(Player player)
@@ -558,7 +643,16 @@ namespace BlackjackLogic
 
 			if (group.Status != Group.GroupStatus.PLAYING) return;
 
-			if (player.Hand.Count != 2) 
+			var (activeHand, index) = GetActiveHand(player);
+
+			if (activeHand == null)
+			{
+				await OnGroupNotification?.Invoke(group, "An error occured, please try again later.", NotificationType.GAME, default);
+				Console.WriteLine($"{player.User_ID} has no active hands to deal a card.");
+				return;
+			}
+
+			if (activeHand.Cards.Count != 2) 
 			{
 				await OnNotification?.Invoke(player, "You can only double down on the first 2 cards.", NotificationType.TOAST, ToastType.WARNING);
 				return;
@@ -584,9 +678,9 @@ namespace BlackjackLogic
 			cardToValueMap.TryGetValue(cardRank, out int cardvalue);
 			cardToNameMap.TryGetValue(card, out string cardName);
 
-			player.Hand.Add(cardvalue.ToString());
+			activeHand.Cards.Add(cardvalue.ToString());
 
-			string totalHandValue = CalculateHandValue(player.Hand);
+			string totalHandValue = CalculateHandValue(activeHand.Cards);
 
 			GameModel model = new GameModel
 			{
@@ -597,21 +691,28 @@ namespace BlackjackLogic
 				Cards_In_Deck = group.Deck.Count,
 				Credits = player.Credits,
 				Bet = group.Bets[player],
+				Hand = index + 1
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
-	
-			player.HasFinished = true;
-			GameModel finishedModel = new GameModel
-			{
-				User_ID = player.User_ID,
-				Action = GameAction.PLAYER_FINISHED,
-			};
 
-			//notify about game-action (player finished playing)
-			await OnGameInfoToGroup?.Invoke(group, finishedModel);
-			
-			Console.WriteLine($"{player.User_ID} doubled down, betting {group.Bets[player]} and received {cardName}, value in hand: {CalculateHandValue(player.Hand)}");
+			activeHand.IsFinished = true;
+
+			//no more hands left
+			if (GetActiveHand(player).hand == null)
+			{
+				player.HasFinished = true;
+				GameModel finishedModel = new GameModel
+				{
+					User_ID = player.User_ID,
+					Action = GameAction.PLAYER_FINISHED,
+				};
+
+				//notify about game-action (player finished playing)
+				await OnGameInfoToGroup?.Invoke(group, finishedModel);
+			}
+
+			Console.WriteLine($"{player.User_ID} doubled down, betting {group.Bets[player]} and received {cardName}, value in hand: {CalculateHandValue(activeHand.Cards)}");
 		}
 
 		private async Task Surrender(Player player)
@@ -620,18 +721,27 @@ namespace BlackjackLogic
 
 			if (group.Status != Group.GroupStatus.PLAYING) return;
 
-			group.Bets.TryGetValue(player, out int bet);
+			var (activeHand, index) = GetActiveHand(player);
 
-			if (player.Credits < bet)
+			if (activeHand == null)
 			{
-				await OnNotification?.Invoke(player, "You don't have enough credits to double down.", NotificationType.TOAST, ToastType.WARNING);
+				await OnGroupNotification?.Invoke(group, "An error occured, please try again later.", NotificationType.GAME, default);
+				Console.WriteLine($"{player.User_ID} has no active hands to deal a card.");
 				return;
 			}
 
-			//give back half. The full bet will be removed on game end.
+			if (activeHand.Cards.Count != 2 || player.Hands.Count != 1) 
+			{
+				await OnNotification?.Invoke(player, "You can only surrender on the first 2 cards.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			group.Bets.TryGetValue(player, out int bet);
+
+			//give back half
 			player.Credits += bet / 2;
 
-			player.Hand.Clear();
+			activeHand.Cards.Clear();
 
 			GameModel model = new GameModel
 			{
@@ -639,9 +749,12 @@ namespace BlackjackLogic
 				Action = GameAction.SURRENDER,
 				Total_Card_Value = "0",
 				Credits = player.Credits,
+				Hand = index + 1
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
+
+			activeHand.IsFinished = true;
 
 			player.HasFinished = true;
 			GameModel finishedModel = new GameModel
@@ -654,6 +767,81 @@ namespace BlackjackLogic
 			await OnGameInfoToGroup?.Invoke(group, finishedModel);
 
 			Console.WriteLine($"{player.User_ID} surrendered.");
+		}
+
+		private async Task Insure(Player player)
+		{
+			return;
+		}
+
+		private async Task Split(Player player)
+		{
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			if (group.Status != Group.GroupStatus.PLAYING) return;
+
+			var (activeHand, index) = GetActiveHand(player);
+
+			if (activeHand == null)
+			{
+				await OnGroupNotification?.Invoke(group, "An error occured, please try again later.", NotificationType.GAME, default);
+				Console.WriteLine($"{player.User_ID} has no active hands to deal a card.");
+				return;
+			}
+
+			//add when done testing
+			//if (activeHand.Cards[0] != activeHand.Cards[1])
+			//{
+			//	await OnNotification?.Invoke(player, "You can only split on identically ranked initial cards.", NotificationType.TOAST, ToastType.WARNING);
+			//	return;
+			//}
+
+			if (activeHand.Cards.Count != 2)
+			{
+				await OnNotification?.Invoke(player, "You can only split on the first 2 cards of a hand.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			group.Bets.TryGetValue(player, out int bet);
+
+			if (player.Credits < bet)
+			{
+				await OnNotification?.Invoke(player, "You don't have enough credits to split.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			player.Credits -= bet;
+
+			var hand1 = new Player.Hand();
+			var hand2 = new Player.Hand();
+
+			hand1.Cards.Add(activeHand.Cards[0]); 
+			hand2.Cards.Add(activeHand.Cards[1]); 
+			
+			player.Hands.Remove(activeHand);
+
+			player.Hands.Add(hand1);
+			player.Hands.Add(hand2);
+
+			Console.WriteLine($"Player {player.User_ID} has the following hands:");
+
+			for (int i = 0; i < player.Hands.Count; i++)
+			{
+				var hand = player.Hands[i];
+				var handValue = CalculateHandValue(hand.Cards); 
+
+				Console.WriteLine($"Hand {i + 1}: {string.Join(", ", hand.Cards)} | Value: {handValue}");
+			}
+
+			GameModel model = new GameModel
+			{
+				User_ID = player.User_ID,
+				Action = GameAction.SPLIT,
+				Hand = index + 1
+			};
+		
+			//notify about game-action (split)
+			await OnGameInfoToGroup?.Invoke(group, model);
 		}
 
 		private async Task Bet(Player player, string bet_amount) 
