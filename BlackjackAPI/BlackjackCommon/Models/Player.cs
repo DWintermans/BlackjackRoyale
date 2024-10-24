@@ -8,6 +8,7 @@
 		public bool IsReady { get; set; }
 		public int Credits { get; set; }
 		public bool HasFinished { get; set; }
+		public bool HasInsurance { get; set; }
 
 		public Player(int user_id, string name)
 		{
@@ -16,6 +17,7 @@
 			Hands = new List<Hand>();
 			IsReady = false;
 			HasFinished = false;
+			HasInsurance = false;
 		}
 
 		public class Hand

@@ -175,10 +175,25 @@ namespace BlackjackLogic
 				}
 			}
 
-			while (GetBestHandValue((CalculateHandValue(group.DealerHand))) <= 16) 
+			await Task.Delay(1000);
+
+			//display faced down card
+			GameModel gameModel = new GameModel
 			{
-				await DealCardToDealer(group);
+				User_ID = 0,
+				Action = GameAction.CARD_DRAWN,
+				Card = group.HoleCard,
+				Total_Card_Value = CalculateHandValue(group.DealerHand),
+				Cards_In_Deck = group.Deck.Count,
+				Hand = 1
+			};
+
+			await OnGameInfoToGroup?.Invoke(group, gameModel);
+
+			while (GetBestHandValue((CalculateHandValue(group.DealerHand))) <= 16) 
+			{				
 				await Task.Delay(1000);
+				await DealCardToDealer(group);
 			}
 
 			foreach (var member in group.Members)
@@ -205,6 +220,38 @@ namespace BlackjackLogic
 						continue;
 					}
 
+					//dealer has blackjack, payout insurance
+					if (dealerHand == 21 && group.DealerHand.Count == 2) 
+					{
+						if (member.HasInsurance)
+						{
+							group.Bets.TryGetValue(member, out int bet);
+							member.Credits += bet;
+							GameModel model = new GameModel
+							{
+								User_ID = member.User_ID,
+								Action = GameAction.INSURANCE_PAID,
+							};
+
+							await OnGameInfoToGroup?.Invoke(group, model);
+						}
+					}
+
+					//bust
+					if (memberHand > 21)
+					{
+						GameModel model = new GameModel
+						{
+							User_ID = member.User_ID,
+							Action = GameAction.GAME_FINISHED,
+							Result = GameResult.BUSTED,
+							Hand = i + 1
+						};
+
+						await OnGameInfoToGroup?.Invoke(group, model);
+						continue;
+					}
+
 					//push / tie
 					if (memberHand == dealerHand)
 					{
@@ -223,28 +270,13 @@ namespace BlackjackLogic
 						continue;
 					}
 
-					//bust
-					if (memberHand > 21)
-					{
-						GameModel model = new GameModel
-						{
-							User_ID = member.User_ID,
-							Action = GameAction.GAME_FINISHED,
-							Result = GameResult.BUSTED,
-							Hand = i + 1
-						};
-
-						await OnGameInfoToGroup?.Invoke(group, model);
-						continue;
-					}
-
 					//blackjack pays 3 to 2 (a.k.a. * 1.5), only counts as blackjack if 21 is achieved with 2 cards
 					if (memberHand == 21 && hand.Cards.Count == 2)
 					{
 						group.Bets.TryGetValue(member, out int bet);
 
 						int bonus = (int)(bet * 1.5);
-						member.Credits += bonus;
+						member.Credits += bet + bonus;
 
 						GameModel model = new GameModel
 						{
@@ -278,8 +310,7 @@ namespace BlackjackLogic
 					{
 						group.Bets.TryGetValue(member, out int bet);
 
-						int bonus = (int)(bet * 2);
-						member.Credits += bonus;
+						member.Credits += bet + bet;
 
 						GameModel model = new GameModel
 						{
@@ -445,7 +476,7 @@ namespace BlackjackLogic
 				await Task.Delay(1000);
 			}
 
-			//give faced down card to dealer, pretend that a card is removed from the deck
+			//display faced down card to dealer
 			GameModel model = new GameModel
 			{
 				User_ID = 0,
@@ -456,9 +487,17 @@ namespace BlackjackLogic
 				Hand = 1
 			};
 
-			//give dealer 0 in hand to prevent spamming hit without everone receiving their cards
-			//gives it 2 cards in hand, allow hit/stand when 2 cards are in hand of dealer
-			group.DealerHand.Add("0");
+			//give second card but dont display, players are allowed to hit/stand when 2 cards are in hand of dealer
+			string card = group.Deck[0];
+			group.Deck.RemoveAt(0);
+
+			//remove first character (e.g. H9 > 9, HK > 10, H0 > 10)
+			char cardRank = card[1];
+			cardToValueMap.TryGetValue(cardRank, out int cardvalue);
+			cardToNameMap.TryGetValue(card, out string cardName);
+
+			group.DealerHand.Add(cardvalue.ToString());
+			group.HoleCard = cardName;
 
 			await OnGameInfoToGroup?.Invoke(group, model);
 
@@ -771,7 +810,42 @@ namespace BlackjackLogic
 
 		private async Task Insure(Player player)
 		{
-			return;
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			if (group.Status != Group.GroupStatus.PLAYING) return;
+
+
+			if (player.HasInsurance) 
+			{
+				await OnNotification?.Invoke(player, "You are already insured.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			if (player.Hands.Count != 1 || player.Hands[0].Cards.Count != 2)
+			{
+				await OnNotification?.Invoke(player, "Insurance is only available with your initial two cards.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			if (group.DealerHand[0] != "11") 
+			{
+				await OnNotification?.Invoke(player, "You can only take insurance when de dealer shows an Ace.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
+
+			group.Bets.TryGetValue(player, out int bet);
+
+			if (player.Credits >= bet / 2)
+			{
+				player.HasInsurance = true;
+				player.Credits -= bet / 2;
+
+				await OnNotification?.Invoke(player, "You are now insured against a dealer Blackjack.", NotificationType.TOAST, ToastType.SUCCESS);
+			}
+			else
+			{
+				await OnNotification?.Invoke(player, "Not enough credits for insurance.", NotificationType.TOAST, ToastType.WARNING);
+			}
 		}
 
 		private async Task Split(Player player)
@@ -786,6 +860,12 @@ namespace BlackjackLogic
 			{
 				await OnGroupNotification?.Invoke(group, "An error occured, please try again later.", NotificationType.GAME, default);
 				Console.WriteLine($"{player.User_ID} has no active hands to deal a card.");
+				return;
+			}
+
+			if (player.Hands.Count == 4) 
+			{
+				await OnNotification?.Invoke(player, "You can only split 3 times.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 

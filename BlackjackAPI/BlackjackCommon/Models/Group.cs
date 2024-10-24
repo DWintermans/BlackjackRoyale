@@ -4,12 +4,11 @@
 	{
 		public string Group_ID { get; private set; }
 		public string Unique_Group_ID { get; private set; }
-
 		public GroupStatus Status { get; set; }
-
 		public List<Player> Members { get; private set; }
 		public List<string> Deck { get; private set; }
 		public List<string> DealerHand { get; private set; }
+		public string? HoleCard { get; set; }
 		public List<Player> WaitingRoom { get; private set; }
 
 		public Dictionary<Player, int> Bets { get; private set; }
