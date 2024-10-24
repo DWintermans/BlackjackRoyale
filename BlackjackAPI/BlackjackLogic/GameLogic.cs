@@ -2,6 +2,7 @@
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
+using System;
 using System.Numerics;
 using System.Threading.Tasks.Dataflow;
 using Group = BlackjackCommon.Models.Group;
@@ -841,6 +842,14 @@ namespace BlackjackLogic
 				player.Credits -= bet / 2;
 
 				await OnNotification?.Invoke(player, "You are now insured against a dealer Blackjack.", NotificationType.TOAST, ToastType.SUCCESS);
+				GameModel model = new GameModel
+				{
+					User_ID = player.User_ID,
+					Action = GameAction.INSURE,
+				};
+
+				//notify about game-action (insure)
+				await OnGameInfoToGroup?.Invoke(group, model);
 			}
 			else
 			{
@@ -869,12 +878,11 @@ namespace BlackjackLogic
 				return;
 			}
 
-			//add when done testing
-			//if (activeHand.Cards[0] != activeHand.Cards[1])
-			//{
-			//	await OnNotification?.Invoke(player, "You can only split on identically ranked initial cards.", NotificationType.TOAST, ToastType.WARNING);
-			//	return;
-			//}
+			if (activeHand.Cards[0] != activeHand.Cards[1])
+			{
+				await OnNotification?.Invoke(player, "You can only split on identically ranked initial cards.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
 
 			if (activeHand.Cards.Count != 2)
 			{
