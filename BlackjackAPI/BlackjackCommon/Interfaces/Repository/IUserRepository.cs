@@ -2,6 +2,8 @@
 {
 	public interface IUserRepository
 	{
+		int RetrieveCredits(int user_id);
+		void UpdateCredits(int user_id, int credits);
 		(int user_id, string user_name, byte[] hashed_pw, byte[] salt) RetrieveLoginInformation(string username);
 		(byte[] hashed_pw, byte[] salt) RetrieveSalt_HashInformation(int user_id);
 		int CreateAccount(string username, string hashed_password, string salt);

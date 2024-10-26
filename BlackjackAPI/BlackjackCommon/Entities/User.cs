@@ -27,6 +27,9 @@ namespace BlackjackCommon.Entities.User
 		[Column("user_is_moderator")]
 		public bool user_is_moderator { get; set; }
 
+		[Column("user_balance")]
+		public int user_balance { get; set; }
+
 		[Column("user_total_wins")]
 		public int? user_total_wins { get; set; }
 

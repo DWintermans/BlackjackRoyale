@@ -206,6 +206,8 @@ namespace BlackjackLogic
 					int memberHand = GetBestHandValue(CalculateHandValue(hand.Cards));
 					int dealerHand = GetBestHandValue((CalculateHandValue(group.DealerHand)));
 
+					group.Bets.TryGetValue(member, out int bet);
+
 					//surrendered? no cards so value is 0
 					if (memberHand == 0)
 					{
@@ -226,12 +228,12 @@ namespace BlackjackLogic
 					{
 						if (member.HasInsurance)
 						{
-							group.Bets.TryGetValue(member, out int bet);
 							member.Credits += bet;
 							GameModel model = new GameModel
 							{
 								User_ID = member.User_ID,
 								Action = GameAction.INSURANCE_PAID,
+								Bet = bet //show winnings
 							};
 
 							await OnGameInfoToGroup?.Invoke(group, model);
@@ -256,7 +258,6 @@ namespace BlackjackLogic
 					//push / tie
 					if (memberHand == dealerHand)
 					{
-						group.Bets.TryGetValue(member, out int bet);
 						member.Credits += bet;
 
 						GameModel model = new GameModel
@@ -264,7 +265,7 @@ namespace BlackjackLogic
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.PUSH,
-							Hand = i + 1
+							Hand = i + 1,
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
@@ -274,16 +275,15 @@ namespace BlackjackLogic
 					//blackjack pays 3 to 2 (a.k.a. * 1.5), only counts as blackjack if 21 is achieved with 2 cards
 					if (memberHand == 21 && hand.Cards.Count == 2)
 					{
-						group.Bets.TryGetValue(member, out int bet);
-
-						int bonus = (int)(bet * 1.5);
-						member.Credits += bet + bonus;
+						int bonus = (int)(bet * 0.5);
+						member.Credits += bet + bet + bonus;
 
 						GameModel model = new GameModel
 						{
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.BLACKJACK,
+							Bet = bet + bet + bonus, //show winnings
 							Hand = i + 1
 						};
 
@@ -309,8 +309,6 @@ namespace BlackjackLogic
 					//win
 					if (memberHand > dealerHand || dealerHand > 21)
 					{
-						group.Bets.TryGetValue(member, out int bet);
-
 						member.Credits += bet + bet;
 
 						GameModel model = new GameModel
@@ -318,6 +316,7 @@ namespace BlackjackLogic
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.WIN,
+							Bet = bet + bet, //show winnings
 							Hand = i + 1
 						};
 
@@ -330,6 +329,15 @@ namespace BlackjackLogic
 			//send credits update privately
 			foreach (var member in group.Members) 
 			{
+				try
+				{
+					_playerLogic.Value.UpdateCredits(member, member.Credits);
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"An error occurred while updating credits: {ex.Message}");
+				}
+
 				GameModel model = new GameModel
 				{
 					User_ID = member.User_ID,
@@ -524,7 +532,6 @@ namespace BlackjackLogic
 
 			Console.WriteLine($"Two new decks have been shuffled and added to group: {group.Group_ID}");
 			await OnGroupNotification?.Invoke(group, "Two new decks have been shuffled and added.", NotificationType.GAME, default);
-
 		}
 
 		private (Player.Hand hand, int index) GetActiveHand(Player player)

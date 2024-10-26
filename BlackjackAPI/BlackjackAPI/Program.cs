@@ -26,6 +26,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<IUserLogic, UserLogic>();
 builder.Services.AddScoped<IFriendLogic, FriendLogic>();
+builder.Services.AddScoped<IPlayerLogic, PlayerLogic>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IFriendRepository, FriendRepository>();

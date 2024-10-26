@@ -241,7 +241,7 @@ internal class Websocket : IWebsocket
 		else
 		{
 			player = new Player(user_id, user_name);
-			_playerLogic.RetrieveCredits(player);
+			_playerLogic.SetCredits(player);
 		}
 
 		if (!SharedData.Players.ContainsKey(user_id))

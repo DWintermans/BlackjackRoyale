@@ -1,14 +1,39 @@
 ﻿using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Interfaces.Repository;
 using Player = BlackjackCommon.Models.Player;
 
 namespace BlackjackLogic
 {
 	public class PlayerLogic : IPlayerLogic
 	{
-		public void RetrieveCredits(Player player)
+		private readonly IUserRepository _userDAL;
+
+		public PlayerLogic(IUserRepository userDAL)
 		{
-			//make db call
-			player.Credits = 100;
+			_userDAL = userDAL;
+		}
+
+		public void SetCredits(Player player)
+		{
+			try 
+			{
+				player.Credits = _userDAL.RetrieveCredits(player.User_ID);
+			} 
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Failed to set credits: {ex.Message}");
+				player.Credits = 100;
+			}
+		}
+
+		//public void SetStatistics(Player player, int wins, int losses, int win_amt, int loss_amt) 
+		//{
+			
+		//}
+
+		public void UpdateCredits(Player player, int credits)
+		{
+			_userDAL.UpdateCredits(player.User_ID, credits);
 		}
 
 	}

@@ -4,6 +4,7 @@ namespace BlackjackCommon.Interfaces.Logic
 {
 	public interface IPlayerLogic
 	{
-		void RetrieveCredits(Player player);
+		void SetCredits(Player player);
+		void UpdateCredits(Player player, int credits);
 	}
 }

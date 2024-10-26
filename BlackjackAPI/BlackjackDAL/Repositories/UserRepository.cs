@@ -8,6 +8,55 @@ namespace BlackjackDAL.Repositories
 	{
 		private readonly DBConnection _DBConnection = new();
 
+
+		public int RetrieveCredits(int user_id)
+		{
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					var user = context.User.SingleOrDefault(u => u.user_id == user_id);
+
+					if (user != null)
+					{
+						return user.user_balance;
+					}
+					else
+					{
+						throw new Exception($"User with ID {user_id} not found.");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
+
+		public void UpdateCredits(int user_id, int credits)
+		{
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					var user = context.User.SingleOrDefault(u => u.user_id == user_id);
+
+					if (user != null)
+					{
+						user.user_balance = credits;
+
+						context.SaveChanges();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
+
 		public (int user_id, string user_name, byte[] hashed_pw, byte[] salt) RetrieveLoginInformation(string username)
 		{
 			try
@@ -168,7 +217,6 @@ namespace BlackjackDAL.Repositories
 				throw;
 			}
 		}
-
 
 	}
 }

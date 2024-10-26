@@ -1,5 +1,7 @@
 ﻿using BlackjackCommon.Interfaces;
 using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Interfaces.Repository;
+using BlackjackDAL.Repositories;
 using BlackjackLogic;
 using BlackjackService;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +21,9 @@ internal class Program
 		serviceCollection.AddTransient<Lazy<IPlayerLogic>>(provider => new Lazy<IPlayerLogic>(() => provider.GetRequiredService<IPlayerLogic>()));
 
 		serviceCollection.AddScoped<IWebsocket, Websocket>();
+
+		serviceCollection.AddScoped<IUserRepository, UserRepository>();
+
 
 		var serviceProvider = serviceCollection.BuildServiceProvider();
 
