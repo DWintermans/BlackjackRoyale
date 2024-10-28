@@ -216,7 +216,8 @@ namespace BlackjackLogic
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.SURRENDER,
-							Hand = i + 1
+							Hand = i + 1,
+							Bet = bet //show winnings/losses
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
@@ -233,7 +234,7 @@ namespace BlackjackLogic
 							{
 								User_ID = member.User_ID,
 								Action = GameAction.INSURANCE_PAID,
-								Bet = bet //show winnings
+								Bet = bet 
 							};
 
 							await OnGameInfoToGroup?.Invoke(group, model);
@@ -248,7 +249,8 @@ namespace BlackjackLogic
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.BUSTED,
-							Hand = i + 1
+							Hand = i + 1,
+							Bet = bet
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
@@ -283,7 +285,7 @@ namespace BlackjackLogic
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.BLACKJACK,
-							Bet = bet + bet + bonus, //show winnings
+							Bet = bet + bonus, //show winnings
 							Hand = i + 1
 						};
 
@@ -299,7 +301,8 @@ namespace BlackjackLogic
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.LOSE,
-							Hand = i + 1
+							Hand = i + 1,
+							Bet = bet
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
@@ -316,7 +319,7 @@ namespace BlackjackLogic
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.WIN,
-							Bet = bet + bet, //show winnings
+							Bet = bet, //show winnings
 							Hand = i + 1
 						};
 
