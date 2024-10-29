@@ -278,6 +278,12 @@ namespace BlackjackLogic
 			//save group to send groupinfo update to
 			Group group = SharedData.GetGroupForPlayer(player);
 
+			//if player left after placing a bet: possibility of losing all credits
+			if (player.Credits < 10)
+			{
+				player.Credits = 100;
+			}
+
 			//leave group
 			if (group != null)
 			{

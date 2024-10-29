@@ -59,6 +59,20 @@ namespace BlackjackLogic
 			{"HJ", "JackHearts.png"}, {"CJ", "JackClubs.png"}, {"DJ", "JackDiamonds.png"}, {"SJ", "JackSpades.png"}
 		};
 
+		//messages for bankruptcy 
+		string[] bankruptMessages = new string[]
+		{
+			"Well, looks like you went all-in... and lost it all! Lucky for you, we’re feeling generous. Here’s a second chance – don’t blow it!",
+			"Ouch, that last hand cleaned you out! Good thing this isn’t Vegas, and we're handing out free credits. Go ahead, give it another shot!",
+			"Congratulations! You hit rock bottom! Here’s some pity credits to get you back in the game. Remember, they don’t grow on trees… or do they?",
+			"They say you’ve gotta lose it all to start fresh. Here’s a little something to get you back in the game – now go win it all back!",
+			"Welcome to the Bank of Pity, where bankrupt players get a second chance! We’re loading you up with a few credits. Don’t spend it all in one place (or do)!",
+			"You’re officially broke! But hey, we all deserve a second chance. Here’s your freebie – maybe this time, play it a bit cooler?",
+			"Looks like the house won! Again. Here’s a little boost to keep you in the game… but remember, the house always… well, you know the rest!",
+			"You did it! You hit zero! Here’s some free credits to save face. Maybe this time, try a little less… enthusiasm.",
+			"Even the best players go broke sometimes. Here’s a fresh stack of credits to turn it around. Now go make that comeback!"
+		};
+
 		public async Task HandleGameAction(Player player, dynamic message)
 		{
 			//check if group exists / if game has started (has received deck)
@@ -267,6 +281,7 @@ namespace BlackjackLogic
 							User_ID = member.User_ID,
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.PUSH,
+							Bet = 0,
 							Hand = i + 1,
 						};
 
@@ -332,6 +347,15 @@ namespace BlackjackLogic
 			//send credits update privately
 			foreach (var member in group.Members) 
 			{
+				//prevent bankruptcy, send funny message
+				if (member.Credits < 10) 
+				{
+					member.Credits = 100;
+					Random random = new Random();
+					string message = bankruptMessages[random.Next(bankruptMessages.Length)];
+					await OnNotification?.Invoke(member, message, NotificationType.TOAST, ToastType.INFO);
+				}
+
 				try
 				{
 					_playerLogic.Value.UpdateCredits(member, member.Credits);
@@ -702,9 +726,9 @@ namespace BlackjackLogic
 				return;
 			}
 
-			if (activeHand.Cards.Count != 2) 
+			if (player.Hands.Count != 1 || activeHand.Cards.Count != 2) 
 			{
-				await OnNotification?.Invoke(player, "You can only double down on the first 2 cards.", NotificationType.TOAST, ToastType.WARNING);
+				await OnNotification?.Invoke(player, "You can only double down on the first 2 cards of the first hand.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
@@ -888,11 +912,11 @@ namespace BlackjackLogic
 				return;
 			}
 
-			if (activeHand.Cards[0] != activeHand.Cards[1])
-			{
-				await OnNotification?.Invoke(player, "You can only split on identically ranked initial cards.", NotificationType.TOAST, ToastType.WARNING);
-				return;
-			}
+			//if (activeHand.Cards[0] != activeHand.Cards[1])
+			//{
+			//	await OnNotification?.Invoke(player, "You can only split on identically ranked initial cards.", NotificationType.TOAST, ToastType.WARNING);
+			//	return;
+			//}
 
 			if (activeHand.Cards.Count != 2)
 			{

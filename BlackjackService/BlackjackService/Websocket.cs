@@ -152,41 +152,54 @@ internal class Websocket : IWebsocket
 
 				if (result.MessageType == WebSocketMessageType.Close)
 				{
-					Console.WriteLine("WebSocket connection closed for client ID: " + client_id);
-
-					//get user_id before removing it
-					string userID = SharedData.userIDToCliendIdMap.FirstOrDefault(x => x.Value == client_id).Key;
-
-					//get key to remove
-					string keyToRemove = SharedData.userIDToCliendIdMap.FirstOrDefault<KeyValuePair<string, string>>((KeyValuePair<string, string> x) => x.Value == client_id).Key;
-
-					//remove client_id to socket connection from list
-					connectedClients.Remove(client_id);
-
-					//remove from user_id to client_id list
-					if (keyToRemove != null)
-					{
-						SharedData.userIDToCliendIdMap.Remove(keyToRemove);
-					}
-
-					//leave group on socket disconnect.
-					if (Int32.TryParse(userID, out int user_id))
-					{
-						Player player = SharedData.TryGetExistingPlayer(user_id);
-						if (player != null)
-						{
-							dynamic message = new ExpandoObject();
-							message.action = "leave_group";
-
-							await _groupLogic.HandleGroupAction(player, message);
-						}
-					}
+					await HandleClientDisconnection(client_id);
 					break;
 				}
 			}
-			catch (Exception e)
+			catch (WebSocketException wsEx) when (wsEx.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely || wsEx.WebSocketErrorCode == WebSocketError.InvalidState)
 			{
-				Console.WriteLine(e.Message);
+				//no closing handshake?
+				Console.WriteLine($"Abrupt WebSocket disconnection for client ID: {client_id}");
+				await HandleClientDisconnection(client_id);
+				break;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("An unexpected error occurred: " + ex.Message);
+				break;
+			}
+		}
+	}
+
+	private async Task HandleClientDisconnection(string client_id)
+	{
+		Console.WriteLine("WebSocket connection closed for client ID: " + client_id);
+
+		//get user_id before removing it
+		string userID = SharedData.userIDToCliendIdMap.FirstOrDefault(x => x.Value == client_id).Key;
+
+		//get key to remove
+		string keyToRemove = SharedData.userIDToCliendIdMap.FirstOrDefault<KeyValuePair<string, string>>((KeyValuePair<string, string> x) => x.Value == client_id).Key;
+
+		//remove client_id to socket connection from list
+		connectedClients.Remove(client_id);
+
+		//remove from user_id to client_id list
+		if (keyToRemove != null)
+		{
+			SharedData.userIDToCliendIdMap.Remove(keyToRemove);
+		}
+
+		//leave group on socket disconnect.
+		if (Int32.TryParse(userID, out int user_id))
+		{
+			Player player = SharedData.TryGetExistingPlayer(user_id);
+			if (player != null)
+			{
+				dynamic message = new ExpandoObject();
+				message.action = "leave_group";
+
+				await _groupLogic.HandleGroupAction(player, message);
 			}
 		}
 	}
