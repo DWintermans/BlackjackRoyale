@@ -269,8 +269,8 @@ namespace BlackjackLogic
 				Console.WriteLine("Group_ID: " + g.Key + " | User_IDs: " + string.Join(", ", g.Value.Members.Select(m => m.User_ID)));
 			}
 
-			await OnNotification?.Invoke(player, $"Group with ID {group.Group_ID} created.", NotificationType.TOAST, ToastType.SUCCESS);
-			await OnNotification?.Invoke(player, $"You have joined group {group.Group_ID}.", NotificationType.TOAST, ToastType.INFO);
+			//await OnNotification?.Invoke(player, $"Group with ID {group.Group_ID} created.", NotificationType.TOAST, ToastType.SUCCESS);
+			await OnNotification?.Invoke(player, $"You have created group {group.Group_ID}. Press 'ready' to start betting.", NotificationType.TOAST, ToastType.INFO);
 		}
 
 		private async Task LeaveGroup(Player player)

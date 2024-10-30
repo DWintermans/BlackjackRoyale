@@ -353,7 +353,8 @@ namespace BlackjackLogic
 					member.Credits = 100;
 					Random random = new Random();
 					string message = bankruptMessages[random.Next(bankruptMessages.Length)];
-					await OnNotification?.Invoke(member, message, NotificationType.TOAST, ToastType.INFO);
+					string messageWithCredits = $"{message} [+100 credits]";
+					await OnNotification?.Invoke(member, messageWithCredits, NotificationType.TOAST, ToastType.DEFAULT);
 				}
 
 				try
@@ -887,7 +888,7 @@ namespace BlackjackLogic
 			}
 			else
 			{
-				await OnNotification?.Invoke(player, "Not enough credits for insurance.", NotificationType.TOAST, ToastType.WARNING);
+				await OnNotification?.Invoke(player, "You don't have enough credits for insurance.", NotificationType.TOAST, ToastType.WARNING);
 			}
 		}
 
