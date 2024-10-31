@@ -18,14 +18,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-
+          
       - name: Restore dependencies for BlackjackAPI
         run: dotnet restore
         working-directory: ./BlackjackAPI/BlackjackAPI
 
       - name: Restore dependencies for BlackjackService
         run: dotnet restore
-        working-directory: ./BlackjackService
+        working-directory: ./BlackjackService/BlackjackService
 
       - name: Publish BlackjackAPI
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackAPI
@@ -33,7 +33,7 @@ jobs:
 
       - name: Publish BlackjackService
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackService
-        working-directory: ./BlackjackService
+        working-directory: ./BlackjackService/BlackjackService
 
       - name: Deploy to FTP Server
         uses: SamKirkland/FTP-Deploy-Action@4.1.0
