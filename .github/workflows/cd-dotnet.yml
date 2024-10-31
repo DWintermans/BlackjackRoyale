@@ -27,6 +27,20 @@ jobs:
         run: dotnet restore
         working-directory: ./BlackjackService/BlackjackService
 
+      - name: Create .env for BlackjackAPI
+        run: |
+          echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> ./BlackjackAPI/BlackjackAPI/.env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackAPI/BlackjackAPI/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackAPI/BlackjackAPI/.env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackAPI/BlackjackAPI/.env
+          echo "JWT=${{ secrets.JWT }}" >> ./BlackjackAPI/BlackjackAPI/.env
+
+      - name: Create .env for BlackjackService
+        run: |
+          echo "WS_URL=wss://i532747.luna.fhict.nl/ws/" >> ./BlackjackService/BlackjackService/.env
+          echo "JWT=${{ secrets.JWT }}" >> ./BlackjackService/BlackjackService/.env
+
+
       - name: Publish BlackjackAPI
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackAPI
         working-directory: ./BlackjackAPI/BlackjackAPI
