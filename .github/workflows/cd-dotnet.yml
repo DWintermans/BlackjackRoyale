@@ -29,6 +29,7 @@ jobs:
 
       - name: Create .env for BlackjackAPI
         run: |
+          rm -f .env
           echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackAPI/BlackjackAPI/.env
@@ -37,6 +38,7 @@ jobs:
 
       - name: Create .env for BlackjackService
         run: |
+          rm -f .env
           echo "WS_URL=wss://i532747.luna.fhict.nl/ws/" >> ./BlackjackService/BlackjackService/.env
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackService/BlackjackService/.env
 
