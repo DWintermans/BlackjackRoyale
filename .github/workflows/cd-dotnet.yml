@@ -1,0 +1,40 @@
+name: .NET
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish BlackjackAPI
+        run: dotnet publish ${{ github.workspace }}/BlackjackAPI/BlackjackAPI/BlackjackAPI.csproj -c Release -o ${{ github.workspace }}/publish
+
+      - name: Publish BlackjackService
+        run: dotnet publish ${{ github.workspace }}/BlackjackService/BlackjackService.csproj -c Release -o ${{ github.workspace }}/publish
+
+      - name: Deploy to FTP Server
+        uses: SamKirkland/FTP-Deploy-Action@4.1.0
+        with:
+          protocol: ftps
+          server: 145.85.4.100
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ${{ github.workspace }}/publish/
+          server-dir: /domains/i532747.luna.fhict.nl/
+          dangerous-clean-slate: true
