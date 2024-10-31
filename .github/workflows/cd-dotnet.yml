@@ -61,3 +61,4 @@ jobs:
           local-dir: ${{ github.workspace }}/publish/
           server-dir: /domains/i532747.luna.fhict.nl/
           dangerous-clean-slate: true
+          passive: true
