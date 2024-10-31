@@ -12,6 +12,7 @@ namespace BlackjackTest.User
 		[TestInitialize]
 		public void Initialize()
 		{
+			Environment.SetEnvironmentVariable("JWT", "yMMp3FmNqsWZQmrgKKH3oPiXS9oJKRxu4NVyzKCHngJrWLvPUj6vVGWvwMGPWME3orgVHhRvJGDzH2hb65WrUwdDMqy2mFHBMRJGFYiTgwet5JhoJDKVLkQHtpZF2iGq");
 			_mockUserRepository = new Mock<IUserRepository>();
 			_userLogic = new UserLogic(_mockUserRepository.Object);
 		}
