@@ -422,6 +422,8 @@ namespace BlackjackLogic
 				foreach (var player in group.WaitingRoom.ToList())
 				{
 					group.Members.Add(player);
+					player.IsReady = true;
+
 					await ForceCheckGroup(player);
 
 					await OnNotification?.Invoke(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);

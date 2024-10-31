@@ -86,7 +86,7 @@ namespace BlackjackLogic
 
 			if (group.Status == Group.GroupStatus.WAITING)
 			{
-				await OnNotification?.Invoke(player, "The game has not started yet", NotificationType.TOAST, ToastType.INFO);
+				await OnNotification?.Invoke(player, "The game has not started yet.", NotificationType.TOAST, ToastType.INFO);
 				return;
 			}
 
@@ -189,6 +189,16 @@ namespace BlackjackLogic
 					return;
 				}
 			}
+
+			//dealers' turn
+			GameModel turnModel = new GameModel
+			{
+				User_ID = 0,
+				Action = GameAction.TURN,
+				Hand = 1
+			};
+
+			await OnGameInfoToGroup?.Invoke(group, turnModel);
 
 			await Task.Delay(1000);
 
@@ -357,14 +367,7 @@ namespace BlackjackLogic
 					await OnNotification?.Invoke(member, messageWithCredits, NotificationType.TOAST, ToastType.DEFAULT);
 				}
 
-				try
-				{
-					_playerLogic.Value.UpdateCredits(member, member.Credits);
-				}
-				catch (Exception ex)
-				{
-					Console.WriteLine($"An error occurred while updating credits: {ex.Message}");
-				}
+				_playerLogic.Value.UpdateCredits(member, member.Credits);
 
 				GameModel model = new GameModel
 				{
@@ -453,7 +456,6 @@ namespace BlackjackLogic
 
 		public async Task StartGame(Group group)
 		{
-			//remove later
 			await OnGroupNotification?.Invoke(group, "Game is starting now!", NotificationType.GAME, default);
 
 			foreach (var member in group.Members)
@@ -476,6 +478,7 @@ namespace BlackjackLogic
 			//clear player hand
 			foreach (var player in group.Members)
 			{
+				player.HasInsurance = false;
 				player.Hands.Clear();
 				player.Hands.Add(new Player.Hand());
 			}
@@ -876,7 +879,6 @@ namespace BlackjackLogic
 				player.HasInsurance = true;
 				player.Credits -= bet / 2;
 
-				await OnNotification?.Invoke(player, "You are now insured against a dealer Blackjack.", NotificationType.TOAST, ToastType.SUCCESS);
 				GameModel model = new GameModel
 				{
 					User_ID = player.User_ID,
@@ -969,8 +971,8 @@ namespace BlackjackLogic
 
 		private async Task Bet(Player player, string bet_amount) 
 		{
-			if (!int.TryParse(bet_amount, out int bet)) {
-				await OnNotification?.Invoke(player, "Unexpected bet value received", NotificationType.TOAST, ToastType.ERROR);
+			if (!int.TryParse(bet_amount, out int bet) || bet % 10 != 0) { 
+				await OnNotification?.Invoke(player, "Invalid bet value received", NotificationType.TOAST, ToastType.ERROR);
 				return;
 			}
 

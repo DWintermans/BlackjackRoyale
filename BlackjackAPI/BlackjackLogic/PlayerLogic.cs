@@ -33,7 +33,15 @@ namespace BlackjackLogic
 
 		public void UpdateCredits(Player player, int credits)
 		{
-			_userDAL.UpdateCredits(player.User_ID, credits);
+			try
+			{
+				_userDAL.UpdateCredits(player.User_ID, credits);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Failed to set credits: {ex.Message}");
+				player.Credits = 100;
+			}
 		}
 
 	}
