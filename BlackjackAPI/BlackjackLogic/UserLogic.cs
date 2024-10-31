@@ -7,11 +7,19 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using DotNetEnv;
 
 namespace BlackjackLogic
 {
 	public class UserLogic : IUserLogic
 	{
+		static UserLogic()
+		{
+			Env.Load();
+		}
+
+		private const string _JWT = "JWT";
+
 		private readonly IUserRepository _userDAL;
 
 		public UserLogic(IUserRepository userDAL)
@@ -25,8 +33,10 @@ namespace BlackjackLogic
 
 		public string CreateJWT(int user_id, string username)
 		{
+			string envjwt = Env.GetString(_JWT);
+
 			var tokenHandler = new JwtSecurityTokenHandler();
-			var key = Encoding.ASCII.GetBytes("ah48MZ4amGS3VqakPxjsYSekeg3yar6MbirervAigfquZkcF8wSCS3VKTWMaQCMR8dSJh3McMCcoT59rUnTxqKoSyAELPRcdZVF9wtB8XxhUPpTQUA5nWoGVSfd8R4Go");
+			var key = Encoding.ASCII.GetBytes(envjwt);
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
 				Subject = new System.Security.Claims.ClaimsIdentity(new[]
@@ -48,11 +58,13 @@ namespace BlackjackLogic
 
 		public int GetUserIDFromJWT(string token)
 		{
+			string jwt = Env.GetString(_JWT);
+
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var validationParameters = new TokenValidationParameters
 			{
 				ValidateIssuerSigningKey = true,
-				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ah48MZ4amGS3VqakPxjsYSekeg3yar6MbirervAigfquZkcF8wSCS3VKTWMaQCMR8dSJh3McMCcoT59rUnTxqKoSyAELPRcdZVF9wtB8XxhUPpTQUA5nWoGVSfd8R4Go")),
+				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt)),
 				ValidateIssuer = false,
 				ValidateAudience = false,
 				ClockSkew = TimeSpan.Zero

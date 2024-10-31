@@ -13,11 +13,41 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Security.Claims;
 using System.Text;
+using DotNetEnv;
 
 namespace BlackjackService;
 
 internal class Websocket : IWebsocket
 {
+	static Websocket()
+	{
+		string envPath = FindEnvFile();
+
+		if (!string.IsNullOrEmpty(envPath))
+		{
+			Env.Load(envPath);
+		}		
+	}
+
+	private static string FindEnvFile()
+	{
+		string? currentDirectory = Directory.GetCurrentDirectory();
+		while (currentDirectory != null)
+		{
+			string potentialPath = Path.Combine(currentDirectory, ".env");
+			
+			if (File.Exists(potentialPath))
+			{
+				return potentialPath;
+			}
+			currentDirectory = Directory.GetParent(currentDirectory)?.FullName;
+		}
+		return null;
+	}
+
+	private const string _JWT = "JWT";
+	private const string _WS_URL = "WS_URL";
+
 	private readonly IChatLogic _chatLogic;
 	private readonly IGroupLogic _groupLogic;
 	private readonly IGameLogic _gameLogic;
@@ -113,8 +143,16 @@ internal class Websocket : IWebsocket
 
 	public async Task Run()
 	{
+		string ws_url = Env.GetString(_WS_URL);
+		string jwt = Env.GetString(_JWT);
+
+		if (string.IsNullOrEmpty(ws_url))
+		{
+			throw new ArgumentNullException(nameof(ws_url), "WebSocket URL must be set in the environment variables.");
+
+		}
 		HttpListener listener = new HttpListener();
-		listener.Prefixes.Add("http://localhost:5000/ws/");
+		listener.Prefixes.Add(ws_url);
 		listener.Start();
 		Console.WriteLine("Listening for WebSocket connections...");
 		while (true)
@@ -489,11 +527,13 @@ internal class Websocket : IWebsocket
 
 	private static (int user_id, string user_name) GetUserInfoFromJWT(string token)
 	{
+		string jwt = Env.GetString(_JWT);
+
 		var tokenHandler = new JwtSecurityTokenHandler();
 		var validationParameters = new TokenValidationParameters
 		{
 			ValidateIssuerSigningKey = true,
-			IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ah48MZ4amGS3VqakPxjsYSekeg3yar6MbirervAigfquZkcF8wSCS3VKTWMaQCMR8dSJh3McMCcoT59rUnTxqKoSyAELPRcdZVF9wtB8XxhUPpTQUA5nWoGVSfd8R4Go")),
+			IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt)),
 			ValidateIssuer = false,
 			ValidateAudience = false,
 			ClockSkew = TimeSpan.Zero

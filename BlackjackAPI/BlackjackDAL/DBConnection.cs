@@ -1,15 +1,27 @@
-﻿namespace BlackjackDAL
+﻿using DotNetEnv;
+
+namespace BlackjackDAL
 {
 	public class DBConnection
 	{
-		private const string _SERVER = "localhost";
-		private const string _USER = "root";
-		private const string _PASSWORD = "usbw";
-		private const string _DATABASE = "blackjackroyale";
+		static DBConnection()
+		{
+			Env.Load();
+		}
+
+		private const string _SERVER = "DB_SERVER";
+		private const string _USER = "DB_USER";
+		private const string _PASSWORD = "DB_PASSWORD";
+		private const string _DATABASE = "DB_DATABASE";
 
 		public string ConnectionString()
 		{
-			return $"server={_SERVER};user={_USER};password={_PASSWORD};database={_DATABASE};";
+			string server = Env.GetString(_SERVER);
+			string user = Env.GetString(_USER);
+			string password = Env.GetString(_PASSWORD);
+			string database = Env.GetString(_DATABASE);
+
+			return $"server={server};user={user};password={password};database={database};";
 		}
 	}
 }
