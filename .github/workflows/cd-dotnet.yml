@@ -67,5 +67,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ${{ github.workspace }}/publish/
           server-dir: /domains/i532747.luna.fhict.nl/
-          dangerous-clean-slate: true
+          dangerous-clean-slate: false
           passive: true
