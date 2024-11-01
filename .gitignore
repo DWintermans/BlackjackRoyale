@@ -398,3 +398,4 @@ FodyWeavers.xsd
 *.sln.iml
 BlackjackAPI/BlackjackAPI/BlackjackAPI.http
 BlackjackService/BlackjackService.sln
+.ftp-deploy-sync-state.json

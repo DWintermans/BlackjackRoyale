@@ -8,7 +8,6 @@ namespace BlackjackDAL.Repositories
 	{
 		private readonly DBConnection _DBConnection = new();
 
-
 		public int RetrieveCredits(int user_id)
 		{
 			try
