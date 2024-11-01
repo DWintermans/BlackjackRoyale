@@ -41,7 +41,14 @@ jobs:
           Remove-Item -Path ./BlackjackService/BlackjackService/.env -ErrorAction Ignore
           echo "WS_URL=wss://i532747.luna.fhict.nl/ws/" >> ./BlackjackService/BlackjackService/.env
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackService/BlackjackService/.env
-
+    
+        # Debugging
+      - name: Check BlackjackAPI .env contents
+        run: cat ./BlackjackAPI/BlackjackAPI/.env
+      
+        # Debugging
+      - name: Check BlackjackService .env contents
+        run: cat ./BlackjackService/BlackjackService/.env
 
       - name: Publish BlackjackAPI
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackAPI
