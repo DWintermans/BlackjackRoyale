@@ -37,7 +37,7 @@ jobs:
         run: cat ./BlackjackAPI/BlackjackAPI/.env
 
       - name: Publish BlackjackAPI
-        run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackAPI
+        run: dotnet publish -c Release -o ${{ github.workspace }}/publish
         working-directory: ./BlackjackAPI/BlackjackAPI
 
       - name: Deploy to FTP Server
