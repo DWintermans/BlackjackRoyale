@@ -23,10 +23,6 @@ jobs:
         run: dotnet restore
         working-directory: ./BlackjackAPI/BlackjackAPI
 
-      - name: Restore dependencies for BlackjackService
-        run: dotnet restore
-        working-directory: ./BlackjackService/BlackjackService
-
       - name: Create .env for BlackjackAPI
         run: |
           Remove-Item -Path ./BlackjackAPI/BlackjackAPI/.env -ErrorAction Ignore
@@ -35,32 +31,14 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackAPI/BlackjackAPI/.env
-          
-      - name: Create .env for BlackjackService
-        run: |
-          Remove-Item -Path ./BlackjackService/BlackjackService/.env -ErrorAction Ignore
-          echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> ./BlackjackService/BlackjackService/.env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackService/BlackjackService/.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackService/BlackjackService/.env
-          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackService/BlackjackService/.env
-          echo "WS_URL=wss://i532747.luna.fhict.nl/ws/" >> ./BlackjackService/BlackjackService/.env
-          echo "JWT=${{ secrets.JWT }}" >> ./BlackjackService/BlackjackService/.env
-
+        
         # Debugging
       - name: Check BlackjackAPI .env contents
         run: cat ./BlackjackAPI/BlackjackAPI/.env
 
-        # Debugging
-      - name: Check BlackjackService .env contents
-        run: cat ./BlackjackService/BlackjackService/.env
-
       - name: Publish BlackjackAPI
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackAPI
         working-directory: ./BlackjackAPI/BlackjackAPI
-
-      - name: Publish BlackjackService
-        run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackService
-        working-directory: ./BlackjackService/BlackjackService
 
       - name: Deploy to FTP Server
         uses: SamKirkland/FTP-Deploy-Action@4.1.0
