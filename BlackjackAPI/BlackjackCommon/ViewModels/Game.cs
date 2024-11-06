@@ -7,6 +7,7 @@
 		public int? Hand {  get; set; } //min 1 to max 4 (if split)
 		public string? Card { get; set; }
 		public string? Total_Card_Value { get; set; }
+		public int? Total_Bet_Value { get; set; }
 		public int? Bet { get; set; }
 		public int? Credits { get; set; }
 		public int? Cards_In_Deck { get; set; }

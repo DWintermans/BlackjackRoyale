@@ -3,6 +3,7 @@ using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
 using System;
+using System.Collections.Immutable;
 using System.Numerics;
 using System.Threading.Tasks.Dataflow;
 using Group = BlackjackCommon.Models.Group;
@@ -232,6 +233,11 @@ namespace BlackjackLogic
 
 					group.Bets.TryGetValue(member, out int bet);
 
+					if (hand.IsDoubled) 
+					{
+						bet = bet * 2;
+					}
+
 					//surrendered? no cards so value is 0
 					if (memberHand == 0)
 					{
@@ -241,7 +247,7 @@ namespace BlackjackLogic
 							Action = GameAction.GAME_FINISHED,
 							Result = GameResult.SURRENDER,
 							Hand = i + 1,
-							Bet = bet //show winnings/losses
+							Bet = bet / 2 //show winnings/losses
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
@@ -360,7 +366,7 @@ namespace BlackjackLogic
 				//prevent bankruptcy, send funny message
 				if (member.Credits < 10) 
 				{
-					member.Credits = 100;
+					member.Credits += 100;
 					Random random = new Random();
 					string message = bankruptMessages[random.Next(bankruptMessages.Length)];
 					string messageWithCredits = $"{message} [+100 credits]";
@@ -730,9 +736,9 @@ namespace BlackjackLogic
 				return;
 			}
 
-			if (player.Hands.Count != 1 || activeHand.Cards.Count != 2) 
+			if (activeHand.Cards.Count != 2)
 			{
-				await OnNotification?.Invoke(player, "You can only double down on the first 2 cards of the first hand.", NotificationType.TOAST, ToastType.WARNING);
+				await OnNotification?.Invoke(player, "You can only double down on the first 2 cards.", NotificationType.TOAST, ToastType.WARNING);
 				return;
 			}
 
@@ -744,9 +750,9 @@ namespace BlackjackLogic
 				return;
 			}
 
-			player.Credits -= bet;
+			activeHand.IsDoubled = true;
 
-			group.Bets[player] += bet;
+			player.Credits -= bet;
 
 			string card = group.Deck[0];
 			group.Deck.RemoveAt(0);
@@ -768,7 +774,8 @@ namespace BlackjackLogic
 				Total_Card_Value = totalHandValue,
 				Cards_In_Deck = group.Deck.Count,
 				Credits = player.Credits,
-				Bet = group.Bets[player],
+				Bet = group.Bets[player] + bet,
+				Total_Bet_Value = CalculateTotalBetValue(player),
 				Hand = index + 1
 			};
 
@@ -883,6 +890,7 @@ namespace BlackjackLogic
 				{
 					User_ID = player.User_ID,
 					Action = GameAction.INSURE,
+					Bet = bet / 2,
 				};
 
 				//notify about game-action (insure)
@@ -915,11 +923,11 @@ namespace BlackjackLogic
 				return;
 			}
 
-			//if (activeHand.Cards[0] != activeHand.Cards[1])
-			//{
-			//	await OnNotification?.Invoke(player, "You can only split on identically ranked initial cards.", NotificationType.TOAST, ToastType.WARNING);
-			//	return;
-			//}
+			if (activeHand.Cards[0] != activeHand.Cards[1])
+			{
+				await OnNotification?.Invoke(player, "You can only split on identically ranked initial cards.", NotificationType.TOAST, ToastType.WARNING);
+				return;
+			}
 
 			if (activeHand.Cards.Count != 2)
 			{
@@ -962,7 +970,9 @@ namespace BlackjackLogic
 			{
 				User_ID = player.User_ID,
 				Action = GameAction.SPLIT,
-				Hand = index + 1
+				Hand = index + 1,
+				Total_Bet_Value = CalculateTotalBetValue(player),
+				Bet = bet,
 			};
 		
 			//notify about game-action (split)
@@ -1004,7 +1014,7 @@ namespace BlackjackLogic
 			{
 				User_ID = player.User_ID,
 				Action = GameAction.BET_PLACED,
-				Bet = bet,
+				Total_Bet_Value = bet,
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
@@ -1015,6 +1025,22 @@ namespace BlackjackLogic
 				group.Status = Group.GroupStatus.PLAYING;
 				StartGame(group);
 			}
+		}
+
+		private int CalculateTotalBetValue(Player player) 
+		{
+			Group group = SharedData.GetGroupForPlayer(player);
+
+			int totalBet = 0;
+
+			foreach (var hand in player.Hands)
+			{
+				group.Bets.TryGetValue(player, out int bet);
+
+				totalBet += hand.IsDoubled ? bet * 2 : bet;
+			}
+
+			return totalBet;
 		}
 
 		private string CalculateHandValue(List<string> hand)

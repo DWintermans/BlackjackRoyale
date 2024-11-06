@@ -281,7 +281,7 @@ namespace BlackjackLogic
 			//if player left after placing a bet: possibility of losing all credits
 			if (player.Credits < 10)
 			{
-				player.Credits = 100;
+				player.Credits += 100;
 			}
 
 			//leave group

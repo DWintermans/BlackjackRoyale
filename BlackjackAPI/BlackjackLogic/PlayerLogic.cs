@@ -22,7 +22,6 @@ namespace BlackjackLogic
 			catch (Exception ex)
 			{
 				Console.WriteLine($"Failed to set credits: {ex.Message}");
-				player.Credits = 100;
 			}
 		}
 
@@ -40,7 +39,6 @@ namespace BlackjackLogic
 			catch (Exception ex)
 			{
 				Console.WriteLine($"Failed to set credits: {ex.Message}");
-				player.Credits = 100;
 			}
 		}
 

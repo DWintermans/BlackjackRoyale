@@ -24,11 +24,13 @@
 		{
 			public List<string> Cards { get; private set; }
 			public bool IsFinished { get; set; }
+			public bool IsDoubled { get; set; }
 
 			public Hand()
 			{
 				Cards = new List<string>();
 				IsFinished = false;
+				IsDoubled = false;
 			}
 
 		}
