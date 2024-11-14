@@ -19,15 +19,14 @@ string jwt = Env.GetString(_JWT);
 //allow everything for cors policy
 builder.Services.AddCors(options =>
 {
-	options.AddPolicy("AllowAllOrigins", builder =>
+	options.AddPolicy("AllowSpecificOrigin", builder =>
 	{
-		builder.AllowAnyOrigin()
+		builder.WithOrigins("https://i532747.hera.fontysict.net") 
 			   .AllowAnyMethod()
-			   .AllowAnyHeader();
+			   .AllowAnyHeader()
+			   .AllowCredentials();
 	});
 });
-
-
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -92,7 +91,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-app.UseCors("AllowAllOrigins");
+app.UseCors("AllowSpecificOrigin");
 
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
