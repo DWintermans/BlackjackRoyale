@@ -10,11 +10,36 @@ using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Env.Load();
+//Env.Load();
 
-const string _JWT = "JWT";
+//const string _JWT = "JWT";
 
-string jwt = Env.GetString(_JWT);
+//string jwt = Env.GetString(_JWT);
+
+
+string jwt;
+try
+{
+	Env.Load();
+
+	const string _JWT = "JWT";
+
+	jwt = Env.GetString(_JWT);
+
+	if(string.IsNullOrEmpty(jwt))
+
+	{
+		throw new Exception("JWT environment variable not found or empty.");
+	}
+}
+catch (Exception ex)
+{
+	string logFilePath = "app-log.txt";
+	string logMessage = $"{DateTime.UtcNow}: - {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
+	System.IO.File.AppendAllText(logFilePath, logMessage);
+
+	jwt = "comVDjpu6NFLqqnwKU6PHzc4FJb4DQJatsJWYfA9XD5qHXgSiEKNry58jixeeGU8p9P8ioGYf4rTPxUK299DQs7WFsrLLsMrEB57pQVAJxmRp8nZsr9mscWvdbSQqe68";
+}
 
 //allow everything for cors policy
 builder.Services.AddCors(options =>

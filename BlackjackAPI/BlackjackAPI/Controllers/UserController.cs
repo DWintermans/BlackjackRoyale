@@ -80,8 +80,7 @@ namespace BlackjackAPI.Controllers
 				string logMessage = $"{DateTime.UtcNow}: - {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
 				System.IO.File.AppendAllText(logFilePath, logMessage);
 
-				return StatusCode(500, "An internal error occurred.");
-				
+				return StatusCode(500, "An internal error occurred.");	
 			}
 		}
 
