@@ -46,6 +46,12 @@ jobs:
           echo "WS_URL=wss://wsi532747.luna.fhict.nl/ws/" >> ./BlackjackService/BlackjackService/.env
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackService/BlackjackService/.env
 
+      - name: Verify contents of BlackjackAPI .env file
+        run: type ./BlackjackAPI/BlackjackAPI/.env
+      
+      - name: Verify contents of BlackjackService .env file
+        run: type ./BlackjackService/BlackjackService/.env
+
       - name: Publish BlackjackAPI
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackAPI
         working-directory: ./BlackjackAPI/BlackjackAPI
