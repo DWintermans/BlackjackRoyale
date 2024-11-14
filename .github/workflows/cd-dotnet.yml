@@ -27,20 +27,19 @@ jobs:
         run: dotnet restore
         working-directory: ./BlackjackService/BlackjackService
 
-      - name: Create .env for BlackjackAPI
+      - name: Create .env files
         run: |
           Remove-Item -Path ./BlackjackAPI/BlackjackAPI/.env -ErrorAction Ignore
-          echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> ./BlackjackAPI/BlackjackAPI/.env
+          Remove-Item -Path ./BlackjackService/BlackjackService/.env -ErrorAction Ignore
+          
+          echo "DB_SERVER=${{ secrets.DB_SERVER }}" > ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackAPI/BlackjackAPI/.env
-          echo "WS_URL=wss://wsi532747.luna.fhict.nl/ws/" >> ./BlackjackService/BlackjackService/.env
+          echo "WS_URL=wss://wsi532747.luna.fhict.nl/ws/" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackAPI/BlackjackAPI/.env
- 
-      - name: Create .env for BlackjackService
-        run: |
-          Remove-Item -Path ./BlackjackService/BlackjackService/.env -ErrorAction Ignore
-          echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> ./BlackjackService/BlackjackService/.env
+          
+          echo "DB_SERVER=${{ secrets.DB_SERVER }}" > ./BlackjackService/BlackjackService/.env
           echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackService/BlackjackService/.env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackService/BlackjackService/.env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackService/BlackjackService/.env
