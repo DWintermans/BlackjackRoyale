@@ -1,4 +1,5 @@
-﻿using DotNetEnv;
+﻿using BlackjackCommon.Entities.User;
+using DotNetEnv;
 
 namespace BlackjackDAL
 {
@@ -21,7 +22,7 @@ namespace BlackjackDAL
 			string password = Env.GetString(_PASSWORD);
 			string database = Env.GetString(_DATABASE);
 
-			return $"server={server};user={user};password={password};database={database};";
+			return $"Server={server};Database={database};User Id={user};Password={password};";
 		}
 	}
 }
