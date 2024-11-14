@@ -19,13 +19,12 @@ string jwt = Env.GetString(_JWT);
 //allow everything for cors policy
 builder.Services.AddCors(options =>
 {
-	options.AddPolicy("AllowAll",
-		builder =>
-		{
-			builder.AllowAnyOrigin()
-				   .AllowAnyHeader()
-				   .AllowAnyMethod();
-		});
+	options.AddPolicy("AllowAllOrigins", builder =>
+	{
+		builder.AllowAnyOrigin()
+			   .AllowAnyMethod()
+			   .AllowAnyHeader();
+	});
 });
 
 // Add services to the container.
