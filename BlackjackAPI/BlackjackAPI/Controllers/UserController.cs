@@ -31,20 +31,46 @@ namespace BlackjackAPI.Controllers
 		[Route("Login")]
 		public IActionResult Login(Login model)
 		{
-			if (!ModelState.IsValid)
+			try
 			{
-				return BadRequest(ModelState);
+				if (!ModelState.IsValid)
+				{
+					return BadRequest(ModelState);
+				}
+
+				int user_id = _userLogic.ValidateUser(model.username, model.password);
+
+				if (user_id <= 0)
+				{
+					return Unauthorized(new { message = "Invalid credentials" });
+				}
+
+				string token = _userLogic.CreateJWT(user_id, model.username);
+			
+				return Ok(new { message = "Login successful", jwt = token });
+			}
+			catch (Exception ex)
+			{
+				LogToFile(ex, model.username);
+
+				return StatusCode(500, "An internal server error occurred.");
 			}
 
-			int user_id = _userLogic.ValidateUser(model.username, model.password);
+		}
 
-			if (user_id <= 0)
-			{
-				return Unauthorized(new { message = "Invalid credentials" });
-			}
+		private void LogToFile(Exception ex, string username)
+		{
+			string logFilePath = "app-log.txt";
+			string logMessage = $"{DateTime.UtcNow}: Error for user {username} - {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
 
-			string token = _userLogic.CreateJWT(user_id, model.username);
-			return Ok(new { message = "Login successful", jwt = token });
+			System.IO.File.AppendAllText(logFilePath, logMessage);
+		}
+
+		[HttpGet]
+		[Route("Healthcheck")]
+		public IActionResult HealthCheck()
+		{
+			return Ok("API is running");
 		}
 
 		/// <summary>
