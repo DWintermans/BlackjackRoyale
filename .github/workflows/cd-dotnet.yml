@@ -61,7 +61,7 @@ jobs:
           server: 145.85.4.100
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ${{ github.workspace }}/publish/BlackjackAPI
+          local-dir: ${{ github.workspace }}/publish/BlackjackAPI/
           server-dir: /domains/apii532747.luna.fhict.nl/
           dangerous-clean-slate: true
           passive: true
@@ -73,7 +73,7 @@ jobs:
           server: 145.85.4.100
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ${{ github.workspace }}/publish/BlackjackService
+          local-dir: ${{ github.workspace }}/publish/BlackjackService/
           server-dir: /domains/wsi532747.luna.fhict.nl/
           dangerous-clean-slate: true
           passive: true
