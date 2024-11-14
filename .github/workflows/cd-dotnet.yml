@@ -60,6 +60,11 @@ jobs:
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackService
         working-directory: ./BlackjackService/BlackjackService
 
+      - name: Copy .env files to publish directory
+        run: |
+          cp ./BlackjackAPI/BlackjackAPI/.env ${{ github.workspace }}/publish/BlackjackAPI/
+          cp ./BlackjackService/BlackjackService/.env ${{ github.workspace }}/publish/BlackjackService/
+
       - name: Deploy BlackjackAPI to FTP Server
         uses: SamKirkland/FTP-Deploy-Action@4.1.0
         with:
