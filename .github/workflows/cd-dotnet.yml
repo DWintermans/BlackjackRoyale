@@ -55,7 +55,7 @@ jobs:
       # Debugging
       - name: Check BlackjackService .env contents
         run: cat ./BlackjackService/BlackjackService/.env
-
+	
       - name: Publish BlackjackAPI
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackAPI
         working-directory: ./BlackjackAPI/BlackjackAPI
