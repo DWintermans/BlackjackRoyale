@@ -14,7 +14,7 @@ Env.Load();
 
 const string _JWT = "JWT";
 
-string jwt = Env.GetString(_JWT) ?? "56HWzJfo9SMwBHd8cpCstyn5ffb9pdQEjkZfbS9BfFW9x773BQqytpq7XiPZFFKij9ZoLQrfsgZDrdBVYEkgiKY6Tmr7rRuKzBjoe7ZK6CqBXCkMFSv5MrrRmYDhKSiU";
+string jwt = Env.GetString(_JWT);
 
 //allow everything for cors policy
 builder.Services.AddCors(options =>
