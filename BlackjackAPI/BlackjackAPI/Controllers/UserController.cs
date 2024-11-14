@@ -70,7 +70,19 @@ namespace BlackjackAPI.Controllers
 		[Route("Healthcheck")]
 		public IActionResult HealthCheck()
 		{
-			return Ok("API is running");
+			try
+			{
+				return Ok("API is running");
+			}
+			catch (Exception ex)
+			{
+				string logFilePath = "app-log.txt";
+				string logMessage = $"{DateTime.UtcNow}: - {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
+				System.IO.File.AppendAllText(logFilePath, logMessage);
+
+				return StatusCode(500, "An internal error occurred.");
+				
+			}
 		}
 
 		/// <summary>
