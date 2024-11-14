@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using DotNetEnv;
+using System.Text.RegularExpressions;
 
 namespace BlackjackLogic
 {
@@ -92,6 +93,18 @@ namespace BlackjackLogic
 
 		public Response CreateAccount(string username, string password)
 		{
+			var valUsernameResponse = ValidateUsername(username);
+			if (valUsernameResponse != null)
+			{
+				return valUsernameResponse; 
+			}
+
+			var valPasswordResponse = ValidatePassword(password);
+			if (valPasswordResponse != null)
+			{
+				return valPasswordResponse;  
+			}
+
 			if (_userDAL.IsUsernameTaken(username))
 			{
 				return new Response("UsernameAlreadyTaken");
@@ -141,6 +154,12 @@ namespace BlackjackLogic
 
 		public Response ChangePassword(int user_id, string old_password, string new_password, string repeat_new_password)
 		{
+			var valPasswordResponse = ValidatePassword(new_password);
+			if (valPasswordResponse != null)
+			{
+				return valPasswordResponse;
+			}
+
 			if (new_password != repeat_new_password)
 			{
 				return new Response("NewPasswordsDontMatch");
@@ -179,6 +198,12 @@ namespace BlackjackLogic
 
 		public Response ChangeUsername(int user_id, string user_name)
 		{
+			var valUsernameResponse = ValidateUsername(user_name);
+			if (valUsernameResponse != null)
+			{
+				return valUsernameResponse;
+			}
+
 			if (_userDAL.IsUsernameTakenByCurrentUser(user_id, user_name))
 			{
 				return new Response("UsernameAlreadyTakenByUser");
@@ -191,6 +216,53 @@ namespace BlackjackLogic
 
 			_userDAL.UpdateUsername(user_id, user_name);
 			return new Response();
+		}
+
+		private static Response ValidateUsername(string username)
+		{
+			if (string.IsNullOrWhiteSpace(username))
+			{
+				return new Response("EmptyUsername");
+			}
+
+			if (username.Length > 50)
+			{
+				return new Response("UsernameTooLong");
+			}
+
+			var usernameRegex = new Regex(@"^[a-zA-Z0-9À-ÖØ-öø-ÿ\s]+$");
+			if (!usernameRegex.IsMatch(username))
+			{
+				return new Response("UsernameFormatInvalid");
+			}
+
+			return null;
+		}
+
+		private static Response ValidatePassword(string password)
+		{
+			if (string.IsNullOrWhiteSpace(password))
+			{
+				return new Response("EmptyPassword");
+			}
+
+			if (password.Length < 6)
+			{
+				return new Response("PasswordTooShort");
+			}
+			if (password.Length > 255)
+			{
+				return new Response("PasswordTooLong");
+			}
+
+			//require at least one number and special char
+			var passwordRegex = new Regex(@"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,255}$");
+			if (!passwordRegex.IsMatch(password))
+			{
+				return new Response("PasswordFormatInvalid");
+			}
+
+			return null;
 		}
 
 		private static byte[] CreateSalt()
