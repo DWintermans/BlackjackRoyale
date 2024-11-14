@@ -34,7 +34,6 @@ jobs:
           echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackAPI/BlackjackAPI/.env
-
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackAPI/BlackjackAPI/.env
  
       - name: Create .env for BlackjackService
