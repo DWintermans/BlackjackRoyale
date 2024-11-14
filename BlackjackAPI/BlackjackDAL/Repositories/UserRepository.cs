@@ -76,9 +76,17 @@ namespace BlackjackDAL.Repositories
 			catch (Exception ex)
 			{
 				Console.WriteLine($"An error occurred: {ex.Message}");
+				LogToFile(ex, username);
 			}
 
 			return (0, null, null, null);
+		}
+
+		private void LogToFile(Exception ex, string username)
+		{
+			string logFilePath = "app-log.txt";
+			string logMessage = $"{DateTime.UtcNow}: Error for user {username} - {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
+			File.AppendAllText(logFilePath, logMessage);
 		}
 
 		public (byte[] hashed_pw, byte[] salt) RetrieveSalt_HashInformation(int user_id)
@@ -134,6 +142,7 @@ namespace BlackjackDAL.Repositories
 			catch (Exception ex)
 			{
 				Console.WriteLine($"An error occurred: {ex.Message}");
+				LogToFile(ex, username);
 				return 0;
 			}
 		}
