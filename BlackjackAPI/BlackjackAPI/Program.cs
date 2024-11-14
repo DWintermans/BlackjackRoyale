@@ -27,6 +27,8 @@ builder.Services.AddCors(options =>
 	});
 });
 
+
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -90,7 +92,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-app.UseCors("AllowAll");
+app.UseCors("AllowAllOrigins");
 
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
