@@ -10,8 +10,14 @@ internal class Program
 {
 	public static void Main(string[] args)
 	{
+		string logFilePath = "app-log.txt";
+		string logMessage;
+
 		try 
-		{ 
+		{
+			logMessage = $"{DateTime.UtcNow}: STARTING NOW";
+			System.IO.File.AppendAllText(logFilePath, logMessage);
+
 			var serviceCollection = new ServiceCollection();
 
 			serviceCollection.AddScoped<IChatLogic, ChatLogic>();
@@ -33,6 +39,9 @@ internal class Program
 
 			// Run the websocket service
 			websocket.Run().Wait();
+
+			logMessage = $"{DateTime.UtcNow}: RUNNING?";
+			System.IO.File.AppendAllText(logFilePath, logMessage);
 		}
 		catch (AggregateException ex)
 		{
