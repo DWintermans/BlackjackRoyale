@@ -1,5 +1,7 @@
 ﻿using BlackjackCommon.Entities.User;
 using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace BlackjackDAL
 {
@@ -22,7 +24,14 @@ namespace BlackjackDAL
 			string password = Env.GetString(_PASSWORD);
 			string database = Env.GetString(_DATABASE);
 
-			return $"Server={server};Database={database};User Id={user};Password={password};";
+			if (server.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+			{
+				return $"Server={server};Database={database};User Id={user};Password={password};";
+			}
+			else
+			{
+				return $"Server={server};Database={database};User Id={user};Password={password};Encrypt=True;TrustServerCertificate=True;";
+			}
 		}
 	}
 }

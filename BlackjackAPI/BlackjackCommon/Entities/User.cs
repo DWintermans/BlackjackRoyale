@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BlackjackCommon.Entities.User
 {
+	[Table("user")]
 	public class User
 	{
 		[Key]

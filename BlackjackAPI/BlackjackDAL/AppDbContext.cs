@@ -14,7 +14,14 @@ namespace BlackjackDAL
 		}
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
-			optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
+			if (_connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+			{
+				optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
+			}
+			else
+			{
+				optionsBuilder.UseSqlServer(_connectionString);
+			}
 		}
 
 		public DbSet<User> User { get; set; }
