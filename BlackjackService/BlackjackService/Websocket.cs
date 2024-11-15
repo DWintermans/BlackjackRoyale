@@ -143,29 +143,54 @@ internal class Websocket : IWebsocket
 
 	public async Task Run()
 	{
-		string ws_url = Env.GetString(_WS_URL);
-		string jwt = Env.GetString(_JWT);
-
-		if (string.IsNullOrEmpty(ws_url))
+		try
 		{
-			throw new ArgumentNullException(nameof(ws_url), "WebSocket URL must be set in the environment variables.");
+			string ws_url = Env.GetString(_WS_URL);
+			string jwt = Env.GetString(_JWT);
 
-		}
-		HttpListener listener = new HttpListener();
-		listener.Prefixes.Add(ws_url);
-		listener.Start();
-		Console.WriteLine("Listening for WebSocket connections...");
-		while (true)
-		{
-			HttpListenerContext context = await listener.GetContextAsync();
-			if (context.Request.IsWebSocketRequest)
+			if (string.IsNullOrEmpty(ws_url))
 			{
-				ProcessRequest(context);
-				continue;
+				throw new ArgumentNullException(nameof(ws_url), "WebSocket URL must be set in the environment variables.");
+
 			}
-			context.Response.StatusCode = 400;
-			context.Response.Close();
+			HttpListener listener = new HttpListener();
+			listener.Prefixes.Add(ws_url);
+			listener.Start();
+			Console.WriteLine("Listening for WebSocket connections...");
+			while (true)
+			{
+				HttpListenerContext context = await listener.GetContextAsync();
+				if (context.Request.IsWebSocketRequest)
+				{
+					ProcessRequest(context);
+					continue;
+				}
+				context.Response.StatusCode = 400;
+				context.Response.Close();
+			}
 		}
+		catch (ArgumentNullException ex)
+		{
+			LogToFile(ex);
+			Console.WriteLine($"ArgumentNullException: {ex.Message}");
+		}
+		catch (HttpListenerException ex)
+		{
+			LogToFile(ex);
+			Console.WriteLine($"HttpListenerException: {ex.Message}");
+		}
+		catch (Exception ex)
+		{
+			LogToFile(ex);
+			Console.WriteLine($"An error occurred: {ex.Message}");
+		}
+	}
+
+	private void LogToFile(Exception ex)
+	{
+		string logFilePath = "app-log.txt";
+		string logMessage = $"{DateTime.UtcNow}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
+		System.IO.File.AppendAllText(logFilePath, logMessage);
 	}
 
 	private async void ProcessRequest(HttpListenerContext context)
