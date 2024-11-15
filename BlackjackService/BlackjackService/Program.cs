@@ -10,26 +10,56 @@ internal class Program
 {
 	public static void Main(string[] args)
 	{
-		var serviceCollection = new ServiceCollection();
+		try 
+		{ 
+			var serviceCollection = new ServiceCollection();
 
-		serviceCollection.AddScoped<IChatLogic, ChatLogic>();
-		serviceCollection.AddScoped<IGroupLogic, GroupLogic>();
-		serviceCollection.AddScoped<IPlayerLogic, PlayerLogic>();
-		serviceCollection.AddScoped<IGameLogic, GameLogic>();
+			serviceCollection.AddScoped<IChatLogic, ChatLogic>();
+			serviceCollection.AddScoped<IGroupLogic, GroupLogic>();
+			serviceCollection.AddScoped<IPlayerLogic, PlayerLogic>();
+			serviceCollection.AddScoped<IGameLogic, GameLogic>();
 
-		serviceCollection.AddTransient<Lazy<IGroupLogic>>(provider => new Lazy<IGroupLogic>(() => provider.GetRequiredService<IGroupLogic>()));
-		serviceCollection.AddTransient<Lazy<IPlayerLogic>>(provider => new Lazy<IPlayerLogic>(() => provider.GetRequiredService<IPlayerLogic>()));
+			serviceCollection.AddTransient<Lazy<IGroupLogic>>(provider => new Lazy<IGroupLogic>(() => provider.GetRequiredService<IGroupLogic>()));
+			serviceCollection.AddTransient<Lazy<IPlayerLogic>>(provider => new Lazy<IPlayerLogic>(() => provider.GetRequiredService<IPlayerLogic>()));
 
-		serviceCollection.AddScoped<IWebsocket, Websocket>();
+			serviceCollection.AddScoped<IWebsocket, Websocket>();
 
-		serviceCollection.AddScoped<IUserRepository, UserRepository>();
+			serviceCollection.AddScoped<IUserRepository, UserRepository>();
 
 
-		var serviceProvider = serviceCollection.BuildServiceProvider();
+			var serviceProvider = serviceCollection.BuildServiceProvider();
 
-		var websocket = serviceProvider.GetService<IWebsocket>();
+			var websocket = serviceProvider.GetService<IWebsocket>();
 
-		// Run the websocket service
-		websocket.Run().Wait();
+			// Run the websocket service
+			websocket.Run().Wait();
+		}
+		catch (AggregateException ex)
+		{
+			foreach (var innerException in ex.InnerExceptions)
+			{
+				LogToFile(innerException);
+				Console.WriteLine($"AggregateException: {innerException.Message}");
+			}
+		}
+		catch (InvalidOperationException ex)
+		{
+			LogToFile(ex);
+			Console.WriteLine($"InvalidOperationException: {ex.Message}");
+		}
+		catch (Exception ex)
+		{
+			LogToFile(ex);
+			Console.WriteLine($"An error occurred: {ex.Message}");
+		}
+
 	}
+
+	private static void LogToFile(Exception ex)
+	{
+		string logFilePath = "app-log.txt";
+		string logMessage = $"{DateTime.UtcNow}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
+		System.IO.File.AppendAllText(logFilePath, logMessage);
+	}
+
 }
