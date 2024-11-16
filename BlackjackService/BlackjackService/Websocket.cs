@@ -22,26 +22,47 @@ internal class Websocket : IWebsocket
 	static Websocket()
 	{
 		string envPath = FindEnvFile();
-
 		if (!string.IsNullOrEmpty(envPath))
 		{
-			Env.Load(envPath);
-		}		
+			Console.WriteLine($"Loading .env from: {envPath}");
+			Env.Load(envPath); 
+		}
+		else
+		{
+			Console.WriteLine("No .env file found.");
+		}
 	}
 
 	private static string FindEnvFile()
 	{
-		string? currentDirectory = Directory.GetCurrentDirectory();
-		while (currentDirectory != null)
+		string currentDirectory = Directory.GetCurrentDirectory();
+		Console.WriteLine($"Current working directory: {currentDirectory}");
+
+		string potentialPath = Path.Combine(currentDirectory, ".env");
+		if (File.Exists(potentialPath))
 		{
-			string potentialPath = Path.Combine(currentDirectory, ".env");
-			
+			return potentialPath;
+		}
+
+		while (Directory.GetParent(currentDirectory) != null)
+		{
+			currentDirectory = Directory.GetParent(currentDirectory).FullName;
+			potentialPath = Path.Combine(currentDirectory, ".env");
+
 			if (File.Exists(potentialPath))
 			{
 				return potentialPath;
 			}
-			currentDirectory = Directory.GetParent(currentDirectory)?.FullName;
 		}
+
+		string fallbackDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "BlackjackService", "BlackjackService");
+		potentialPath = Path.Combine(fallbackDirectory, ".env");
+		if (File.Exists(potentialPath))
+		{
+			Console.WriteLine($"Found .env in fallback directory: {fallbackDirectory}");
+			return potentialPath;
+		}
+
 		return null;
 	}
 
@@ -150,9 +171,15 @@ internal class Websocket : IWebsocket
 
 			if (string.IsNullOrEmpty(ws_url))
 			{
-				throw new ArgumentNullException(nameof(ws_url), "WebSocket URL must be set in the environment variables.");
-
+				Console.WriteLine("WS_URL not found in environment variables.");
+				System.IO.File.AppendAllText("app-log.txt", "WS_URL not found in environment variables.\n");
 			}
+			else
+			{
+				Console.WriteLine($"WS_URL: {ws_url}");
+				System.IO.File.AppendAllText("app-log.txt", $"WS_URL: {ws_url}\n");
+			}
+
 			HttpListener listener = new HttpListener();
 			listener.Prefixes.Add(ws_url);
 			listener.Start();
