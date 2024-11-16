@@ -10,7 +10,7 @@ internal class Program
 {
 	public static void Main(string[] args)
 	{
-		string logFilePath = "app-log.txt";
+		string logFilePath = Path.Combine(AppContext.BaseDirectory, "app-log.txt");
 		string logMessage;
 
 		try 
@@ -39,9 +39,6 @@ internal class Program
 
 			// Run the websocket service
 			websocket.Run().Wait();
-
-			logMessage = $"{DateTime.UtcNow}: RUNNING?";
-			System.IO.File.AppendAllText(logFilePath, logMessage);
 		}
 		catch (AggregateException ex)
 		{
