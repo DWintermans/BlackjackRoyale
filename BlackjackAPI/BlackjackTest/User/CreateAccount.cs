@@ -18,9 +18,9 @@ namespace BlackjackTest.User
 		}
 
 		[TestMethod]
-		[DataRow("username1", "password1", 1)]
-		[DataRow("username2", "password2", 2)]
-		[DataRow("50CharssjsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3", "255Chars_jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbaa", 3)]
+		[DataRow("username1", "password!1", 1)]
+		[DataRow("username2", "password!2", 2)]
+		[DataRow("50CharssjsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3", "255Chars!_jSgaN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbR7W6iAp3jsSgyN9hmBy6yNAGVPvFZtcgQcGazcciFbaa", 3)]
 		public void CreateAccount_SuccessfulAccountCreation_Returns_JWT(string username, string password, int user_id)
 		{
 			// Arrange
@@ -66,7 +66,7 @@ namespace BlackjackTest.User
 			_mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
 
 			// Act
-			var result = _userLogic.CreateAccount(username, "password");
+			var result = _userLogic.CreateAccount(username, "password!1");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -75,7 +75,7 @@ namespace BlackjackTest.User
 		}
 
 		[TestMethod]
-		[DataRow("newUser", "password")]
+		[DataRow("newUser", "password!1")]
 		public void CreateAccount_DatabaseAccountCreationFails_ReturnsErrorMessage(string username, string password)
 		{
 			// Arrange

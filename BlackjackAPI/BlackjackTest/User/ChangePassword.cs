@@ -34,7 +34,7 @@ namespace BlackjackTest.User
 
 
 			// Act
-			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "password", "newPass!1", "newPass!1");
 
 			// Assert
 			Assert.IsTrue(result.Success);
@@ -45,7 +45,7 @@ namespace BlackjackTest.User
 		public void ChangePassword_NewPasswordsDontMatch_ReturnsErrorMessage()
 		{
 			// Act
-			var result = _userLogic.ChangePassword(1, "oldPass", "newPass123", "newPass456");
+			var result = _userLogic.ChangePassword(1, "oldPass!1", "newPass123!1", "newPass456!1");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -56,7 +56,7 @@ namespace BlackjackTest.User
 		public void ChangePassword_NewPasswordSameAsOldPassword_ReturnsErrorMessage()
 		{
 			// Act
-			var result = _userLogic.ChangePassword(1, "oldPass", "oldPass", "oldPass");
+			var result = _userLogic.ChangePassword(1, "oldPass!1", "oldPass!1", "oldPass!1");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -80,7 +80,7 @@ namespace BlackjackTest.User
 			_mockUserRepository.Setup(dal => dal.RetrieveSalt_HashInformation(1)).Returns(fakeSaltHashInfo);
 
 			// Act
-			var result = _userLogic.ChangePassword(1, "passwordt", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "passwordt!1", "newPass!1", "newPass!1");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -104,7 +104,7 @@ namespace BlackjackTest.User
 			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>()));
 
 			// Act
-			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "password!1", "newPass!1", "newPass!1");
 
 			// Assert
 			Assert.IsFalse(result.Success);
@@ -128,7 +128,7 @@ namespace BlackjackTest.User
 			_mockUserRepository.Setup(dal => dal.UpdatePassword(1, It.IsAny<string>(), It.IsAny<string>()));
 
 			// Act
-			var result = _userLogic.ChangePassword(1, "password", "newPass", "newPass");
+			var result = _userLogic.ChangePassword(1, "password!1", "newPass!1", "newPass!1");
 
 			// Assert
 			Assert.IsFalse(result.Success);

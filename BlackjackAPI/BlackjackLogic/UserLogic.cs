@@ -256,7 +256,7 @@ namespace BlackjackLogic
 			}
 
 			//require at least one number and special char
-			var passwordRegex = new Regex(@"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,255}$");
+			var passwordRegex = new Regex(@"^(?=.*[A-Za-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{6,255}$");
 			if (!passwordRegex.IsMatch(password))
 			{
 				return new Response("PasswordFormatInvalid");
