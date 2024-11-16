@@ -10,7 +10,7 @@ internal class Program
 {
 	public static void Main(string[] args)
 	{
-		string logFilePath = Path.Combine(AppContext.BaseDirectory, "app-log.txt");
+		string logFilePath = DetermineLogFilePath();
 		string logMessage;
 
 		try 
@@ -63,9 +63,61 @@ internal class Program
 
 	private static void LogToFile(Exception ex)
 	{
-		string logFilePath = "app-log.txt";
+		string logFilePath = DetermineLogFilePath();
+
 		string logMessage = $"{DateTime.UtcNow}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
 		System.IO.File.AppendAllText(logFilePath, logMessage);
+	}
+
+	private static string DetermineLogFilePath()
+	{
+		string envFilePath = FindEnvFile();
+
+		if (!string.IsNullOrEmpty(envFilePath))
+		{
+			string envDirectory = Path.GetDirectoryName(envFilePath);
+			return Path.Combine(envDirectory, "app-log.txt");
+		}
+
+		string fallbackDirectory = Path.Combine(Directory.GetCurrentDirectory(), "app-log.txt");
+		Console.WriteLine($"Log file will be created in fallback location: {fallbackDirectory}");
+		return fallbackDirectory;
+	}
+
+	private static string FindEnvFile()
+	{
+		string currentDirectory = Directory.GetCurrentDirectory();
+		Console.WriteLine($"Current working directory: {currentDirectory}");
+
+		string potentialPath = Path.Combine(currentDirectory, ".env");
+		if (File.Exists(potentialPath))
+		{
+			Console.WriteLine($"Found .env file in current directory: {currentDirectory}");
+			return potentialPath;
+		}
+
+		while (Directory.GetParent(currentDirectory) != null)
+		{
+			currentDirectory = Directory.GetParent(currentDirectory).FullName;
+			potentialPath = Path.Combine(currentDirectory, ".env");
+
+			if (File.Exists(potentialPath))
+			{
+				Console.WriteLine($"Found .env file in parent directory: {currentDirectory}");
+				return potentialPath;
+			}
+		}
+
+		string fallbackDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "BlackjackService", "BlackjackService");
+		potentialPath = Path.Combine(fallbackDirectory, ".env");
+		if (File.Exists(potentialPath))
+		{
+			Console.WriteLine($"Found .env file in fallback directory: {fallbackDirectory}");
+			return potentialPath;
+		}
+
+		Console.WriteLine("No .env file found.");
+		return null;
 	}
 
 }
