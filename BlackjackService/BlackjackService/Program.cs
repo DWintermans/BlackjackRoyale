@@ -11,12 +11,12 @@ internal class Program
 	public static void Main(string[] args)
 	{
 		string logFilePath = DetermineLogFilePath();
-		string logMessage;
+
+		LogToFile("STARTING NOW");
 
 		try 
 		{
-			logMessage = $"{DateTime.UtcNow}: STARTING NOW";
-			System.IO.File.AppendAllText(logFilePath, logMessage);
+			LogToFile("Initializing services...");
 
 			var serviceCollection = new ServiceCollection();
 
@@ -61,10 +61,16 @@ internal class Program
 
 	}
 
+	private static void LogToFile(string message)
+	{
+		string logFilePath = DetermineLogFilePath();
+		string logMessage = $"{DateTime.UtcNow}: {message}";
+		System.IO.File.AppendAllText(logFilePath, logMessage + Environment.NewLine);
+	}
+
 	private static void LogToFile(Exception ex)
 	{
 		string logFilePath = DetermineLogFilePath();
-
 		string logMessage = $"{DateTime.UtcNow}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
 		System.IO.File.AppendAllText(logFilePath, logMessage);
 	}
@@ -76,10 +82,10 @@ internal class Program
 		if (!string.IsNullOrEmpty(envFilePath))
 		{
 			string envDirectory = Path.GetDirectoryName(envFilePath);
-			return Path.Combine(envDirectory, "app-log.txt");
+			return Path.Combine(envDirectory, "program-log.txt");
 		}
 
-		string fallbackDirectory = Path.Combine(Directory.GetCurrentDirectory(), "app-log.txt");
+		string fallbackDirectory = Path.Combine(Directory.GetCurrentDirectory(), "program-log.txt");
 		Console.WriteLine($"Log file will be created in fallback location: {fallbackDirectory}");
 		return fallbackDirectory;
 	}
