@@ -36,5 +36,5 @@ jobs:
 
     - name: Run Roslyn Analyzers
       run: |
-        dotnet build --configuration Release
-        dotnet build --configuration Release /p:RunAnalyzers=true
+        dotnet build BlackjackAPI/BlackjackRoyale.sln --configuration Release
+        dotnet build BlackjackAPI/BlackjackRoyale.sln --configuration Release /p:RunAnalyzers=true
