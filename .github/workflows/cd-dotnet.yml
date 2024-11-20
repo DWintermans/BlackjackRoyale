@@ -36,14 +36,14 @@ jobs:
           echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackAPI/BlackjackAPI/.env
-          echo "WS_URL=https://+/ws/" >> ./BlackjackAPI/BlackjackAPI/.env
+          echo "WS_URL=http://+:8593/ws/" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackAPI/BlackjackAPI/.env
           
           echo "DB_SERVER=${{ secrets.DB_SERVER }}" > ./BlackjackService/BlackjackService/.env
           echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackService/BlackjackService/.env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackService/BlackjackService/.env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackService/BlackjackService/.env
-          echo "WS_URL=https://+/ws/" >> ./BlackjackService/BlackjackService/.env
+          echo "WS_URL=http://+:8593/ws/" >> ./BlackjackService/BlackjackService/.env
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackService/BlackjackService/.env
 
       - name: Verify contents of BlackjackAPI .env file
