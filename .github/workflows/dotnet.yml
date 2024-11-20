@@ -33,3 +33,8 @@ jobs:
       
     - name: Test
       run: dotnet test BlackjackAPI/BlackjackRoyale.sln --no-build --verbosity normal
+
+    - name: Run Roslyn Analyzers
+      run: |
+        dotnet build BlackjackAPI/BlackjackRoyale.sln --configuration Release
+        dotnet build BlackjackAPI/BlackjackRoyale.sln --configuration Release /p:RunAnalyzers=true
