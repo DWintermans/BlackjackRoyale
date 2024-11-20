@@ -6,5 +6,6 @@ namespace BlackjackCommon.Interfaces.Logic
 	{
 		void SetCredits(Player player);
 		void UpdateCredits(Player player, int credits);
+		void UpdateStatistics(Player player, int gameWins, int gameLosses, int earnings, int losses);
 	}
 }

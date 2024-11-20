@@ -56,6 +56,32 @@ namespace BlackjackDAL.Repositories
 			}
 		}
 
+		public void UpdateStatistics(int user_id, int gameWins, int gameLosses, int earnings, int losses) 
+		{
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					var user = context.User.SingleOrDefault(u => u.user_id == user_id);
+
+					if (user != null)
+					{
+						user.user_total_wins += gameWins;
+						user.user_total_losses += gameLosses;
+						user.user_total_earnings_amt += earnings;
+						user.user_total_losses_amt += losses;
+
+						context.SaveChanges();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
+
 		public (int user_id, string user_name, byte[] hashed_pw, byte[] salt) RetrieveLoginInformation(string username)
 		{
 			try

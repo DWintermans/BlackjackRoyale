@@ -1,5 +1,4 @@
-﻿using BlackjackAPI.Models.Friend;
-using BlackjackCommon.Interfaces.Logic;
+﻿using BlackjackCommon.Interfaces.Logic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,14 +25,9 @@ namespace BlackjackAPI.Controllers
 		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
 		[Authorize]
 		[HttpPost]
-		[Route("Request")]
-		public IActionResult SendFriendRequest(RequestModel model)
+		[Route("Request/{friend_id}")]
+		public IActionResult SendFriendRequest(int friend_id)
 		{
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState);
-			}
-
 			var jwt_user_id = HttpContext.User.FindFirst("user_id");
 
 			if (jwt_user_id == null)
@@ -43,14 +37,14 @@ namespace BlackjackAPI.Controllers
 
 			int user_id = int.Parse(jwt_user_id.Value);
 
-			if (user_id == model.befriend_user_id)
+			if (user_id == friend_id)
 			{
 				return BadRequest(new { message = "You can't befriend yourself." });
 			}
 
 			try
 			{
-				var response = _friendLogic.RequestFriendship(user_id, model.befriend_user_id);
+				var response = _friendLogic.RequestFriendship(user_id, friend_id);
 
 				if (!response.Success)
 				{
@@ -76,14 +70,9 @@ namespace BlackjackAPI.Controllers
 		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
 		[Authorize]
 		[HttpPut]
-		[Route("Request/Status")]
-		public IActionResult UpdateFriendStatus(StatusModel model)
+		[Route("requests/{friend_id}/{status}")]
+		public IActionResult UpdateFriendStatus(int friend_id, string status)
 		{
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState);
-			}
-
 			var jwt_user_id = HttpContext.User.FindFirst("user_id");
 
 			if (jwt_user_id == null)
@@ -95,14 +84,14 @@ namespace BlackjackAPI.Controllers
 
 			try
 			{			
-				var response = _friendLogic.UpdateFriendStatus(user_id, model.friend_user_id, model.status);
+				var response = _friendLogic.UpdateFriendStatus(user_id, friend_id, status);
 
 				if (!response.Success)
 				{
 					return BadRequest(new { message = response.Message });
 				}
 
-				return Ok(new { message = $"Friend status successfully updated to '{model.status}'." });
+				return Ok(new { message = $"Friend status successfully updated to '{status}'." });
 			}
 			catch (Exception ex)
 			{

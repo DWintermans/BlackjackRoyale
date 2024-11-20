@@ -224,6 +224,11 @@ namespace BlackjackLogic
 
 			foreach (var member in group.Members)
 			{
+				int gameWins = 0;
+				int gameLosses = 0;
+				int earnings = 0;
+				int losses = 0;
+
 				for (int i = 0; i < member.Hands.Count; i++)
 				{
 					var hand = member.Hands[i];
@@ -241,6 +246,9 @@ namespace BlackjackLogic
 					//surrendered? no cards so value is 0
 					if (memberHand == 0)
 					{
+						gameLosses += 1;
+						losses += bet / 2;
+
 						GameModel model = new GameModel
 						{
 							User_ID = member.User_ID,
@@ -255,25 +263,37 @@ namespace BlackjackLogic
 					}
 
 					//dealer has blackjack, payout insurance
-					if (dealerHand == 21 && group.DealerHand.Count == 2) 
+					if (dealerHand == 21 && group.DealerHand.Count == 2)
 					{
 						if (member.HasInsurance)
 						{
+							earnings += bet / 2;
+
 							member.Credits += bet;
 							GameModel model = new GameModel
 							{
 								User_ID = member.User_ID,
 								Action = GameAction.INSURANCE_PAID,
-								Bet = bet 
+								Bet = bet
 							};
 
 							await OnGameInfoToGroup?.Invoke(group, model);
+						}
+					}
+					else 
+					{
+						if (member.HasInsurance) 
+						{
+							losses += bet / 2;
 						}
 					}
 
 					//bust
 					if (memberHand > 21)
 					{
+						gameLosses += 1;
+						losses += bet;
+
 						GameModel model = new GameModel
 						{
 							User_ID = member.User_ID,
@@ -309,7 +329,12 @@ namespace BlackjackLogic
 					if (memberHand == 21 && hand.Cards.Count == 2)
 					{
 						int bonus = (int)(bet * 0.5);
+
+						gameWins += 1;
+						earnings += bet + bonus;
+
 						member.Credits += bet + bet + bonus;
+
 
 						GameModel model = new GameModel
 						{
@@ -327,6 +352,9 @@ namespace BlackjackLogic
 					//lose
 					if (dealerHand > memberHand && dealerHand <= 21)
 					{
+						gameLosses += 1;
+						losses += bet;
+
 						GameModel model = new GameModel
 						{
 							User_ID = member.User_ID,
@@ -343,6 +371,9 @@ namespace BlackjackLogic
 					//win
 					if (memberHand > dealerHand || dealerHand > 21)
 					{
+						gameWins += 1;
+						earnings += bet;
+
 						member.Credits += bet + bet;
 
 						GameModel model = new GameModel
@@ -358,6 +389,9 @@ namespace BlackjackLogic
 						continue;
 					}
 				}
+
+				_playerLogic.Value.UpdateStatistics(member, gameWins, gameLosses, earnings, losses);
+				
 			}
 
 			//send credits update privately

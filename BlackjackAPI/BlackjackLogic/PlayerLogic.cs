@@ -25,10 +25,17 @@ namespace BlackjackLogic
 			}
 		}
 
-		//public void SetStatistics(Player player, int wins, int losses, int win_amt, int loss_amt) 
-		//{
-			
-		//}
+		public void UpdateStatistics(Player player, int gameWins, int gameLosses, int earnings, int losses) 
+		{
+			try
+			{
+				_userDAL.UpdateStatistics(player.User_ID, gameWins, gameLosses, earnings, losses);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Failed to set credits: {ex.Message}");
+			}
+		}
 
 		public void UpdateCredits(Player player, int credits)
 		{

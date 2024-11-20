@@ -24,6 +24,8 @@
 			{ "UsernameAlreadyTakenByUser", "You already have this username." },
 
 			{ "FriendshipExists", "Friendship request already exists between these users." },
+			{ "InvalidFriendId", "Friend user ID is required." },
+			{ "InvalidFriendStatus", "Status must be either 'accepted' or 'rejected'." },
 
 			//returns jwt and message
 			{ "SuccessfullAccountCreation", "Account created successfully." },
