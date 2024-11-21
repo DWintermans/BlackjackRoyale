@@ -155,7 +155,11 @@ namespace BlackjackDAL.Repositories
 						user_passwordhash = hashed_password,
 						user_passwordsalt = salt,
 						user_is_moderator = false,
-						user_status = UserStatus.active
+						user_status = UserStatus.active,
+						user_total_wins = 0,
+						user_total_losses = 0,
+						user_total_earnings_amt = 0,
+						user_total_losses_amt = 0,
 					};
 
 					context.User.Add(newUser);

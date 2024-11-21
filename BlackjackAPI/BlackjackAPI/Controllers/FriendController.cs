@@ -25,7 +25,7 @@ namespace BlackjackAPI.Controllers
 		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
 		[Authorize]
 		[HttpPost]
-		[Route("Request/{friend_id}")]
+		[Route("request/{friend_id}")]
 		public IActionResult SendFriendRequest(int friend_id)
 		{
 			var jwt_user_id = HttpContext.User.FindFirst("user_id");
@@ -70,7 +70,7 @@ namespace BlackjackAPI.Controllers
 		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
 		[Authorize]
 		[HttpPut]
-		[Route("requests/{friend_id}/{status}")]
+		[Route("request/{friend_id}/{status}")]
 		public IActionResult UpdateFriendStatus(int friend_id, string status)
 		{
 			var jwt_user_id = HttpContext.User.FindFirst("user_id");
