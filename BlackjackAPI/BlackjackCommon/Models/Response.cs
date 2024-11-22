@@ -25,6 +25,7 @@
 
 			{ "FriendshipExists", "Friendship request already exists between these users." },
 			{ "InvalidFriendId", "Friend user ID is required." },
+			{ "FriendIdDoesntExist", "Friend user ID does not exist." },
 			{ "InvalidFriendStatus", "Status must be either 'accepted' or 'rejected'." },
 
 			//returns jwt and message

@@ -1,4 +1,5 @@
 ﻿using BlackjackCommon.Entities.Message;
+using BlackjackCommon.Entities.User;
 using BlackjackCommon.Interfaces.Repository;
 
 namespace BlackjackDAL.Repositories
@@ -116,11 +117,32 @@ namespace BlackjackDAL.Repositories
 
 
 
-		public void SaveChatMessage()
+		public void SaveChatMessage(int user_id, int receiver_id, string group_id, string message)
 		{
-			
-		}
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					var newMessage = new Message
+					{
+						MessageSender = user_id,
+						MessageReceiver = receiver_id,
+						MessageGroup = group_id,
+						MessageContent = message,
+						MessageDateTime= DateTime.Now,
+					};
 
+					context.Message.Add(newMessage);
+
+					context.SaveChanges();
+
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+			}
+		}
 
 	}
 }

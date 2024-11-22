@@ -31,6 +31,7 @@ internal class Program
 			serviceCollection.AddScoped<IWebsocket, Websocket>();
 
 			serviceCollection.AddScoped<IUserRepository, UserRepository>();
+			serviceCollection.AddScoped<IChatRepository, ChatRepository>();
 
 
 			var serviceProvider = serviceCollection.BuildServiceProvider();

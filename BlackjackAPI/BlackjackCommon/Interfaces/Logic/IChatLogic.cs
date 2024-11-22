@@ -12,9 +12,7 @@ namespace BlackjackCommon.Interfaces.Logic
 
 		Response<List<Message>> RetrieveMessageList(int user_id);
 		Response<List<Message>> RetrievePrivateMessages(int user_id, int other_user_id);
-
-
-		void SaveChatMessage();
+		void SaveChatMessage(int user_id, int receiver_id, string? group_id, string message);
 
 		Task HandleChatAction(Player player, dynamic message);
 	}

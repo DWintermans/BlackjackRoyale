@@ -17,7 +17,6 @@ namespace BlackjackLogic
 			_chatRepository = chatRepository;
 		}
 
-
 		private const int MaxGroupSize = 4;
 
 		public event Func<Player, string, NotificationType, ToastType?, Task>? OnNotification;
@@ -91,6 +90,7 @@ namespace BlackjackLogic
 				if (group == null)
 				{
 					await SendMessageGlobally(player, chatMessage);
+					SaveChatMessage(player.User_ID, 0, "GLOBAL", chatMessage);
 				}
 				else
 				{
@@ -102,6 +102,7 @@ namespace BlackjackLogic
 				if (group != null)
 				{
 					await SendMessageToGroup(player, group, chatMessage);
+					SaveChatMessage(player.User_ID, 0, group.Unique_Group_ID, chatMessage);
 				}
 				else
 				{
@@ -114,6 +115,7 @@ namespace BlackjackLogic
 				if (player.User_ID != receiver_id)
 				{
 					await OnPrivateMessage?.Invoke(player, receiver_id, chatMessage);
+					SaveChatMessage(player.User_ID, receiver_id, null, chatMessage);
 				}
 			}
 			else
@@ -145,9 +147,38 @@ namespace BlackjackLogic
 			}
 		}
 
-		public void SaveChatMessage()
+		public void SaveChatMessage(int user_id, int receiver_id, string? group_id, string message)
 		{
-			throw new NotImplementedException();
+			if (user_id <= 0)
+			{
+				throw new ArgumentException("User ID must be provided.");
+			}
+
+			if (string.IsNullOrEmpty(message))
+			{
+				throw new ArgumentException("Message cannot be empty.");
+			}
+
+			if (receiver_id <= 0 && string.IsNullOrEmpty(group_id))
+			{
+				throw new ArgumentException("Either receiver_id or group_id must be provided.");
+			}
+
+			if (receiver_id > 0 && !string.IsNullOrEmpty(group_id))
+			{
+				throw new ArgumentException("Only one of receiver_id or group_id can be provided, not both.");
+			}
+
+			try
+			{
+				_chatRepository.SaveChatMessage(user_id, receiver_id, group_id, message);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+
 		}
 	}
 }

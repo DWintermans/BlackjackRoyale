@@ -9,17 +9,24 @@ namespace BlackjackLogic
 	public class FriendLogic : IFriendLogic
 	{
 		private readonly IFriendRepository _friendDAL;
+		private readonly IUserRepository _userDAL;
 
-		public FriendLogic(IFriendRepository friendDAL)
+		public FriendLogic(IFriendRepository friendDAL, IUserRepository userDAL)
 		{
 			_friendDAL = friendDAL;
+			_userDAL = userDAL;
 		}
 
-		public Response<string> RequestFriendship(int	 user_id, int befriend_user_id)
+		public Response<string> RequestFriendship(int user_id, int befriend_user_id)
 		{
 			if (befriend_user_id < 0)
 			{
 				return new Response<string>("InvalidFriendId");
+			}
+
+			if (!_userDAL.UserIDExists(befriend_user_id))
+			{
+				return new Response<string>("FriendIdDoesntExist");
 			}
 
 			if (_friendDAL.FriendshipExists(user_id, befriend_user_id))

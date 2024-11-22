@@ -12,5 +12,6 @@
 		void UpdatePassword(int user_id, string hashed_password, string salt);
 		void UpdateUsername(int user_id, string user_name);
 		bool IsUsernameTakenByCurrentUser(int user_id, string user_name);
+		bool UserIDExists(int user_id);
 	}
 }

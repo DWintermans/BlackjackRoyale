@@ -29,7 +29,10 @@ namespace BlackjackCommon.Entities.Message
 		[Column("message_deleted")]
 		public bool MessageDeleted { get; set; }
 
+		[NotMapped]
 		public string SenderUserName { get; set; }
+		
+		[NotMapped]
 		public string ReceiverUserName { get; set; }	
 	}
 }

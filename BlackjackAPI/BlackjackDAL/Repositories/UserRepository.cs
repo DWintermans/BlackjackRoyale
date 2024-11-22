@@ -256,5 +256,21 @@ namespace BlackjackDAL.Repositories
 			}
 		}
 
+		public bool UserIDExists(int user_id)
+		{
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					return context.User.Any(u => u.user_id == user_id);
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				return false;
+			}
+		}
+
 	}
 }
