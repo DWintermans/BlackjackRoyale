@@ -1,5 +1,6 @@
 ﻿using BlackjackAPI.Models.User;
 using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Models;
 using BlackjackLogic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +48,7 @@ namespace BlackjackAPI.Controllers
 
 				string token = _userLogic.CreateJWT(user_id, model.username);
 			
-				return Ok(new { message = "Login successful", jwt = token });
+				return Ok(new Response<string>(token, "SuccessfullLogin"));
 			}
 			catch (Exception ex)
 			{
@@ -111,7 +112,7 @@ namespace BlackjackAPI.Controllers
 					return BadRequest(new { message = response.Message });
 				}
 
-				return Ok(new { message = response.Message, jwt = response.JWT });
+				return Ok(response);
 			}
 			catch (Exception ex)
 			{

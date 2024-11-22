@@ -1,5 +1,8 @@
 ﻿using BlackjackCommon.Data.SharedData;
+using BlackjackCommon.Entities.Message;
 using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Interfaces.Repository;
+using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
 using Group = BlackjackCommon.Models.Group;
 using Player = BlackjackCommon.Models.Player;
@@ -8,11 +11,58 @@ namespace BlackjackLogic
 {
 	public class ChatLogic : IChatLogic
 	{
+		private readonly IChatRepository _chatRepository;
+		public ChatLogic(IChatRepository chatRepository)
+		{
+			_chatRepository = chatRepository;
+		}
+
+
 		private const int MaxGroupSize = 4;
 
 		public event Func<Player, string, NotificationType, ToastType?, Task>? OnNotification;
 		public event Func<Player, int, string, MessageType, Task>? OnMessage;
 		public event Func<Player, int, string, Task>? OnPrivateMessage;
+
+		public Response<List<Message>> RetrieveMessageList(int user_id)
+		{
+			try
+			{
+				var messages = _chatRepository.RetrieveMessageList(user_id);
+
+				if (messages == null || messages.Count == 0)
+				{
+					return new Response<List<Message>>("NoMessagesFound");
+				}
+
+				return new Response<List<Message>>(messages, "Success");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
+
+		public Response<List<Message>> RetrievePrivateMessages(int user_id, int other_user_id) 
+		{
+			try
+			{
+				var privateMessages = _chatRepository.RetrievePrivateMessages(user_id, other_user_id);
+
+				if (privateMessages == null || privateMessages.Count == 0)
+				{
+					return new Response<List<Message>>("NoMessagesFound");
+				}
+
+				return new Response<List<Message>>(privateMessages, "Success");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
 
 		public async Task HandleChatAction(Player player, dynamic message)
 		{
@@ -93,6 +143,11 @@ namespace BlackjackLogic
 					await OnMessage?.Invoke(player, user.User_ID, chatMessage, MessageType.GLOBAL);
 				}
 			}
+		}
+
+		public void SaveChatMessage()
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

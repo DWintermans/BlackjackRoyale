@@ -1,4 +1,5 @@
 ﻿using BlackjackCommon.Entities.Friend;
+using BlackjackCommon.Entities.Message;
 using BlackjackCommon.Entities.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,7 @@ namespace BlackjackDAL
 
 		public DbSet<User> User { get; set; }
 		public DbSet<Friend> Friend { get; set; }
+		public DbSet<Message> Message { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

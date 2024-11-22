@@ -15,27 +15,27 @@ namespace BlackjackLogic
 			_friendDAL = friendDAL;
 		}
 
-		public Response RequestFriendship(int	 user_id, int befriend_user_id)
+		public Response<string> RequestFriendship(int	 user_id, int befriend_user_id)
 		{
 			if (befriend_user_id < 0)
 			{
-				return new Response("InvalidFriendId");
+				return new Response<string>("InvalidFriendId");
 			}
 
 			if (_friendDAL.FriendshipExists(user_id, befriend_user_id))
 			{
-				return new Response("FriendshipExists");
+				return new Response<string>("FriendshipExists");
 			}
 
 			_friendDAL.RequestFriendship(user_id, befriend_user_id);
-			return new Response();
+			return new Response<string>();
 		}
 
-		public Response UpdateFriendStatus(int user_id, int friend_user_id, string status)
+		public Response<string> UpdateFriendStatus(int user_id, int friend_user_id, string status)
 		{
 			if (friend_user_id < 0) 
 			{
-				return new Response("InvalidFriendId");
+				return new Response<string>("InvalidFriendId");
 			}
 
 			var valStatusResponse = ValidateStatus(status);
@@ -45,14 +45,14 @@ namespace BlackjackLogic
 			}
 
 			_friendDAL.UpdateFriendStatus(user_id, friend_user_id, status);
-			return new Response();
+			return new Response<string>();
 		}
 
-		private static Response ValidateStatus(string status)
+		private static Response<string> ValidateStatus(string status)
 		{
 			if (status.ToLower() != "accepted" && status.ToLower() != "rejected")
 			{
-				return new Response("InvalidFriendStatus");
+				return new Response<string>("InvalidFriendStatus");
 			}
 
 			return null;

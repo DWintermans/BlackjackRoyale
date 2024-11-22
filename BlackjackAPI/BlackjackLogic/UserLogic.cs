@@ -91,7 +91,7 @@ namespace BlackjackLogic
 			}
 		}
 
-		public Response CreateAccount(string username, string password)
+		public Response<string> CreateAccount(string username, string password)
 		{
 			var valUsernameResponse = ValidateUsername(username);
 			if (valUsernameResponse != null)
@@ -107,7 +107,7 @@ namespace BlackjackLogic
 
 			if (_userDAL.IsUsernameTaken(username))
 			{
-				return new Response("UsernameAlreadyTaken");
+				return new Response<string>("UsernameAlreadyTaken");
 			}
 
 			byte[] salt = CreateSalt();
@@ -117,17 +117,17 @@ namespace BlackjackLogic
 
 			if (user_id <= 0)
 			{
-				return new Response("default");
+				return new Response<string>("default");
 			}
 
 			string token = CreateJWT(user_id, username);
 
 			if (token.Length <= 0)
 			{
-				return new Response("default");
+				return new Response<string>("default");
 			}
 
-			return new Response(token, "SuccessfullAccountCreation");
+			return new Response<string>(token, "SuccessfullAccountCreation");
 		}
 
 		//ref: https://security.stackexchange.com/questions/228993/argon2id-configuration
@@ -152,7 +152,7 @@ namespace BlackjackLogic
 			return 0;
 		}
 
-		public Response ChangePassword(int user_id, string old_password, string new_password, string repeat_new_password)
+		public Response<string> ChangePassword(int user_id, string old_password, string new_password, string repeat_new_password)
 		{
 			var valPasswordResponse = ValidatePassword(new_password);
 			if (valPasswordResponse != null)
@@ -162,12 +162,12 @@ namespace BlackjackLogic
 
 			if (new_password != repeat_new_password)
 			{
-				return new Response("NewPasswordsDontMatch");
+				return new Response<string>("NewPasswordsDontMatch");
 			}
 
 			if (old_password == new_password)
 			{
-				return new Response("RepeatedPasswords");
+				return new Response<string>("RepeatedPasswords");
 			}
 
 			//Get old password and salt from db based on user_id
@@ -175,7 +175,7 @@ namespace BlackjackLogic
 
 			if (loginInfo.hashed_pw == null || loginInfo.hashed_pw.Length == 0 || loginInfo.salt == null || loginInfo.salt.Length == 0)
 			{
-				return new Response("Default");
+				return new Response<string>("Default");
 			}
 			else
 			{
@@ -184,7 +184,7 @@ namespace BlackjackLogic
 
 				if (!VerifyHash(old_password, db_salt, db_hashed_pw))
 				{
-					return new Response("OldPasswordsDontMatch");
+					return new Response<string>("OldPasswordsDontMatch");
 				}
 			}
 
@@ -193,10 +193,10 @@ namespace BlackjackLogic
 
 			_userDAL.UpdatePassword(user_id, Convert.ToBase64String(hashed_password), Convert.ToBase64String(salt));
 			
-			return new Response();
+			return new Response<string>();
 		}
 
-		public Response ChangeUsername(int user_id, string user_name)
+		public Response<string> ChangeUsername(int user_id, string user_name)
 		{
 			var valUsernameResponse = ValidateUsername(user_name);
 			if (valUsernameResponse != null)
@@ -206,60 +206,60 @@ namespace BlackjackLogic
 
 			if (_userDAL.IsUsernameTakenByCurrentUser(user_id, user_name))
 			{
-				return new Response("UsernameAlreadyTakenByUser");
+				return new Response<string>("UsernameAlreadyTakenByUser");
 			}
 
 			if (_userDAL.IsUsernameTaken(user_name))
 			{
-				return new Response("UsernameAlreadyTaken");
+				return new Response<string>("UsernameAlreadyTaken");
 			}
 
 			_userDAL.UpdateUsername(user_id, user_name);
-			return new Response();
+			return new Response<string>();
 		}
 
-		private static Response ValidateUsername(string username)
+		private static Response<string> ValidateUsername(string username)
 		{
 			if (string.IsNullOrWhiteSpace(username))
 			{
-				return new Response("EmptyUsername");
+				return new Response<string>("EmptyUsername");
 			}
 
 			if (username.Length > 50)
 			{
-				return new Response("UsernameTooLong");
+				return new Response<string>("UsernameTooLong");
 			}
 
 			var usernameRegex = new Regex(@"^[a-zA-Z0-9À-ÖØ-öø-ÿ\s]+$");
 			if (!usernameRegex.IsMatch(username))
 			{
-				return new Response("UsernameFormatInvalid");
+				return new Response<string>("UsernameFormatInvalid");
 			}
 
 			return null;
 		}
 
-		private static Response ValidatePassword(string password)
+		private static Response<string> ValidatePassword(string password)
 		{
 			if (string.IsNullOrWhiteSpace(password))
 			{
-				return new Response("EmptyPassword");
+				return new Response<string>("EmptyPassword");
 			}
 
 			if (password.Length < 6)
 			{
-				return new Response("PasswordTooShort");
+				return new Response<string>("PasswordTooShort");
 			}
 			if (password.Length > 255)
 			{
-				return new Response("PasswordTooLong");
+				return new Response<string>("PasswordTooLong");
 			}
 
 			//require at least one number and special char
 			var passwordRegex = new Regex(@"^(?=.*[A-Za-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{6,255}$");
 			if (!passwordRegex.IsMatch(password))
 			{
-				return new Response("PasswordFormatInvalid");
+				return new Response<string>("PasswordFormatInvalid");
 			}
 
 			return null;

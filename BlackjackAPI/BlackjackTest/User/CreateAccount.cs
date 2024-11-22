@@ -34,7 +34,7 @@ namespace BlackjackTest.User
 			Assert.IsTrue(result.Success);
 			Assert.AreEqual("Account created successfully.", result.Message);
 
-			int jwt_user_id = _userLogic.GetUserIDFromJWT(result.JWT);
+			int jwt_user_id = _userLogic.GetUserIDFromJWT(result.Data);
 			Assert.AreEqual(user_id, jwt_user_id);
 		}
 

@@ -1,4 +1,5 @@
-﻿using BlackjackCommon.Models;
+﻿using BlackjackCommon.Entities.Message;
+using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
 
 namespace BlackjackCommon.Interfaces.Logic
@@ -8,6 +9,12 @@ namespace BlackjackCommon.Interfaces.Logic
 		event Func<Player, string, NotificationType, ToastType?, Task> OnNotification;
 		event Func<Player, int, string, MessageType, Task> OnMessage;
 		event Func<Player, int, string, Task> OnPrivateMessage;
+
+		Response<List<Message>> RetrieveMessageList(int user_id);
+		Response<List<Message>> RetrievePrivateMessages(int user_id, int other_user_id);
+
+
+		void SaveChatMessage();
 
 		Task HandleChatAction(Player player, dynamic message);
 	}

@@ -1,6 +1,6 @@
 ﻿namespace BlackjackCommon.Models
 {
-	public class Response
+	public class Response<T>
 	{
 		private static readonly Dictionary<string, string> MessageMap = new Dictionary<string, string>
 		{
@@ -29,18 +29,19 @@
 
 			//returns jwt and message
 			{ "SuccessfullAccountCreation", "Account created successfully." },
+			{ "SuccessfullLogin", "Logging in." },
+			
+			{ "Success", "Success" },
 
 		};
 
 		public bool Success { get; set; }
-		public string Code { get; set; }
 		public string Message { get; set; }
-		public string? JWT { get; set; }
+		public T? Data { get; set; }
 
 		public Response(string code)
 		{
 			Success = false;
-			Code = code;
 			Message = GetMessageForCode(code);
 		}
 
@@ -49,11 +50,10 @@
 			Success = true;
 		}
 
-		public Response(string jwtToken, string code)
+		public Response(T data, string code)
 		{
 			Success = true;
-			JWT = jwtToken;
-			Code = code;
+			Data = data;
 			Message = GetMessageForCode(code);
 		}
 
