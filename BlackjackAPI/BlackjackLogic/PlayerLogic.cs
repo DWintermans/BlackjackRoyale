@@ -25,11 +25,11 @@ namespace BlackjackLogic
 			}
 		}
 
-		public void UpdateStatistics(Player player, int gameWins, int gameLosses, int earnings, int losses) 
+		public void UpdateStatistics(Player player, int earnings, int losses) 
 		{
 			try
 			{
-				_userDAL.UpdateStatistics(player.User_ID, gameWins, gameLosses, earnings, losses);
+				_userDAL.UpdateStatistics(player.User_ID, earnings, losses);
 			}
 			catch (Exception ex)
 			{

@@ -11,10 +11,10 @@ namespace BlackjackLogic
 {
 	public class ChatLogic : IChatLogic
 	{
-		private readonly IChatRepository _chatRepository;
-		public ChatLogic(IChatRepository chatRepository)
+		private readonly IChatRepository _chatDAL;
+		public ChatLogic(IChatRepository chatDAL)
 		{
-			_chatRepository = chatRepository;
+			_chatDAL = chatDAL;
 		}
 
 		private const int MaxGroupSize = 4;
@@ -27,11 +27,16 @@ namespace BlackjackLogic
 		{
 			try
 			{
-				var messages = _chatRepository.RetrieveMessageList(user_id);
+				var messages = _chatDAL.RetrieveMessageList(user_id);
 
-				if (messages == null || messages.Count == 0)
+				if (messages.Count == 0)
 				{
-					return new Response<List<Message>>("NoMessagesFound");
+					return new Response<List<Message>>(null, "NoMessagesFound");
+				}
+
+				if (messages == null) 
+				{
+					return new Response<List<Message>>(null, "Default");
 				}
 
 				return new Response<List<Message>>(messages, "Success");
@@ -47,7 +52,7 @@ namespace BlackjackLogic
 		{
 			try
 			{
-				var privateMessages = _chatRepository.RetrievePrivateMessages(user_id, other_user_id);
+				var privateMessages = _chatDAL.RetrievePrivateMessages(user_id, other_user_id);
 
 				if (privateMessages == null || privateMessages.Count == 0)
 				{
@@ -171,7 +176,7 @@ namespace BlackjackLogic
 
 			try
 			{
-				_chatRepository.SaveChatMessage(user_id, receiver_id, group_id, message);
+				_chatDAL.SaveChatMessage(user_id, receiver_id, group_id, message);
 			}
 			catch (Exception ex)
 			{

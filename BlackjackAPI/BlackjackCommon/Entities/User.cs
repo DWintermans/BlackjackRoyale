@@ -31,12 +31,6 @@ namespace BlackjackCommon.Entities.User
 		[Column("user_balance")]
 		public int user_balance { get; set; }
 
-		[Column("user_total_wins")]
-		public int? user_total_wins { get; set; }
-
-		[Column("user_total_losses")]
-		public int? user_total_losses { get; set; }
-
 		[Column("user_total_earnings_amt")]
 		public int? user_total_earnings_amt { get; set; }
 

@@ -56,7 +56,7 @@ namespace BlackjackDAL.Repositories
 			}
 		}
 
-		public void UpdateStatistics(int user_id, int gameWins, int gameLosses, int earnings, int losses) 
+		public void UpdateStatistics(int user_id, int earnings, int losses) 
 		{
 			try
 			{
@@ -66,8 +66,6 @@ namespace BlackjackDAL.Repositories
 
 					if (user != null)
 					{
-						user.user_total_wins += gameWins;
-						user.user_total_losses += gameLosses;
 						user.user_total_earnings_amt += earnings;
 						user.user_total_losses_amt += losses;
 
@@ -156,8 +154,6 @@ namespace BlackjackDAL.Repositories
 						user_passwordsalt = salt,
 						user_is_moderator = false,
 						user_status = UserStatus.active,
-						user_total_wins = 0,
-						user_total_losses = 0,
 						user_total_earnings_amt = 0,
 						user_total_losses_amt = 0,
 					};

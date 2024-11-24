@@ -423,6 +423,7 @@ namespace BlackjackLogic
 				{
 					group.Members.Add(player);
 					player.IsReady = true;
+					group.WaitingRoom.Remove(player);
 
 					await ForceCheckGroup(player);
 

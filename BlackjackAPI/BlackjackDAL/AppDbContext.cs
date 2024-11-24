@@ -1,6 +1,7 @@
 ﻿using BlackjackCommon.Entities.Friend;
 using BlackjackCommon.Entities.Message;
 using BlackjackCommon.Entities.User;
+using BlackjackCommon.Entities.History;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlackjackDAL
@@ -28,6 +29,7 @@ namespace BlackjackDAL
 		public DbSet<User> User { get; set; }
 		public DbSet<Friend> Friend { get; set; }
 		public DbSet<Message> Message { get; set; }
+		public DbSet<History> History { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -49,6 +51,14 @@ namespace BlackjackDAL
 			//string conversion for enum
 			modelBuilder.Entity<Friend>()
 				.Property(f => f.friend_status)
+				.HasConversion<string>();
+
+			modelBuilder.Entity<History>()
+				.Property(f => f.history_action)
+				.HasConversion<string>();
+
+			modelBuilder.Entity<History>()
+				.Property(f => f.history_result)
 				.HasConversion<string>();
 
 			base.OnModelCreating(modelBuilder);

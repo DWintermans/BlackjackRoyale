@@ -23,44 +23,44 @@ namespace BlackjackDAL.Repositories
 
 					// subquery to get the last message exchanged between two users.
 					var lastMessages = context.Message
-						.Where(m => m.MessageSender == user_id || m.MessageReceiver == user_id)
+						.Where(m => m.message_sender == user_id || m.message_receiver == user_id)
 						.GroupBy(m => new {
-							User1 = Math.Max(m.MessageSender, (int)m.MessageReceiver),
-							User2 = Math.Min(m.MessageSender, (int)m.MessageReceiver)
+							User1 = Math.Max(m.message_sender, (int)m.message_receiver),
+							User2 = Math.Min(m.message_sender, (int)m.message_receiver)
 						})
 						.Select(g => new
 						{
 							User1 = g.Key.User1,
 							User2 = g.Key.User2,
-							LatestMessageID = g.Max(m => m.MessageId)
+							LatestMessageID = g.Max(m => m.message_id)
 						});
 
 					// main query to get details for said message.
 					var messages = from m in context.Message
-						join uSender in context.User on m.MessageSender equals uSender.user_id
-						join uReceiver in context.User on m.MessageReceiver equals uReceiver.user_id
+						join uSender in context.User on m.message_sender equals uSender.user_id
+						join uReceiver in context.User on m.message_receiver equals uReceiver.user_id
 						join lastMsg in lastMessages on new
 						{
-						   User1 = Math.Max(m.MessageSender, (int)m.MessageReceiver),
-						   User2 = Math.Min(m.MessageSender, (int)m.MessageReceiver)
+						   User1 = Math.Max(m.message_sender, (int)m.message_receiver),
+						   User2 = Math.Min(m.message_sender, (int)m.message_receiver)
 						} equals new
 						{
 						   User1 = lastMsg.User1,
 						   User2 = lastMsg.User2
 						}
-						where m.MessageId == lastMsg.LatestMessageID
-						orderby m.MessageId descending
+						where m.message_id == lastMsg.LatestMessageID
+						orderby m.message_id descending
 						select new Message
 						{
-						   MessageId = m.MessageId,
-						   MessageSender = m.MessageSender,
-						   MessageReceiver = m.MessageReceiver,
-						   MessageGroup = null,
-						   MessageContent = m.MessageDeleted ? "This message has been deleted." : m.MessageContent,
-						   MessageDateTime = m.MessageDateTime,
-						   MessageDeleted = m.MessageDeleted,
-						   SenderUserName = uSender.user_name,
-						   ReceiverUserName = uReceiver.user_name
+						   message_id = m.message_id,
+						   message_sender = m.message_sender,
+						   message_receiver = m.message_receiver,
+						   message_group = null,
+						   message_content = m.message_deleted ? "This message has been deleted." : m.message_content,
+						   message_datetime = m.message_datetime,
+						   message_deleted = m.message_deleted,
+						   sender_username = uSender.user_name,
+						   receiver_username = uReceiver.user_name
 						};
 
 					return messages.ToList();
@@ -87,22 +87,22 @@ namespace BlackjackDAL.Repositories
 					}
 
 					var messages = from m in context.Message
-						join uSender in context.User on m.MessageSender equals uSender.user_id
-						join uReceiver in context.User on m.MessageReceiver equals uReceiver.user_id
-						where (m.MessageSender == user_id && m.MessageReceiver == other_user_id)
-							 || (m.MessageSender == other_user_id && m.MessageReceiver == user_id)
-						orderby m.MessageId descending 
+						join uSender in context.User on m.message_sender equals uSender.user_id
+						join uReceiver in context.User on m.message_receiver equals uReceiver.user_id
+						where (m.message_sender == user_id && m.message_receiver == other_user_id)
+							 || (m.message_sender == other_user_id && m.message_receiver == user_id)
+						orderby m.message_id descending 
 						select new Message
 						{
-						   MessageId = m.MessageId,
-						   MessageSender = m.MessageSender,
-						   MessageReceiver = m.MessageReceiver,
-						   MessageGroup = null,
-						   MessageContent = m.MessageDeleted ? "This message has been deleted." : m.MessageContent,
-						   MessageDateTime = m.MessageDateTime,
-						   MessageDeleted = m.MessageDeleted,
-						   SenderUserName = uSender.user_name,
-						   ReceiverUserName = uReceiver.user_name
+						   message_id = m.message_id,
+						   message_sender = m.message_sender,
+						   message_receiver = m.message_receiver,
+						   message_group = null,
+						   message_content = m.message_deleted ? "This message has been deleted." : m.message_content,
+						   message_datetime = m.message_datetime,
+						   message_deleted = m.message_deleted,
+						   sender_username = uSender.user_name,
+						   receiver_username = uReceiver.user_name
 						};
 
 					return messages.ToList();
@@ -125,11 +125,11 @@ namespace BlackjackDAL.Repositories
 				{
 					var newMessage = new Message
 					{
-						MessageSender = user_id,
-						MessageReceiver = receiver_id,
-						MessageGroup = group_id,
-						MessageContent = message,
-						MessageDateTime= DateTime.Now,
+						message_sender = user_id,
+						message_receiver = receiver_id,
+						message_group = group_id,
+						message_content = message,
+						message_datetime= DateTime.Now,
 					};
 
 					context.Message.Add(newMessage);

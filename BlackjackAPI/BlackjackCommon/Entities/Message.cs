@@ -8,31 +8,31 @@ namespace BlackjackCommon.Entities.Message
 	{
 		[Key] 
 		[Column("message_id")]
-		public int MessageId { get; set; }
+		public int message_id { get; set; }
 
 		[Column("message_sender")]
-		public int MessageSender { get; set; }
+		public int message_sender { get; set; }
 
 		[Column("message_receiver")]
-		public int? MessageReceiver { get; set; } 
+		public int? message_receiver { get; set; } 
 
 		[Column("message_group")]
 		[StringLength(50)]
-		public string? MessageGroup { get; set; } 
+		public string? message_group { get; set; } 
 
 		[Column("message_content")]
-		public string MessageContent { get; set; } 
+		public string message_content { get; set; } 
 
 		[Column("message_datetime")]
-		public DateTime MessageDateTime { get; set; }
+		public DateTime message_datetime { get; set; }
 
 		[Column("message_deleted")]
-		public bool MessageDeleted { get; set; }
+		public bool message_deleted { get; set; }
 
 		[NotMapped]
-		public string SenderUserName { get; set; }
+		public string sender_username { get; set; }
 		
 		[NotMapped]
-		public string ReceiverUserName { get; set; }	
+		public string receiver_username { get; set; }	
 	}
 }

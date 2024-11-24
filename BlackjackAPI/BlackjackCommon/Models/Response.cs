@@ -34,6 +34,8 @@
 			
 			{ "Success", "Success" },
 
+			{ "NoMessagesFound", "No messages found." },
+
 		};
 
 		public bool Success { get; set; }
@@ -60,7 +62,7 @@
 
 		private string GetMessageForCode(string errorCode)
 		{
-			return MessageMap.TryGetValue(errorCode, out var message) ? message : "An unexpected error occurred.";
+			return MessageMap.TryGetValue(errorCode, out var message) ? message : "An unexpected error in error-code translation occurred.";
 		}
 	}
 }

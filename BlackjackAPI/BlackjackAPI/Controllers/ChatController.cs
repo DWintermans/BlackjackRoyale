@@ -45,6 +45,13 @@ namespace BlackjackAPI.Controllers
 			{
 				var response = _chatLogic.RetrieveMessageList(user_id);
 
+				//no data but did succesfully retrieve.
+				if (response.Data == null)
+				{
+					return Ok(new { Message = response.Message });
+				}
+
+				//failed to retrieve due to issue
 				if (!response.Success)
 				{
 					return NotFound(new { Message = response.Message });

@@ -1,11 +1,18 @@
 ﻿using BlackjackCommon.Data.SharedData;
 using BlackjackCommon.Interfaces.Logic;
+using BlackjackCommon.Interfaces.Repository;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+using Sprache;
 using System;
 using System.Collections.Immutable;
 using System.Numerics;
+using System.Reflection;
 using System.Threading.Tasks.Dataflow;
+using static System.Collections.Specialized.BitVector32;
 using Group = BlackjackCommon.Models.Group;
 using Player = BlackjackCommon.Models.Player;
 
@@ -20,11 +27,14 @@ namespace BlackjackLogic
 
 		private readonly Lazy<IGroupLogic> _groupLogic;
 		private readonly Lazy<IPlayerLogic> _playerLogic;
+		private readonly IGameRepository _gameDAL;
 
-		public GameLogic(Lazy<IGroupLogic> groupLogic, Lazy<IPlayerLogic> playerLogic)
+
+		public GameLogic(Lazy<IGroupLogic> groupLogic, Lazy<IPlayerLogic> playerLogic, IGameRepository gameDAL)
 		{
 			_groupLogic = groupLogic;
 			_playerLogic = playerLogic;
+			_gameDAL = gameDAL;
 		}
 
 		static List<string> baseDeck = new List<string>
@@ -151,6 +161,32 @@ namespace BlackjackLogic
 			}
 		}
 
+		private void SaveEvent<T>(T model, string group_id, int round_number) where T : class
+		{
+			try 
+			{
+				var settings = new JsonSerializerSettings
+				{
+					Converters = new List<JsonConverter> { new StringEnumConverter() }
+				};
+
+				string payload = JsonConvert.SerializeObject(model, settings);
+
+				var jsonObject = JObject.Parse(payload);
+
+				int user_id = jsonObject["User_ID"]?.Value<int>() ?? throw new InvalidOperationException("Payload is missing the 'User_ID' field.");
+				string action = jsonObject["Action"]?.Value<string>() ?? throw new InvalidOperationException("Payload is missing the 'Action' field.");
+				string result = jsonObject["Result"]?.Value<string>(); //nullable
+
+				_gameDAL.SaveEvent(user_id, group_id, action, result, payload, round_number);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
+
 		private async Task WhoseTurnIsIt(Group group) 
 		{
 			foreach (var member in group.Members)
@@ -174,6 +210,7 @@ namespace BlackjackLogic
 					};
 
 					await OnGameInfoToGroup?.Invoke(group, model);
+					SaveEvent(model, group.Unique_Group_ID, group.Round);
 
 					return;
 				}
@@ -200,6 +237,7 @@ namespace BlackjackLogic
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, turnModel);
+			SaveEvent(turnModel, group.Unique_Group_ID, group.Round);
 
 			await Task.Delay(1000);
 
@@ -215,6 +253,7 @@ namespace BlackjackLogic
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, gameModel);
+			SaveEvent(gameModel, group.Unique_Group_ID, group.Round);
 
 			while (GetBestHandValue((CalculateHandValue(group.DealerHand))) <= 16) 
 			{				
@@ -224,8 +263,6 @@ namespace BlackjackLogic
 
 			foreach (var member in group.Members)
 			{
-				int gameWins = 0;
-				int gameLosses = 0;
 				int earnings = 0;
 				int losses = 0;
 
@@ -246,7 +283,6 @@ namespace BlackjackLogic
 					//surrendered? no cards so value is 0
 					if (memberHand == 0)
 					{
-						gameLosses += 1;
 						losses += bet / 2;
 
 						GameModel model = new GameModel
@@ -259,6 +295,7 @@ namespace BlackjackLogic
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
+						SaveEvent(model, group.Unique_Group_ID, group.Round);
 						continue;
 					}
 
@@ -278,6 +315,7 @@ namespace BlackjackLogic
 							};
 
 							await OnGameInfoToGroup?.Invoke(group, model);
+							SaveEvent(model, group.Unique_Group_ID, group.Round);
 						}
 					}
 					else 
@@ -291,7 +329,6 @@ namespace BlackjackLogic
 					//bust
 					if (memberHand > 21)
 					{
-						gameLosses += 1;
 						losses += bet;
 
 						GameModel model = new GameModel
@@ -304,6 +341,7 @@ namespace BlackjackLogic
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
+						SaveEvent(model, group.Unique_Group_ID, group.Round);
 						continue;
 					}
 
@@ -322,6 +360,7 @@ namespace BlackjackLogic
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
+						SaveEvent(model, group.Unique_Group_ID, group.Round);
 						continue;
 					}
 
@@ -330,7 +369,6 @@ namespace BlackjackLogic
 					{
 						int bonus = (int)(bet * 0.5);
 
-						gameWins += 1;
 						earnings += bet + bonus;
 
 						member.Credits += bet + bet + bonus;
@@ -346,13 +384,13 @@ namespace BlackjackLogic
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
+						SaveEvent(model, group.Unique_Group_ID, group.Round);
 						continue;
 					}
 
 					//lose
 					if (dealerHand > memberHand && dealerHand <= 21)
 					{
-						gameLosses += 1;
 						losses += bet;
 
 						GameModel model = new GameModel
@@ -365,13 +403,13 @@ namespace BlackjackLogic
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
+						SaveEvent(model, group.Unique_Group_ID, group.Round);
 						continue;
 					}
 
 					//win
 					if (memberHand > dealerHand || dealerHand > 21)
 					{
-						gameWins += 1;
 						earnings += bet;
 
 						member.Credits += bet + bet;
@@ -386,11 +424,12 @@ namespace BlackjackLogic
 						};
 
 						await OnGameInfoToGroup?.Invoke(group, model);
+						SaveEvent(model, group.Unique_Group_ID, group.Round);
 						continue;
 					}
 				}
 
-				_playerLogic.Value.UpdateStatistics(member, gameWins, gameLosses, earnings, losses);
+				_playerLogic.Value.UpdateStatistics(member, earnings, losses);
 				
 			}
 
@@ -417,6 +456,7 @@ namespace BlackjackLogic
 				};
 
 				await OnGameInfoToPlayer?.Invoke(member, model);
+				SaveEvent(model, group.Unique_Group_ID, group.Round);
 			}
 
 			group.Status = Group.GroupStatus.BETTING;
@@ -498,16 +538,16 @@ namespace BlackjackLogic
 		{
 			await OnGroupNotification?.Invoke(group, "Game is starting now!", NotificationType.GAME, default);
 
-			foreach (var member in group.Members)
-			{
-				GameModel startModel = new GameModel
-				{
-					User_ID = member.User_ID,
-					Action = GameAction.GAME_STARTED,
-				};
+			group.Round += 1;
 
-				await OnGameInfoToGroup?.Invoke(group, startModel);
-			}
+			GameModel startModel = new GameModel
+			{
+				User_ID = -1,
+				Action = GameAction.GAME_STARTED,
+			};
+
+			await OnGameInfoToGroup?.Invoke(group, startModel);
+			SaveEvent(startModel, group.Unique_Group_ID, group.Round);
 
 			//shuffle and play with two decks, when starting round and one deck is depleted start game with 2 new shuffled decks 
 			while (group.Deck.Count <= 52)
@@ -580,6 +620,7 @@ namespace BlackjackLogic
 			group.HoleCard = cardName;
 
 			await OnGameInfoToGroup?.Invoke(group, model);
+			SaveEvent(model, group.Unique_Group_ID, group.Round);
 
 			await OnGroupNotification?.Invoke(group, "Setup has ended", NotificationType.GAME, default);
 
@@ -654,8 +695,10 @@ namespace BlackjackLogic
 				Cards_In_Deck = group.Deck.Count,
 				Hand = index + 1
 			};
-
+			
 			await OnGameInfoToGroup?.Invoke(group, model);
+
+			SaveEvent(model, group.Unique_Group_ID, group.Round);
 
 			//end turn for player if above or equal to 21
 			if (GetBestHandValue(totalHandValue) > 21 || GetBestHandValue(totalHandValue) == 21) 
@@ -675,6 +718,7 @@ namespace BlackjackLogic
 
 					//notify about game-action (player finished playing)
 					await OnGameInfoToGroup?.Invoke(group, finishedModel);
+					SaveEvent(finishedModel, group.Unique_Group_ID, group.Round);
 				}
 			}
 
@@ -706,6 +750,8 @@ namespace BlackjackLogic
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
+			SaveEvent(model, group.Unique_Group_ID, group.Round);
+
 			Console.WriteLine($"{group.Group_ID} dealer received {cardName}, value in hand: {CalculateHandValue(group.DealerHand)}");
 		}
 
@@ -737,6 +783,7 @@ namespace BlackjackLogic
 
 			//notify about game-action (stand)
 			await OnGameInfoToGroup?.Invoke(group, model);
+			SaveEvent(model, group.Unique_Group_ID, group.Round);
 
 			activeHand.IsFinished = true;
 
@@ -752,6 +799,7 @@ namespace BlackjackLogic
 
 				//notify about game-action (player finished playing)
 				await OnGameInfoToGroup?.Invoke(group, finishModel);
+				SaveEvent(finishModel, group.Unique_Group_ID, group.Round);
 			}
 		}
 
@@ -814,6 +862,7 @@ namespace BlackjackLogic
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
+			SaveEvent(model, group.Unique_Group_ID, group.Round);
 
 			activeHand.IsFinished = true;
 
@@ -829,6 +878,7 @@ namespace BlackjackLogic
 
 				//notify about game-action (player finished playing)
 				await OnGameInfoToGroup?.Invoke(group, finishedModel);
+				SaveEvent(finishedModel, group.Unique_Group_ID, group.Round);
 			}
 
 			Console.WriteLine($"{player.User_ID} doubled down, betting {group.Bets[player]} and received {cardName}, value in hand: {CalculateHandValue(activeHand.Cards)}");
@@ -872,6 +922,7 @@ namespace BlackjackLogic
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
+			SaveEvent(model, group.Unique_Group_ID, group.Round);
 
 			activeHand.IsFinished = true;
 
@@ -884,6 +935,7 @@ namespace BlackjackLogic
 
 			//notify about game-action (player finished playing)
 			await OnGameInfoToGroup?.Invoke(group, finishedModel);
+			SaveEvent(finishedModel, group.Unique_Group_ID, group.Round);
 
 			Console.WriteLine($"{player.User_ID} surrendered.");
 		}
@@ -929,6 +981,7 @@ namespace BlackjackLogic
 
 				//notify about game-action (insure)
 				await OnGameInfoToGroup?.Invoke(group, model);
+				SaveEvent(model, group.Unique_Group_ID, group.Round);
 			}
 			else
 			{
@@ -1011,6 +1064,7 @@ namespace BlackjackLogic
 		
 			//notify about game-action (split)
 			await OnGameInfoToGroup?.Invoke(group, model);
+			SaveEvent(model, group.Unique_Group_ID, group.Round);
 		}
 
 		private async Task Bet(Player player, string bet_amount) 
@@ -1052,6 +1106,7 @@ namespace BlackjackLogic
 			};
 
 			await OnGameInfoToGroup?.Invoke(group, model);
+			SaveEvent(model, group.Unique_Group_ID, group.Round);
 
 			//all bets locked in? start game
 			if (group.Bets.Count == group.Members.Count)

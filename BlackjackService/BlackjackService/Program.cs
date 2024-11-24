@@ -32,6 +32,7 @@ internal class Program
 
 			serviceCollection.AddScoped<IUserRepository, UserRepository>();
 			serviceCollection.AddScoped<IChatRepository, ChatRepository>();
+			serviceCollection.AddScoped<IGameRepository, GameRepository>();
 
 
 			var serviceProvider = serviceCollection.BuildServiceProvider();

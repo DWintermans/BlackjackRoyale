@@ -12,6 +12,7 @@
 		public List<Player> WaitingRoom { get; private set; }
 
 		public Dictionary<Player, int> Bets { get; private set; }
+		public int Round { get; set; }
 
 		public Group(string group_id, string unique_id)
 		{
@@ -22,6 +23,7 @@
 			DealerHand = new List<string>();
 			WaitingRoom = new List<Player>();
 			Bets = new Dictionary<Player, int>();
+			Round = 0;
 		}
 
 		public enum GroupStatus
