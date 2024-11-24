@@ -1,6 +1,7 @@
 ﻿using BlackjackCommon.Entities.Message;
 using BlackjackCommon.Entities.User;
 using BlackjackCommon.Interfaces.Repository;
+using BlackjackCommon.ViewModels;
 
 namespace BlackjackDAL.Repositories
 {
@@ -8,7 +9,7 @@ namespace BlackjackDAL.Repositories
 	{
 		private readonly DBConnection _DBConnection = new();
 
-		public List<Message> RetrieveMessageList(int user_id)
+		public List<MessageListModel> RetrieveMessageList(int user_id)
 		{
 			try
 			{
@@ -50,12 +51,11 @@ namespace BlackjackDAL.Repositories
 						}
 						where m.message_id == lastMsg.LatestMessageID
 						orderby m.message_id descending
-						select new Message
+						select new MessageListModel
 						{
 						   message_id = m.message_id,
 						   message_sender = m.message_sender,
 						   message_receiver = m.message_receiver,
-						   message_group = null,
 						   message_content = m.message_deleted ? "This message has been deleted." : m.message_content,
 						   message_datetime = m.message_datetime,
 						   message_deleted = m.message_deleted,
@@ -73,7 +73,7 @@ namespace BlackjackDAL.Repositories
 			}
 		}
 
-		public List<Message> RetrievePrivateMessages(int user_id, int other_user_id)
+		public List<MessageListModel> RetrievePrivateMessages(int user_id, int other_user_id)
 		{
 			try
 			{
@@ -92,12 +92,11 @@ namespace BlackjackDAL.Repositories
 						where (m.message_sender == user_id && m.message_receiver == other_user_id)
 							 || (m.message_sender == other_user_id && m.message_receiver == user_id)
 						orderby m.message_id descending 
-						select new Message
+						select new MessageListModel
 						{
 						   message_id = m.message_id,
 						   message_sender = m.message_sender,
 						   message_receiver = m.message_receiver,
-						   message_group = null,
 						   message_content = m.message_deleted ? "This message has been deleted." : m.message_content,
 						   message_datetime = m.message_datetime,
 						   message_deleted = m.message_deleted,

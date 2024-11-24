@@ -1,11 +1,12 @@
 ﻿using BlackjackCommon.Entities.Message;
+using BlackjackCommon.ViewModels;
 
 namespace BlackjackCommon.Interfaces.Repository
 {
 	public interface IChatRepository
 	{
-		List<Message> RetrieveMessageList(int user_id);
-		List<Message> RetrievePrivateMessages(int user_id, int other_user_id);
+		List<MessageListModel> RetrieveMessageList(int user_id);
+		List<MessageListModel> RetrievePrivateMessages(int user_id, int other_user_id);
 		void SaveChatMessage(int user_id, int receiver_id, string group_id, string message);
 	}
 }

@@ -23,7 +23,7 @@ namespace BlackjackLogic
 		public event Func<Player, int, string, MessageType, Task>? OnMessage;
 		public event Func<Player, int, string, Task>? OnPrivateMessage;
 
-		public Response<List<Message>> RetrieveMessageList(int user_id)
+		public Response<List<MessageListModel>> RetrieveMessageList(int user_id)
 		{
 			try
 			{
@@ -31,15 +31,15 @@ namespace BlackjackLogic
 
 				if (messages.Count == 0)
 				{
-					return new Response<List<Message>>(null, "NoMessagesFound");
+					return new Response<List<MessageListModel>>(null, "NoMessagesFound");
 				}
 
 				if (messages == null) 
 				{
-					return new Response<List<Message>>(null, "Default");
+					return new Response<List<MessageListModel>>(null, "Default");
 				}
 
-				return new Response<List<Message>>(messages, "Success");
+				return new Response<List<MessageListModel>>(messages, "Success");
 			}
 			catch (Exception ex)
 			{
@@ -48,7 +48,7 @@ namespace BlackjackLogic
 			}
 		}
 
-		public Response<List<Message>> RetrievePrivateMessages(int user_id, int other_user_id) 
+		public Response<List<MessageListModel>> RetrievePrivateMessages(int user_id, int other_user_id) 
 		{
 			try
 			{
@@ -56,10 +56,10 @@ namespace BlackjackLogic
 
 				if (privateMessages == null || privateMessages.Count == 0)
 				{
-					return new Response<List<Message>>("NoMessagesFound");
+					return new Response<List<MessageListModel>>("NoMessagesFound");
 				}
 
-				return new Response<List<Message>>(privateMessages, "Success");
+				return new Response<List<MessageListModel>>(privateMessages, "Success");
 			}
 			catch (Exception ex)
 			{
