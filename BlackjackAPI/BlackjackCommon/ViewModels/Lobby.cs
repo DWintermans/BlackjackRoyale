@@ -10,5 +10,7 @@
 	{
 		public string Group_ID { get; set; }
 		public int Members { get; set; }
+		public string Status { get; set; }
+		public int Round { get; set; }
 	}
 }

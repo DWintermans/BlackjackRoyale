@@ -132,7 +132,7 @@ namespace BlackjackLogic
 			}
 		}
 
-		private async Task ForceShowLobby()
+		public async Task ForceShowLobby()
 		{
 			LobbyModel lobbyModel = new LobbyModel
 			{
@@ -150,8 +150,10 @@ namespace BlackjackLogic
 				Lobby lobby = new Lobby
 				{
 					Group_ID = currentGroup.Group_ID,
-					Members = memberCount + waitingRoomCount
-				};
+					Members = memberCount + waitingRoomCount,
+					Status = currentGroup.Status.ToString() == "BETTING" ? "PLAYING" : currentGroup.Status.ToString(),
+					Round = currentGroup.Round
+			};
 
 				lobbyModel.Lobby.Add(lobby);
 			}
@@ -194,7 +196,9 @@ namespace BlackjackLogic
 				Lobby lobby = new Lobby
 				{
 					Group_ID = currentGroup.Group_ID,
-					Members = memberCount + waitingRoomCount
+					Members = memberCount + waitingRoomCount,
+					Status = currentGroup.Status.ToString() == "BETTING" ? "PLAYING" : currentGroup.Status.ToString(),
+					Round = currentGroup.Round
 				};
 
 				lobbyModel.Lobby.Add(lobby);
@@ -348,6 +352,8 @@ namespace BlackjackLogic
 
 		private async Task JoinGroup(Player player, string group_id)
 		{
+			group_id = group_id.ToUpper();
+
 			//check if group exists
 			if (!SharedData.Groups.ContainsKey(group_id))
 			{
@@ -485,6 +491,7 @@ namespace BlackjackLogic
 			if (readyCount > totalMembers / 2)
 			{
 				group.Status = Group.GroupStatus.BETTING;
+
 				await _gameLogic.StartBetting(group);
 			}
 		}

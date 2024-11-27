@@ -275,11 +275,6 @@ namespace BlackjackLogic
 
 					group.Bets.TryGetValue(member, out int bet);
 
-					if (hand.IsDoubled) 
-					{
-						bet = bet * 2;
-					}
-
 					//surrendered? no cards so value is 0
 					if (memberHand == 0)
 					{
@@ -324,6 +319,11 @@ namespace BlackjackLogic
 						{
 							losses += bet / 2;
 						}
+					}
+
+					if (hand.IsDoubled)
+					{
+						bet = bet * 2;
 					}
 
 					//bust
@@ -1112,6 +1112,13 @@ namespace BlackjackLogic
 			if (group.Bets.Count == group.Members.Count)
 			{
 				group.Status = Group.GroupStatus.PLAYING;
+
+				//only send a message once when it goes from betting to playing
+				if (group.Round == 0) 
+				{
+					await _groupLogic.Value.ForceShowLobby();
+				}
+
 				StartGame(group);
 			}
 		}
