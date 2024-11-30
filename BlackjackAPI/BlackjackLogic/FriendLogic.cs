@@ -1,6 +1,7 @@
 ﻿using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Interfaces.Repository;
 using BlackjackCommon.Models;
+using BlackjackCommon.ViewModels;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -15,6 +16,31 @@ namespace BlackjackLogic
 		{
 			_friendDAL = friendDAL;
 			_userDAL = userDAL;
+		}
+
+		public Response<List<FriendRequestModel>> GetFriendRequests(int user_id)
+		{
+			try
+			{
+				var data = _friendDAL.GetFriendRequests(user_id);
+
+				if (data.Count == 0)
+				{
+					return new Response<List<FriendRequestModel>>(null, "NoPendingFriendshipFound");
+				}
+
+				if (data == null)
+				{
+					return new Response<List<FriendRequestModel>>(null, "Default");
+				}
+
+				return new Response<List<FriendRequestModel>>(data, "Success");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
 		}
 
 		public Response<string> RequestFriendship(int user_id, int befriend_user_id)

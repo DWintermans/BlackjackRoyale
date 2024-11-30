@@ -1,12 +1,53 @@
 ﻿using BlackjackCommon.Entities.Friend;
 using BlackjackCommon.Entities.Friend_Request;
 using BlackjackCommon.Interfaces.Repository;
+using BlackjackCommon.ViewModels;
 
 namespace BlackjackDAL.Repositories
 {
 	public class FriendRepository : IFriendRepository
 	{
 		private readonly DBConnection _DBConnection = new();
+
+		public List<FriendRequestModel> GetFriendRequests(int user_id) 
+		{
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					//get all relevant requests for the userid as requester or receiver
+					var friendRequests = context.Friend_Request
+					   .Where(f => f.friend_user_id == user_id || f.friend_befriend_user_id == user_id)
+						.AsEnumerable()
+						.GroupBy(f => new
+						{
+							MinUserId = Math.Min(f.friend_user_id, f.friend_befriend_user_id),
+							MaxUserId = Math.Max(f.friend_user_id, f.friend_befriend_user_id)
+						})
+						.Select(g => g.OrderByDescending(f => f.friend_datetime).FirstOrDefault())
+						.Where(f => f.friend_status == FriendStatus.pending)
+						.ToList();
+
+					//build model
+					var result = friendRequests.Select(f => new FriendRequestModel
+					{
+						user_id = f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id,
+						user_name = context.User
+							.Where(u => u.user_id == (f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id))
+							.Select(u => u.user_name)
+							.FirstOrDefault(),
+						can_answer = f.friend_befriend_user_id == user_id //if is receiver > true, if requested the friendship set to false.
+					}).ToList();
+
+					return result;
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
 
 		public bool FriendshipIsPending(int user_id, int befriend_user_id) 
 		{

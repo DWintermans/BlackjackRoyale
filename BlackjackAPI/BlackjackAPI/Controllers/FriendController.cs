@@ -16,6 +16,54 @@ namespace BlackjackAPI.Controllers
 		}
 
 		/// <summary>
+		/// Retrieves the list of pending friend requests.
+		/// </summary>
+		/// <param name="model"></param>
+		/// <response code="200"></response>
+		/// <response code="400"></response>
+		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+		[Authorize]
+		[HttpGet]
+		[Route("request")]
+		public IActionResult GetFriendRequests()
+		{
+			var jwt_user_id = HttpContext.User.FindFirst("user_id");
+
+			if (jwt_user_id == null)
+			{
+				return Unauthorized(new { message = "Invalid credentials" });
+			}
+
+			int user_id = int.Parse(jwt_user_id.Value);
+			
+			try
+			{
+				var response = _friendLogic.GetFriendRequests(user_id);
+
+				//no data but did succesfully retrieve.
+				if (response.Data == null)
+				{
+					return Ok(new { Message = response.Message });
+				}
+
+				//failed to retrieve due to issue
+				if (!response.Success)
+				{
+					return NotFound(new { Message = response.Message });
+				}
+
+				return Ok(new { Messages = response.Data });
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+				return StatusCode(500, new { message = "An error occurred while processing your request." });
+			}
+		}
+
+
+		/// <summary>
 		/// Request to become friends with another user.
 		/// </summary>
 		/// <param name="model">The request model containing the ID of the user to send the friend request to.</param>
