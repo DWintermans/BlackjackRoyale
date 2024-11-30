@@ -12,9 +12,11 @@ namespace BlackjackLogic
 	public class ChatLogic : IChatLogic
 	{
 		private readonly IChatRepository _chatDAL;
-		public ChatLogic(IChatRepository chatDAL)
+		private readonly IFriendRepository _friendDAL;
+		public ChatLogic(IChatRepository chatDAL, IFriendRepository friendDAL)
 		{
 			_chatDAL = chatDAL;
+			_friendDAL = friendDAL;
 		}
 
 		private const int MaxGroupSize = 4;
@@ -119,8 +121,16 @@ namespace BlackjackLogic
 				//cant send private message to yourself
 				if (player.User_ID != receiver_id)
 				{
-					await OnPrivateMessage?.Invoke(player, receiver_id, chatMessage);
-					SaveChatMessage(player.User_ID, receiver_id, null, chatMessage);
+					//only allow messages between players that are friends
+					if (_friendDAL.FriendshipExists(player.User_ID, receiver_id))
+					{
+						await OnPrivateMessage?.Invoke(player, receiver_id, chatMessage);
+						SaveChatMessage(player.User_ID, receiver_id, null, chatMessage);
+					}
+					else 
+					{
+						await OnNotification?.Invoke(player, "You must be friends before sending a private message.", NotificationType.TOAST, ToastType.ERROR);
+					}
 				}
 			}
 			else

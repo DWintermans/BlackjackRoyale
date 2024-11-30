@@ -1,4 +1,5 @@
 ﻿using BlackjackCommon.Entities.Friend;
+using BlackjackCommon.Entities.Friend_Request;
 using BlackjackCommon.Interfaces.Repository;
 
 namespace BlackjackDAL.Repositories
@@ -7,13 +8,37 @@ namespace BlackjackDAL.Repositories
 	{
 		private readonly DBConnection _DBConnection = new();
 
-		public bool FriendshipExists(int user_id, int befriend_user_id) 
+		public bool FriendshipIsPending(int user_id, int befriend_user_id) 
 		{
 			try
 			{
 				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
 				{
-					//check if friendship requested (if already pending/accepted/rejected)
+					//check if friendship is pending
+					var friendRequest = context.Friend_Request
+					.Where(f =>
+						(f.friend_user_id == user_id && f.friend_befriend_user_id == befriend_user_id) ||
+						(f.friend_user_id == befriend_user_id && f.friend_befriend_user_id == user_id))
+					.OrderByDescending(f => f.friend_datetime)
+					.FirstOrDefault();
+
+					return friendRequest != null && friendRequest.friend_status == FriendStatus.pending;
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
+
+		public bool FriendshipExists(int user_id, int befriend_user_id)
+		{
+			try
+			{
+				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				{
+					//check if friendship already exists
 					var existingFriendship = context.Friend
 						.FirstOrDefault(f =>
 							(f.friend_user_id == befriend_user_id && f.friend_befriend_user_id == user_id) ||
@@ -35,14 +60,15 @@ namespace BlackjackDAL.Repositories
 			{
 				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
 				{
-					var newFriendship = new Friend
+					var newFriendship = new Friend_Request
 					{
 						friend_user_id = user_id,
 						friend_befriend_user_id = befriend_user_id,
-						friend_status = FriendStatus.pending
+						friend_status = FriendStatus.pending,
+						friend_datetime = DateTime.Now
 					};
 
-					context.Friend.Add(newFriendship);
+					context.Friend_Request.Add(newFriendship);
 					context.SaveChanges();
 				}
 			}
@@ -59,11 +85,29 @@ namespace BlackjackDAL.Repositories
 			{
 				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
 				{
-					var friendship = context.Friend
-						.FirstOrDefault(f =>
-							(f.friend_user_id == friend_user_id && f.friend_befriend_user_id == user_id));
 
-					friendship.friend_status = Enum.Parse<FriendStatus>(status);
+					//log action
+					var newFriendship = new Friend_Request
+					{
+						friend_user_id = user_id,
+						friend_befriend_user_id = friend_user_id,
+						friend_status = Enum.Parse<FriendStatus>(status),
+						friend_datetime = DateTime.Now
+					};
+
+					context.Friend_Request.Add(newFriendship);
+
+					if (status == "accepted")
+					{
+						var newFriend = new Friend
+						{
+							friend_user_id = user_id,
+							friend_befriend_user_id = friend_user_id
+						};
+
+						context.Friend.Add(newFriend);
+					}
+
 					context.SaveChanges();
 				}
 			}

@@ -23,7 +23,9 @@
 			{ "UsernameAlreadyTaken", "Username already in use." },
 			{ "UsernameAlreadyTakenByUser", "You already have this username." },
 
-			{ "FriendshipExists", "Friendship request already exists between these users." },
+			{ "NoPendingFriendshipFound", "No valid pending friend request found." },
+			{ "PendingFriendshipFound", "You already have a pending friendrequest with this user." },
+			{ "FriendshipExists", "You are already friends with this user." },
 			{ "InvalidFriendId", "Friend user ID is required." },
 			{ "FriendIdDoesntExist", "Friend user ID does not exist." },
 			{ "InvalidFriendStatus", "Status must be either 'accepted' or 'rejected'." },

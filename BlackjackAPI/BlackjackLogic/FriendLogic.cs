@@ -34,6 +34,11 @@ namespace BlackjackLogic
 				return new Response<string>("FriendshipExists");
 			}
 
+			if (_friendDAL.FriendshipIsPending(user_id, befriend_user_id))
+			{
+				return new Response<string>("PendingFriendshipFound");
+			}
+
 			_friendDAL.RequestFriendship(user_id, befriend_user_id);
 			return new Response<string>();
 		}
@@ -49,6 +54,11 @@ namespace BlackjackLogic
 			if (valStatusResponse != null)
 			{
 				return valStatusResponse;
+			}
+
+			if (!_friendDAL.FriendshipIsPending(user_id, friend_user_id))
+			{
+				return new Response<string>("NoPendingFriendshipFound");
 			}
 
 			_friendDAL.UpdateFriendStatus(user_id, friend_user_id, status);

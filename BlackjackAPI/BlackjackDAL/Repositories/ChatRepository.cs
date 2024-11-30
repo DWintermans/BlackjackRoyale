@@ -2,6 +2,7 @@
 using BlackjackCommon.Entities.User;
 using BlackjackCommon.Interfaces.Repository;
 using BlackjackCommon.ViewModels;
+using System.Linq;
 
 namespace BlackjackDAL.Repositories
 {
@@ -22,10 +23,17 @@ namespace BlackjackDAL.Repositories
 						throw new Exception($"User with ID {user_id} not found.");
 					}
 
-					// subquery to get the last message exchanged between two users.
+					//retrieve all friends
+					var friendIds = context.Friend
+						.Where(f => f.friend_user_id == user_id || f.friend_befriend_user_id == user_id)
+						.Select(f => f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id)
+						.ToList();
+
+					//subquery to get the last message exchanged between two users.
 					var lastMessages = context.Message
-						.Where(m => m.message_sender == user_id || m.message_receiver == user_id)
-						.GroupBy(m => new {
+						.Where(m => (m.message_sender == user_id || m.message_receiver == user_id))
+						.GroupBy(m => new
+						{
 							User1 = Math.Max(m.message_sender, (int)m.message_receiver),
 							User2 = Math.Min(m.message_sender, (int)m.message_receiver)
 						})
@@ -36,7 +44,7 @@ namespace BlackjackDAL.Repositories
 							LatestMessageID = g.Max(m => m.message_id)
 						});
 
-					// main query to get details for said message.
+					//main query to get details for said message.
 					var messages = from m in context.Message
 						join uSender in context.User on m.message_sender equals uSender.user_id
 						join uReceiver in context.User on m.message_receiver equals uReceiver.user_id
@@ -63,7 +71,34 @@ namespace BlackjackDAL.Repositories
 						   receiver_username = uReceiver.user_name
 						};
 
-					return messages.ToList();
+					var messageListWithMessages = messages.ToList();
+
+					//make empty messages 
+					var messageListWithoutMessages = friendIds
+						.Where(friendId => !lastMessages.Any(lm => lm.User1 == friendId || lm.User2 == friendId))
+						.Select(friendId => new MessageListModel
+						{
+							message_id = 0, 
+							message_sender = user_id, 
+							message_receiver = friendId, 
+							message_content = "", 
+							message_datetime = null, 
+							message_deleted = false,
+							sender_username = context.User
+								.Where(u => u.user_id == user_id)
+								.Select(u => u.user_name)
+								.FirstOrDefault(),
+							receiver_username = context.User
+								.Where(u => u.user_id == friendId) 
+								.Select(u => u.user_name)
+								.FirstOrDefault()
+						}).ToList();
+
+					//combine normal msg with empty
+					var finalMessageList = messageListWithMessages.Concat(messageListWithoutMessages).ToList();
+
+					return finalMessageList;
+
 				}
 			}
 			catch (Exception ex)
@@ -91,7 +126,7 @@ namespace BlackjackDAL.Repositories
 						join uReceiver in context.User on m.message_receiver equals uReceiver.user_id
 						where (m.message_sender == user_id && m.message_receiver == other_user_id)
 							 || (m.message_sender == other_user_id && m.message_receiver == user_id)
-						orderby m.message_id descending 
+						orderby m.message_id ascending 
 						select new MessageListModel
 						{
 						   message_id = m.message_id,

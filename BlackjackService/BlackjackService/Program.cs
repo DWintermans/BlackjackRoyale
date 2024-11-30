@@ -24,6 +24,7 @@ internal class Program
 			serviceCollection.AddScoped<IGroupLogic, GroupLogic>();
 			serviceCollection.AddScoped<IPlayerLogic, PlayerLogic>();
 			serviceCollection.AddScoped<IGameLogic, GameLogic>();
+			serviceCollection.AddScoped<IFriendLogic,FriendLogic>();
 
 			serviceCollection.AddTransient<Lazy<IGroupLogic>>(provider => new Lazy<IGroupLogic>(() => provider.GetRequiredService<IGroupLogic>()));
 			serviceCollection.AddTransient<Lazy<IPlayerLogic>>(provider => new Lazy<IPlayerLogic>(() => provider.GetRequiredService<IPlayerLogic>()));
@@ -33,6 +34,7 @@ internal class Program
 			serviceCollection.AddScoped<IUserRepository, UserRepository>();
 			serviceCollection.AddScoped<IChatRepository, ChatRepository>();
 			serviceCollection.AddScoped<IGameRepository, GameRepository>();
+			serviceCollection.AddScoped<IFriendRepository, FriendRepository>();
 
 
 			var serviceProvider = serviceCollection.BuildServiceProvider();

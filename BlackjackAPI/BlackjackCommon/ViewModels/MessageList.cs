@@ -13,7 +13,7 @@ namespace BlackjackCommon.ViewModels
 
 		public string message_content { get; set; }
 
-		public DateTime message_datetime { get; set; }
+		public DateTime? message_datetime { get; set; }
 
 		public bool message_deleted { get; set; }
 
