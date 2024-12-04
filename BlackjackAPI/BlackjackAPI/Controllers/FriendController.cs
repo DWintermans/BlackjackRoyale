@@ -18,10 +18,9 @@ namespace BlackjackAPI.Controllers
 		/// <summary>
 		/// Retrieves the list of pending friend requests.
 		/// </summary>
-		/// <param name="model"></param>
-		/// <response code="200"></response>
-		/// <response code="400"></response>
+		/// <response code="200">Returns the list of friend requests or a message if no data is found.</response>
 		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+		/// <response code="404">Not Found. Indicates that friend requests could not be retrieved successfully.</response>
 		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
 		[Authorize]
 		[HttpGet]

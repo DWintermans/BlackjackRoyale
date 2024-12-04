@@ -15,7 +15,7 @@ using System.Security.Claims;
 using System.Text;
 using DotNetEnv;
 
-namespace BlackjackService;
+namespace BlackjackWebsocket;
 
 internal class Websocket : IWebsocket
 {
@@ -55,7 +55,7 @@ internal class Websocket : IWebsocket
 			}
 		}
 
-		string fallbackDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "BlackjackService", "BlackjackService");
+		string fallbackDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "BlackjackWebsocket", "BlackjackWebsocket");
 		potentialPath = Path.Combine(fallbackDirectory, ".env");
 		if (File.Exists(potentialPath))
 		{

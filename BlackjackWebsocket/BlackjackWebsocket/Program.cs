@@ -3,7 +3,7 @@ using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Interfaces.Repository;
 using BlackjackDAL.Repositories;
 using BlackjackLogic;
-using BlackjackService;
+using BlackjackWebsocket;
 using Microsoft.Extensions.DependencyInjection;
 
 internal class Program
@@ -118,7 +118,7 @@ internal class Program
 			}
 		}
 
-		string fallbackDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "BlackjackService", "BlackjackService");
+		string fallbackDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "BlackjackWebsocket", "BlackjackWebsocket");
 		potentialPath = Path.Combine(fallbackDirectory, ".env");
 		if (File.Exists(potentialPath))
 		{

@@ -23,14 +23,14 @@ jobs:
         run: dotnet restore
         working-directory: ./BlackjackAPI/BlackjackAPI
 
-      - name: Restore dependencies for BlackjackService
+      - name: Restore dependencies for BlackjackWebsocket
         run: dotnet restore
-        working-directory: ./BlackjackService/BlackjackService
+        working-directory: ./BlackjackWebsocket/BlackjackWebsocket
 
       - name: Create .env files
         run: |
           Remove-Item -Path ./BlackjackAPI/BlackjackAPI/.env -ErrorAction Ignore
-          Remove-Item -Path ./BlackjackService/BlackjackService/.env -ErrorAction Ignore
+          Remove-Item -Path ./BlackjackWebsocket/BlackjackWebsocket/.env -ErrorAction Ignore
           
           echo "DB_SERVER=${{ secrets.DB_SERVER }}" > ./BlackjackAPI/BlackjackAPI/.env
           echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackAPI/BlackjackAPI/.env
@@ -39,31 +39,31 @@ jobs:
           echo "WS_URL=http://+:8593/ws/" >> ./BlackjackAPI/BlackjackAPI/.env
           echo "JWT=${{ secrets.JWT }}" >> ./BlackjackAPI/BlackjackAPI/.env
           
-          echo "DB_SERVER=${{ secrets.DB_SERVER }}" > ./BlackjackService/BlackjackService/.env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackService/BlackjackService/.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackService/BlackjackService/.env
-          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackService/BlackjackService/.env
-          echo "WS_URL=http://+:8593/ws/" >> ./BlackjackService/BlackjackService/.env
-          echo "JWT=${{ secrets.JWT }}" >> ./BlackjackService/BlackjackService/.env
+          echo "DB_SERVER=${{ secrets.DB_SERVER }}" > ./BlackjackWebsocket/BlackjackWebsocket/.env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> ./BlackjackWebsocket/BlackjackWebsocket/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./BlackjackWebsocket/BlackjackWebsocket/.env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> ./BlackjackWebsocket/BlackjackWebsocket/.env
+          echo "WS_URL=http://+:8593/ws/" >> ./BlackjackWebsocket/BlackjackWebsocket/.env
+          echo "JWT=${{ secrets.JWT }}" >> ./BlackjackWebsocket/BlackjackWebsocket/.env
 
       - name: Verify contents of BlackjackAPI .env file
         run: type ./BlackjackAPI/BlackjackAPI/.env
       
-      - name: Verify contents of BlackjackService .env file
-        run: type ./BlackjackService/BlackjackService/.env
+      - name: Verify contents of BlackjackWebsocket .env file
+        run: type ./BlackjackWebsocket/BlackjackWebsocket/.env
 
       - name: Publish BlackjackAPI
         run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackAPI
         working-directory: ./BlackjackAPI/BlackjackAPI
 
-      - name: Publish BlackjackService
-        run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackService
-        working-directory: ./BlackjackService/BlackjackService
+      - name: Publish BlackjackWebsocket
+        run: dotnet publish -c Release -o ${{ github.workspace }}/publish/BlackjackWebsocket
+        working-directory: ./BlackjackWebsocket/BlackjackWebsocket
 
       - name: Copy .env files to publish directory
         run: |
           cp ./BlackjackAPI/BlackjackAPI/.env ${{ github.workspace }}/publish/BlackjackAPI/
-          cp ./BlackjackService/BlackjackService/.env ${{ github.workspace }}/publish/BlackjackService/
+          cp ./BlackjackWebsocket/BlackjackWebsocket/.env ${{ github.workspace }}/publish/BlackjackWebsocket/
 
       - name: Deploy BlackjackAPI to FTP Server
         uses: SamKirkland/FTP-Deploy-Action@4.1.0
@@ -77,14 +77,14 @@ jobs:
           dangerous-clean-slate: true
           passive: true
 
-      - name: Deploy BlackjackService to FTP Server
+      - name: Deploy BlackjackWebsocket to FTP Server
         uses: SamKirkland/FTP-Deploy-Action@4.1.0
         with:
           protocol: ftps
           server: 145.85.4.100
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ${{ github.workspace }}/publish/BlackjackService/
+          local-dir: ${{ github.workspace }}/publish/BlackjackWebsocket/
           server-dir: /domains/wsi532747.luna.fhict.nl/
           dangerous-clean-slate: true
           passive: true

@@ -9,13 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackAPI", "BlackjackAP
 		{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD} = {ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackService", "..\BlackjackService\BlackjackService\BlackjackService.csproj", "{7E36542D-E658-4A25-84E0-8EE34CE150EC}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2AE776E2-FC4D-4647-8AF8-C66F59BCA08D} = {2AE776E2-FC4D-4647-8AF8-C66F59BCA08D}
-		{5409DD26-B94D-45BB-8F0A-87E1D963969A} = {5409DD26-B94D-45BB-8F0A-87E1D963969A}
-		{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD} = {ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackLogic", "BlackjackLogic\BlackjackLogic.csproj", "{5409DD26-B94D-45BB-8F0A-87E1D963969A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD} = {ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}
@@ -31,10 +24,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackTest", "BlackjackT
 	ProjectSection(ProjectDependencies) = postProject
 		{5409DD26-B94D-45BB-8F0A-87E1D963969A} = {5409DD26-B94D-45BB-8F0A-87E1D963969A}
 		{68376027-C45D-4E76-B511-A273F03E1392} = {68376027-C45D-4E76-B511-A273F03E1392}
-		{7E36542D-E658-4A25-84E0-8EE34CE150EC} = {7E36542D-E658-4A25-84E0-8EE34CE150EC}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackCommon", "BlackjackCommon\BlackjackCommon.csproj", "{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlackjackWebsocket", "..\BlackjackWebsocket\BlackjackWebsocket\BlackjackWebsocket.csproj", "{14E1882A-CFB5-4EA8-9075-EAE186B0A203}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,10 +40,6 @@ Global
 		{68376027-C45D-4E76-B511-A273F03E1392}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68376027-C45D-4E76-B511-A273F03E1392}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68376027-C45D-4E76-B511-A273F03E1392}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7E36542D-E658-4A25-84E0-8EE34CE150EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E36542D-E658-4A25-84E0-8EE34CE150EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E36542D-E658-4A25-84E0-8EE34CE150EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E36542D-E658-4A25-84E0-8EE34CE150EC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5409DD26-B94D-45BB-8F0A-87E1D963969A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5409DD26-B94D-45BB-8F0A-87E1D963969A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5409DD26-B94D-45BB-8F0A-87E1D963969A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -66,6 +56,10 @@ Global
 		{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADEC8419-C7EC-4A05-ABFF-674DEDA7AFCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14E1882A-CFB5-4EA8-9075-EAE186B0A203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14E1882A-CFB5-4EA8-9075-EAE186B0A203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14E1882A-CFB5-4EA8-9075-EAE186B0A203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14E1882A-CFB5-4EA8-9075-EAE186B0A203}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
