@@ -117,14 +117,14 @@ namespace BlackjackLogic
 
 			if (user_id <= 0)
 			{
-				return new Response<string>("default");
+				return new Response<string>("Default");
 			}
 
 			string token = CreateJWT(user_id, username);
 
 			if (token.Length <= 0)
 			{
-				return new Response<string>("default");
+				return new Response<string>("Default");
 			}
 
 			return new Response<string>(token, "SuccessfullAccountCreation");
