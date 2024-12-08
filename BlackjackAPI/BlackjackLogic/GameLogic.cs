@@ -6,13 +6,6 @@ using BlackjackCommon.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using Sprache;
-using System;
-using System.Collections.Immutable;
-using System.Numerics;
-using System.Reflection;
-using System.Threading.Tasks.Dataflow;
-using static System.Collections.Specialized.BitVector32;
 using Group = BlackjackCommon.Models.Group;
 using Player = BlackjackCommon.Models.Player;
 
@@ -161,7 +154,7 @@ namespace BlackjackLogic
 			}
 		}
 
-		private void SaveEvent<T>(T model, string group_id, int round_number) where T : class
+		public void SaveEvent<T>(T model, string group_id, int round_number) where T : class
 		{
 			try 
 			{
@@ -527,6 +520,8 @@ namespace BlackjackLogic
 
 			await OnGroupNotification?.Invoke(group, "Place your bets now!", NotificationType.GAME, default);
 
+			group.Round += 1;
+
 			group.Bets.Clear();
 			foreach (var member in group.Members)
 			{
@@ -537,8 +532,6 @@ namespace BlackjackLogic
 		public async Task StartGame(Group group)
 		{
 			await OnGroupNotification?.Invoke(group, "Game is starting now!", NotificationType.GAME, default);
-
-			group.Round += 1;
 
 			GameModel startModel = new GameModel
 			{

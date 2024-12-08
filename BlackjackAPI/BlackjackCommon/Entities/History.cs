@@ -43,6 +43,8 @@ namespace BlackjackCommon.Entities.History
 		GAME_FINISHED,
 		GAME_STARTED,
 		PLAYER_FINISHED,
+		PLAYER_JOINED,
+		PLAYER_LEFT,
 		INSURANCE_PAID,
 		HIT,
 		STAND,

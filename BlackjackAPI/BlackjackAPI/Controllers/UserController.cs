@@ -1,7 +1,6 @@
 ﻿using BlackjackAPI.Models.User;
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Models;
-using BlackjackLogic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

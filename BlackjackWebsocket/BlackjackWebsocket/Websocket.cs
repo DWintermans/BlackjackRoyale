@@ -100,6 +100,9 @@ internal class Websocket : IWebsocket
 		_groupLogic.OnGroupNotification += HandleGroupNotification;
 		_groupLogic.OnGroupInfoToPlayer += HandleGroupInfoToPlayer;
 		_groupLogic.OnLobbyInfoToPlayer += HandleLobbyInfoToPlayer;
+
+		//left/join game actions
+		_groupLogic.OnGameInfoToGroup += HandleGameInfoToGroup;
 	}
 
 	private void SubscribeToGameEvents()

@@ -1,6 +1,7 @@
 ﻿using BlackjackCommon.Entities.User;
 using BlackjackCommon.Interfaces.Repository;
 using BlackjackCommon.Models;
+using MySql.Data.MySqlClient;
 
 namespace BlackjackDAL.Repositories
 {

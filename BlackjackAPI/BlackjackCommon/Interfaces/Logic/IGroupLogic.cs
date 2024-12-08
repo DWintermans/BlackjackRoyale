@@ -8,6 +8,7 @@ namespace BlackjackCommon.Interfaces.Logic
 		event Func<Player, string, NotificationType, ToastType?, Task>? OnNotification;
 		event Func<Group, string, NotificationType, ToastType?, Task>? OnGroupNotification;
 		event Func<Player, GroupModel, Task>? OnGroupInfoToPlayer;
+		public event Func<Group, GameModel, Task>? OnGameInfoToGroup;
 		event Func<Player, LobbyModel, Task>? OnLobbyInfoToPlayer;
 
 

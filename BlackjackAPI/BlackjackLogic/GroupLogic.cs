@@ -12,6 +12,7 @@ namespace BlackjackLogic
 		public event Func<Player, string, NotificationType, ToastType?, Task>? OnNotification;
 		public event Func<Group, string, NotificationType, ToastType?, Task>? OnGroupNotification;
 		public event Func<Player, GroupModel, Task>? OnGroupInfoToPlayer;
+		public event Func<Group, GameModel, Task>? OnGameInfoToGroup;
 		public event Func<Player, LobbyModel, Task>? OnLobbyInfoToPlayer;
 
 		private const int MaxGroupSize = 4;
@@ -300,6 +301,15 @@ namespace BlackjackLogic
 				
 				await OnGroupNotification?.Invoke(group, $"{player.Name} left the group.", NotificationType.GROUP, default);
 
+				GameModel model = new GameModel
+				{
+					User_ID = player.User_ID,
+					Action = GameAction.PLAYER_LEFT,
+				};
+
+				await OnGameInfoToGroup?.Invoke(group, model);
+				_gameLogic.SaveEvent(model, group.Unique_Group_ID, group.Round);
+
 				Console.WriteLine($"User {player.User_ID} left group {group.Group_ID}");
 
 				if (group.Members.Count == 0)
@@ -397,6 +407,15 @@ namespace BlackjackLogic
 			{
 				group.Members.Add(player);
 				player.IsReady = false;
+
+				GameModel model = new GameModel
+				{
+					User_ID = player.User_ID,
+					Action = GameAction.PLAYER_JOINED,
+				};
+
+				await OnGameInfoToGroup?.Invoke(group, model);
+				_gameLogic.SaveEvent(model, group.Unique_Group_ID, group.Round);
 			}
 
 			Console.WriteLine($"User {player.User_ID} joined group {group_id}");
@@ -435,6 +454,15 @@ namespace BlackjackLogic
 
 					await OnNotification?.Invoke(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);
 					await OnGroupNotification?.Invoke(group, $"{player.Name} joined the group.", NotificationType.GROUP, default);
+
+					GameModel model = new GameModel
+					{
+						User_ID = player.User_ID,
+						Action = GameAction.PLAYER_JOINED,
+					};
+
+					await OnGameInfoToGroup?.Invoke(group, model);
+					_gameLogic.SaveEvent(model, group.Unique_Group_ID, group.Round);
 				}
 				group.WaitingRoom.Clear();
 			}
