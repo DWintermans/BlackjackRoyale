@@ -1,5 +1,4 @@
-﻿using BlackjackCommon.Entities.Message;
-using BlackjackCommon.ViewModels;
+﻿using BlackjackCommon.ViewModels;
 
 namespace BlackjackCommon.Interfaces.Repository
 {

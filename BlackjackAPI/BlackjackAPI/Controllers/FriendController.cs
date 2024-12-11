@@ -98,7 +98,8 @@ namespace BlackjackAPI.Controllers
 					return BadRequest(new { message = response.Message });
 				}
 
-				return Ok(new { message = "Friend request sent successfully." });
+				return Created( "", new { message = "Friend request sent successfully." });
+
 			}
 			catch (Exception ex)
 			{

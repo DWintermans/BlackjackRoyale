@@ -1,5 +1,4 @@
 ﻿using BlackjackCommon.Data.SharedData;
-using BlackjackCommon.Entities.Message;
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Interfaces.Repository;
 using BlackjackCommon.Models;

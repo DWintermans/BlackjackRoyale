@@ -47,7 +47,7 @@ namespace BlackjackAPI.Controllers
 
 				string token = _userLogic.CreateJWT(user_id, model.username);
 			
-				return Ok(new Response<string>(token, "SuccessfullLogin"));
+				return Created("", new Response<string>(token, "SuccessfullLogin"));
 			}
 			catch (Exception ex)
 			{
@@ -111,7 +111,7 @@ namespace BlackjackAPI.Controllers
 					return BadRequest(new { message = response.Message });
 				}
 
-				return Ok(response);
+				return Created("", response);
 			}
 			catch (Exception ex)
 			{

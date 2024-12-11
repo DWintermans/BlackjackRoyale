@@ -1,5 +1,4 @@
-﻿using BlackjackCommon.Entities.Message;
-using BlackjackCommon.Models;
+﻿using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
 
 namespace BlackjackCommon.Interfaces.Logic
