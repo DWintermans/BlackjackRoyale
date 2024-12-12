@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
+using BlackjackDAL;
+using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,16 @@ Env.Load();
 const string _JWT = "JWT";
 
 string jwt = Env.GetString(_JWT);
+
+string dbServer = Env.GetString("DB_SERVER");
+string dbUser = Env.GetString("DB_USER");
+string dbPassword = Env.GetString("DB_PASSWORD");
+string dbDatabase = Env.GetString("DB_DATABASE");
+
+string connectionString = $"Server={dbServer};User={dbUser};Password={dbPassword};Database={dbDatabase}";
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+	options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 
 //allow everything for cors policy

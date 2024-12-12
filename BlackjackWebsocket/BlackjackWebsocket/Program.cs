@@ -1,9 +1,12 @@
 ﻿using BlackjackCommon.Interfaces;
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Interfaces.Repository;
+using BlackjackDAL;
 using BlackjackDAL.Repositories;
 using BlackjackLogic;
 using BlackjackWebsocket;
+using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 internal class Program
@@ -19,6 +22,26 @@ internal class Program
 			LogToFile("Initializing services...");
 
 			var serviceCollection = new ServiceCollection();
+
+			string envPath = FindEnvFile();
+			if (!string.IsNullOrEmpty(envPath))
+			{
+				Console.WriteLine($"Loading .env from: {envPath}");
+				Env.Load(envPath);
+			}
+			else
+			{
+				Console.WriteLine("No .env file found.");
+			}
+
+			string dbServer = Env.GetString("DB_SERVER");
+			string dbUser = Env.GetString("DB_USER");
+			string dbPassword = Env.GetString("DB_PASSWORD");
+			string dbDatabase = Env.GetString("DB_DATABASE");
+
+			string connectionString = $"Server={dbServer};User={dbUser};Password={dbPassword};Database={dbDatabase}";
+			serviceCollection.AddDbContext<AppDbContext>(options =>
+				options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 			serviceCollection.AddScoped<IChatLogic, ChatLogic>();
 			serviceCollection.AddScoped<IGroupLogic, GroupLogic>();

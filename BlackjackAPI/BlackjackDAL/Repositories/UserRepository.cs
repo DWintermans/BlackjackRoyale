@@ -7,24 +7,26 @@ namespace BlackjackDAL.Repositories
 {
 	public class UserRepository : IUserRepository
 	{
-		private readonly DBConnection _DBConnection = new();
+		private readonly AppDbContext _context;
+
+		public UserRepository(AppDbContext context)
+		{
+			_context = context;
+		}
 
 		public int RetrieveCredits(int user_id)
 		{
 			try
 			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
-				{
-					var user = context.User.SingleOrDefault(u => u.user_id == user_id);
+				var user = _context.User.SingleOrDefault(u => u.user_id == user_id);
 
-					if (user != null)
-					{
-						return user.user_balance;
-					}
-					else
-					{
-						throw new Exception($"User with ID {user_id} not found.");
-					}
+				if (user != null)
+				{
+					return user.user_balance;
+				}
+				else
+				{
+					throw new Exception($"User with ID {user_id} not found.");
 				}
 			}
 			catch (Exception ex)
@@ -37,18 +39,15 @@ namespace BlackjackDAL.Repositories
 		public void UpdateCredits(int user_id, int credits)
 		{
 			try
-			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+			{				
+				var user = _context.User.SingleOrDefault(u => u.user_id == user_id);
+
+				if (user != null)
 				{
-					var user = context.User.SingleOrDefault(u => u.user_id == user_id);
+					user.user_balance = credits;
 
-					if (user != null)
-					{
-						user.user_balance = credits;
-
-						context.SaveChanges();
-					}
-				}
+					_context.SaveChanges();
+				}			
 			}
 			catch (Exception ex)
 			{
@@ -60,19 +59,16 @@ namespace BlackjackDAL.Repositories
 		public void UpdateStatistics(int user_id, int earnings, int losses) 
 		{
 			try
-			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+			{	
+				var user = _context.User.SingleOrDefault(u => u.user_id == user_id);
+
+				if (user != null)
 				{
-					var user = context.User.SingleOrDefault(u => u.user_id == user_id);
+					user.user_total_earnings_amt += earnings;
+					user.user_total_losses_amt += losses;
 
-					if (user != null)
-					{
-						user.user_total_earnings_amt += earnings;
-						user.user_total_losses_amt += losses;
-
-						context.SaveChanges();
-					}
-				}
+					_context.SaveChanges();
+				}				
 			}
 			catch (Exception ex)
 			{
@@ -84,19 +80,16 @@ namespace BlackjackDAL.Repositories
 		public (int user_id, string user_name, byte[] hashed_pw, byte[] salt) RetrieveLoginInformation(string username)
 		{
 			try
-			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+			{				
+				var user = _context.User.SingleOrDefault(u => u.user_name == username);
+
+				if (user != null)
 				{
-					var user = context.User.SingleOrDefault(u => u.user_name == username);
+					byte[] hashed_pw = Convert.FromBase64String(user.user_passwordhash);
+					byte[] salt = Convert.FromBase64String(user.user_passwordsalt);
 
-					if (user != null)
-					{
-						byte[] hashed_pw = Convert.FromBase64String(user.user_passwordhash);
-						byte[] salt = Convert.FromBase64String(user.user_passwordsalt);
-
-						return (user.user_id, user.user_name, hashed_pw, salt);
-					}
-				}
+					return (user.user_id, user.user_name, hashed_pw, salt);
+				}				
 			}
 			catch (Exception ex)
 			{
@@ -118,21 +111,18 @@ namespace BlackjackDAL.Repositories
 		{
 			try
 			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				var user = _context.User
+								  .Where(u => u.user_id == user_id)
+								  .Select(u => new { u.user_passwordhash, u.user_passwordsalt })
+								  .FirstOrDefault();
+
+				if (user != null)
 				{
-					var user = context.User
-									  .Where(u => u.user_id == user_id)
-									  .Select(u => new { u.user_passwordhash, u.user_passwordsalt })
-									  .FirstOrDefault();
+					byte[] hashed_pw = Convert.FromBase64String(user.user_passwordhash);
+					byte[] salt = Convert.FromBase64String(user.user_passwordsalt);
 
-					if (user != null)
-					{
-						byte[] hashed_pw = Convert.FromBase64String(user.user_passwordhash);
-						byte[] salt = Convert.FromBase64String(user.user_passwordsalt);
-
-						return (hashed_pw, salt);
-					}
-				}
+					return (hashed_pw, salt);
+				}	
 			}
 			catch (Exception ex)
 			{
@@ -145,26 +135,22 @@ namespace BlackjackDAL.Repositories
 		public int CreateAccount(string username, string hashed_password, string salt)
 		{
 			try
-			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+			{				
+				var newUser = new User
 				{
-					var newUser = new User
-					{
-						user_name = username,
-						user_passwordhash = hashed_password,
-						user_passwordsalt = salt,
-						user_is_moderator = false,
-						user_status = UserStatus.active,
-						user_total_earnings_amt = 0,
-						user_total_losses_amt = 0,
-					};
+					user_name = username,
+					user_passwordhash = hashed_password,
+					user_passwordsalt = salt,
+					user_is_moderator = false,
+					user_status = UserStatus.active,
+					user_total_earnings_amt = 0,
+					user_total_losses_amt = 0,
+				};
 
-					context.User.Add(newUser);
+				_context.User.Add(newUser);
+				_context.SaveChanges();
 
-					context.SaveChanges();
-
-					return newUser.user_id;
-				}
+				return newUser.user_id;
 			}
 			catch (Exception ex)
 			{
@@ -177,11 +163,8 @@ namespace BlackjackDAL.Repositories
 		public bool IsUsernameTaken(string username)
 		{
 			try
-			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
-				{
-					return context.User.Any(u => u.user_name == username);
-				}
+			{	
+				return _context.User.Any(u => u.user_name == username);				
 			}
 			catch (Exception ex)
 			{
@@ -193,11 +176,8 @@ namespace BlackjackDAL.Repositories
 		public bool IsUsernameTakenByCurrentUser(int user_id, string username)
 		{
 			try
-			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
-				{
-					return context.User.Any(u => u.user_name == username && u.user_id == user_id);
-				}
+			{				
+				return _context.User.Any(u => u.user_name == username && u.user_id == user_id);				
 			}
 			catch (Exception ex)
 			{
@@ -210,17 +190,14 @@ namespace BlackjackDAL.Repositories
 		{
 			try
 			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+				var user = _context.User.SingleOrDefault(u => u.user_id == user_id);
+
+				if (user != null)
 				{
-					var user = context.User.SingleOrDefault(u => u.user_id == user_id);
+					user.user_name = user_name;
 
-					if (user != null)
-					{
-						user.user_name = user_name;
-
-						context.SaveChanges();
-					}
-				}
+					_context.SaveChanges();
+				}	
 			}
 			catch (Exception ex)
 			{
@@ -232,19 +209,16 @@ namespace BlackjackDAL.Repositories
 		public void UpdatePassword(int user_id, string hashed_password, string salt)
 		{
 			try
-			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
+			{	
+				var user = _context.User.SingleOrDefault(u => u.user_id == user_id);
+
+				if (user != null)
 				{
-					var user = context.User.SingleOrDefault(u => u.user_id == user_id);
+					user.user_passwordhash = hashed_password;
+					user.user_passwordsalt = salt;
 
-					if (user != null)
-					{
-						user.user_passwordhash = hashed_password;
-						user.user_passwordsalt = salt;
-
-						context.SaveChanges();
-					}
-				}
+					_context.SaveChanges();
+				}	
 			}
 			catch (Exception ex)
 			{
@@ -257,10 +231,7 @@ namespace BlackjackDAL.Repositories
 		{
 			try
 			{
-				using (var context = new AppDbContext(_DBConnection.ConnectionString()))
-				{
-					return context.User.Any(u => u.user_id == user_id);
-				}
+				return _context.User.Any(u => u.user_id == user_id);			
 			}
 			catch (Exception ex)
 			{

@@ -11,19 +11,29 @@ namespace BlackjackDAL
 	{
 		private readonly string _connectionString;
 
+		//for testing
+		public AppDbContext(DbContextOptions<AppDbContext> options)
+		   : base(options)
+		{
+		}
+
 		public AppDbContext(string connectionString)
 		{
 			_connectionString = connectionString;
 		}
+
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
-			if (_connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+			if (!optionsBuilder.IsConfigured && !string.IsNullOrEmpty(_connectionString))
 			{
-				optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
-			}
-			else
-			{
-				optionsBuilder.UseSqlServer(_connectionString);
+				if (_connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+				{
+					optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
+				}
+				else
+				{
+					optionsBuilder.UseSqlServer(_connectionString);
+				}
 			}
 		}
 
