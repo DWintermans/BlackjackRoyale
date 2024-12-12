@@ -110,6 +110,15 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+//apply migrations, create database if needed
+using (var scope = app.Services.CreateScope())
+{
+	var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+	//apply pending migrations
+	context.Database.Migrate();
+}
+
 app.UseCors("AllowAll");
 
 app.UseSwagger();

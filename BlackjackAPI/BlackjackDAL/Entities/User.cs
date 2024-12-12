@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BlackjackCommon.Entities.User
@@ -40,7 +41,8 @@ namespace BlackjackCommon.Entities.User
 		[Column("user_total_playtime")]
 		public TimeSpan? user_total_playtime { get; set; }
 
-		[Column("user_status")]
+		[Column("user_status", TypeName = "varchar(50)")]
+		[DefaultValue(UserStatus.active)]
 		public UserStatus user_status { get; set; }
 
 		[Column("user_punishment_till")]
