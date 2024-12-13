@@ -39,13 +39,15 @@ jobs:
         dotnet build BlackjackAPI/BlackjackRoyale.sln --configuration Release
         dotnet build BlackjackAPI/BlackjackRoyale.sln --configuration Release /p:RunAnalyzers=true
 
-    # .net format to check code style and formatting
+    # .net format to check code style and formatting, fail on issues
     - name: Run .NET Format
-      run: dotnet format --check --verbosity normal
-
-    - name: .net format auto-fix
-      run: dotnet format --verbosity normal
-      
+      run: |
+        dotnet format BlackjackAPI/BlackjackRoyale.sln --verbosity normal
+        if [ $? -ne 0 ]; then
+          echo "Formatting issues found! Please run 'dotnet format' to fix.";
+          exit 1;
+        fi
+        
     # run stylecop analyzers
     - name: Run StyleCop Analyzers
       run: |
