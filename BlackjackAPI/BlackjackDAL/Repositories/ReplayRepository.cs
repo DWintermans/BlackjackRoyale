@@ -71,9 +71,8 @@ namespace BlackjackDAL.Repositories
             try
             {
                 var gameActions = _context.History
-                    .Where(h => rounds.Contains(h.history_round_number)
-                                && h.history_group_id == group_id)
-                    .OrderBy(h => h.history_datetime)
+                    .Where(h => rounds.Contains(h.history_round_number) && h.history_group_id == group_id && h.history_action != HistoryAction.CREDITS_UPDATE)
+					.OrderBy(h => h.history_datetime)
                     .ToList();
 
                 if (gameActions == null || gameActions.Count == 0)
