@@ -1,61 +1,63 @@
-﻿using BlackjackCommon.Interfaces.Logic;
-using BlackjackLogic;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿// <copyright file="ReplayController.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace BlackjackAPI.Controllers
 {
-	[ApiController]
-	[Route("[controller]")]
-	public class ReplayController : ControllerBase
-	{
-		private readonly IReplayLogic _replayLogic;
+    using BlackjackCommon.Interfaces.Logic;
+    using BlackjackLogic;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Mvc;
 
-		public ReplayController(IReplayLogic ReplayLogic)
-		{
-			_replayLogic = ReplayLogic;
-		}
+    [ApiController]
+    [Route("[controller]")]
+    public class ReplayController : ControllerBase
+    {
+        private readonly IReplayLogic replayLogic;
 
-		[Authorize]
-		[HttpGet]
-		[Route("")]
-		public IActionResult RetrieveReplayList()
-		{
-			return Ok();
-		}
+        public ReplayController(IReplayLogic replayLogic)
+        {
+            this.replayLogic = replayLogic;
+        }
 
-		[Authorize]
-		[HttpGet]
-		[Route("{group_id}")]
-		public async Task<IActionResult> RetrieveReplay(string group_id)
-		{
-			var jwt_user_id = HttpContext.User.FindFirst("user_id");
+        [Authorize]
+        [HttpGet]
+        [Route("")]
+        public IActionResult RetrieveReplayList()
+        {
+            return this.Ok();
+        }
 
-			if (jwt_user_id == null)
-			{
-				return Unauthorized(new { Chat = "Invalid credentials" });
-			}
+        [Authorize]
+        [HttpGet]
+        [Route("{group_id}")]
+        public async Task<IActionResult> RetrieveReplay(string group_id)
+        {
+            var jwt_user_id = this.HttpContext.User.FindFirst("user_id");
 
-			int user_id = int.Parse(jwt_user_id.Value);
+            if (jwt_user_id == null)
+            {
+                return this.Unauthorized(new { Chat = "Invalid credentials" });
+            }
 
-			try
-			{
-				var response = await _replayLogic.RetrieveReplayAsync(user_id, group_id);
+            int user_id = int.Parse(jwt_user_id.Value);
 
-				if (!response.Success)
-				{
-					return NotFound(new { Message = response.Message });
-				}
+            try
+            {
+                var response = await this.replayLogic.RetrieveReplayAsync(user_id, group_id);
 
-				return Ok(new { Messages = response.Data });
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(ex);
-				return StatusCode(500, new { Message = "An error occurred while processing your request." });
-			}
+                if (!response.Success)
+                {
+                    return this.NotFound(new { Message = response.Message });
+                }
 
-		}
-
-	}
+                return this.Ok(new { Messages = response.Data });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return this.StatusCode(500, new { Message = "An error occurred while processing your request." });
+            }
+        }
+    }
 }

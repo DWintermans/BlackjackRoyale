@@ -1,14 +1,17 @@
+// <copyright file="Program.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using System.Text;
 using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Interfaces.Repository;
+using BlackjackDAL;
 using BlackjackDAL.Repositories;
 using BlackjackLogic;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using DotNetEnv;
-using BlackjackDAL;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,25 +29,23 @@ string dbDatabase = Env.GetString("DB_DATABASE");
 string connectionString = $"Server={dbServer};User={dbUser};Password={dbPassword};Database={dbDatabase}";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-	options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-
-//allow everything for cors policy
+// allow everything for cors policy
 builder.Services.AddCors(options =>
 {
-	options.AddPolicy("AllowAll", builder =>
-	{
-		builder.AllowAnyOrigin()
-			   .AllowAnyMethod()
-			   .AllowAnyHeader();
-	});
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
 });
-
 
 // Add services to the container.
 builder.Services.AddControllers();
 
-//lowercase urls
+// lowercase urls
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
 builder.Services.AddScoped<IUserLogic, UserLogic>();
@@ -58,65 +59,65 @@ builder.Services.AddScoped<IFriendRepository, FriendRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IReplayRepository, ReplayRepository>();
 
-//add jwt bearer in header
+// add jwt bearer in header
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-	.AddJwtBearer(options =>
-	{
-		options.TokenValidationParameters = new TokenValidationParameters
-		{
-			ValidateIssuer = true,
-			ValidateAudience = true,
-			ValidateLifetime = true,
-			ValidateIssuerSigningKey = true,
-			ValidIssuer = "Issuer",
-			ValidAudience = "Audience",
-			IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt))
-		};
-	});
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "Issuer",
+            ValidAudience = "Audience",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt)),
+        };
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-	c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "BlackjackRoyale API", Version = "v1" });
-	c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-	{
-		In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-		Description = "Enter: 'Bearer{space}TOKEN'",
-		Name = "Authorization",
-		Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-		Scheme = "Bearer"
-	});
-	c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-	{
-		{
-			new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-			{
-				Reference = new Microsoft.OpenApi.Models.OpenApiReference
-				{
-					Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-					Id = "Bearer"
-				}
-			},
-			new string[] { }
-		}
-	});
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "BlackjackRoyale API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Enter: 'Bearer{space}TOKEN'",
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+    });
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer",
+                },
+            },
+            new string[] { }
+        },
+    });
 
-	//comments
-	var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-	var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    // comments
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-	c.IncludeXmlComments(xmlPath);
+    c.IncludeXmlComments(xmlPath);
 });
 
 var app = builder.Build();
 
-//apply migrations, create database if needed
+// apply migrations, create database if needed
 using (var scope = app.Services.CreateScope())
 {
-	var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-	//apply pending migrations
-	context.Database.Migrate();
+    // apply pending migrations
+    context.Database.Migrate();
 }
 
 app.UseCors("AllowAll");
@@ -124,15 +125,14 @@ app.UseCors("AllowAll");
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-	c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlackjackRoyale V1");
-	c.RoutePrefix = "swagger"; 
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlackjackRoyale V1");
+    c.RoutePrefix = "swagger";
 });
 
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 app.MapControllers();
 

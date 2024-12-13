@@ -1,110 +1,113 @@
-﻿using BlackjackCommon.Interfaces.Logic;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿// <copyright file="ChatController.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace BlackjackAPI.Controllers
 {
-	[ApiController]
-	[Route("[controller]")]
-	public class ChatController : ControllerBase
-	{
-		private readonly IChatLogic _chatLogic;
+    using BlackjackCommon.Interfaces.Logic;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Mvc;
 
-		public ChatController(IChatLogic ChatLogic)
-		{
-			_chatLogic = ChatLogic;
-		}
+    [ApiController]
+    [Route("[controller]")]
+    public class ChatController : ControllerBase
+    {
+        private readonly IChatLogic chatLogic;
 
-		/// <summary>
-		/// Retrieves the list of messages exchanged between the user and others, returning the latest message from each conversation.
-		/// </summary>
-		/// <returns>
-		/// Returns a list of messages where each entry represents the last message exchanged between the user and another user. If no messages are found, a 404 Not Found response is returned.
-		/// </returns>
-		/// <response code="200">If messages are found, returns a list of the latest messages exchanged between the authenticated user and others.</response>
-		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
-		/// <response code="404">If no messages are found for the authenticated user.</response>
-		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request (e.g., database failure).</response>
-		[Authorize]
-		[HttpGet]
-		[Route("")]
-		public IActionResult RetrieveMessageList()
-		{
-			var jwt_user_id = HttpContext.User.FindFirst("user_id");
+        public ChatController(IChatLogic chatLogic)
+        {
+            this.chatLogic = chatLogic;
+        }
 
-			if (jwt_user_id == null)
-			{
-				return Unauthorized(new { Chat = "Invalid credentials" });
-			}
+        /// <summary>
+        /// Retrieves the list of messages exchanged between the user and others, returning the latest message from each conversation.
+        /// </summary>
+        /// <returns>
+        /// Returns a list of messages where each entry represents the last message exchanged between the user and another user. If no messages are found, a 404 Not Found response is returned.
+        /// </returns>
+        /// <response code="200">If messages are found, returns a list of the latest messages exchanged between the authenticated user and others.</response>
+        /// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+        /// <response code="404">If no messages are found for the authenticated user.</response>
+        /// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request (e.g., database failure).</response>
+        [Authorize]
+        [HttpGet]
+        [Route("")]
+        public IActionResult RetrieveMessageList()
+        {
+            var jwt_user_id = this.HttpContext.User.FindFirst("user_id");
 
-			int user_id = int.Parse(jwt_user_id.Value);
+            if (jwt_user_id == null)
+            {
+                return this.Unauthorized(new { Chat = "Invalid credentials" });
+            }
 
-			try
-			{
-				var response = _chatLogic.RetrieveMessageList(user_id);
+            int user_id = int.Parse(jwt_user_id.Value);
 
-				//no data but did succesfully retrieve.
-				if (response.Data == null)
-				{
-					return Ok(new { Message = response.Message });
-				}
+            try
+            {
+                var response = this.chatLogic.RetrieveMessageList(user_id);
 
-				//failed to retrieve due to issue
-				if (!response.Success)
-				{
-					return NotFound(new { Message = response.Message });
-				}
+                // no data but did succesfully retrieve.
+                if (response.Data == null)
+                {
+                    return this.Ok(new { Message = response.Message });
+                }
 
-				return Ok(new { Messages = response.Data });
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(ex);
-				return StatusCode(500, new { Message = "An error occurred while processing your request." });
-			}
-		}
+                // failed to retrieve due to issue
+                if (!response.Success)
+                {
+                    return this.NotFound(new { Message = response.Message });
+                }
 
-		/// <summary>
-		/// Retrieves the messages exchanged between the user and another user.
-		/// </summary>
-		/// <returns>
-		/// Returns a list of messages sent between the user and others.
-		/// </returns>
-		/// <response code="200">If messages are found, returns a list of the latest messages exchanged between the authenticated user and others.</response>
-		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
-		/// <response code="404">If no messages are found for the authenticated user.</response>
-		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request (e.g., database failure).</response>
-		[Authorize]
-		[HttpGet]
-		[Route("messages/{other_user_id}")]
-		public IActionResult RetrieveMessages(int other_user_id)
-		{
-			var jwt_user_id = HttpContext.User.FindFirst("user_id");
+                return this.Ok(new { Messages = response.Data });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return this.StatusCode(500, new { Message = "An error occurred while processing your request." });
+            }
+        }
 
-			if (jwt_user_id == null)
-			{
-				return Unauthorized(new { Chat = "Invalid credentials" });
-			}
+        /// <summary>
+        /// Retrieves the messages exchanged between the user and another user.
+        /// </summary>
+        /// <returns>
+        /// Returns a list of messages sent between the user and others.
+        /// </returns>
+        /// <response code="200">If messages are found, returns a list of the latest messages exchanged between the authenticated user and others.</response>
+        /// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+        /// <response code="404">If no messages are found for the authenticated user.</response>
+        /// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request (e.g., database failure).</response>
+        [Authorize]
+        [HttpGet]
+        [Route("messages/{other_user_id}")]
+        public IActionResult RetrieveMessages(int other_user_id)
+        {
+            var jwt_user_id = this.HttpContext.User.FindFirst("user_id");
 
-			int user_id = int.Parse(jwt_user_id.Value);
+            if (jwt_user_id == null)
+            {
+                return this.Unauthorized(new { Chat = "Invalid credentials" });
+            }
 
-			try
-			{
-				var response = _chatLogic.RetrievePrivateMessages(user_id, other_user_id);
+            int user_id = int.Parse(jwt_user_id.Value);
 
-				if (!response.Success)
-				{
-					return NotFound(new { Message = response.Message });
-				}
+            try
+            {
+                var response = this.chatLogic.RetrievePrivateMessages(user_id, other_user_id);
 
-				return Ok(new { response });
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(ex);
-				return StatusCode(500, new { Message = "An error occurred while processing your request." });
-			}
+                if (!response.Success)
+                {
+                    return this.NotFound(new { Message = response.Message });
+                }
 
-		}
-	}
+                return this.Ok(new { response });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return this.StatusCode(500, new { Message = "An error occurred while processing your request." });
+            }
+        }
+    }
 }

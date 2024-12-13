@@ -1,0 +1,6 @@
+[*.cs]
+dotnet_diagnostic.SA1600.severity = none  # Documentation required for public members
+dotnet_diagnostic.SA1611.severity = none  # Documentation for parameters
+dotnet_diagnostic.SA1612.severity = none  # Documentation for return values
+dotnet_diagnostic.SA1202.severity = none  # Element order warnings
+dotnet_diagnostic.SA1616.severity = none  # Documentation for enum values

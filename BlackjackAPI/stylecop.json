@@ -1,0 +1,17 @@
+{
+  "settings": {
+    "documentationRules": {
+      "companyName": "BlackjackRoyale", 
+      "xmlHeader": false, 
+      "requireDocumentationForPublicMembers": false,
+      "requireDocumentationForInternalMembers": false,
+      "documentInterfaces": false,
+      "documentEnums": false,
+      "documentDelegates": false,
+      "documentTypes": false
+    },
+    "orderingRules": {
+      "elementOrder": false 
+    }
+  }
+}

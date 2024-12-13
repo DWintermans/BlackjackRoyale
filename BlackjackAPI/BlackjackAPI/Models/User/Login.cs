@@ -1,14 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// <copyright file="Login.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace BlackjackAPI.Models.User
 {
-	public class Login
-	{
-		[Required(ErrorMessage = "Username is required")]
-		public string username { get; set; }
+    using System.ComponentModel.DataAnnotations;
 
+    public class Login
+    {
+        [Required(ErrorMessage = "Username is required")]
+        public string Username { get; set; }
 
-		[Required(ErrorMessage = "Password is required")]
-		public string password { get; set; }
-	}
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; }
+    }
 }
