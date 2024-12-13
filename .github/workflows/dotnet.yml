@@ -51,6 +51,4 @@ jobs:
     # run stylecop analyzers
     - name: Run StyleCop Analyzers
       run: |
-        dotnet build BlackjackAPI/BlackjackRoyale.sln --configuration Release
         dotnet build BlackjackAPI/BlackjackRoyale.sln --configuration Release /p:RunAnalyzers=true
-        dotnet stylecop analyze BlackjackAPI/BlackjackRoyale.sln
