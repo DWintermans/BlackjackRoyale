@@ -23,10 +23,34 @@ namespace BlackjackAPI.Controllers
         [Authorize]
         [HttpGet]
         [Route("")]
-        public IActionResult RetrieveReplayList()
+        public async Task<IActionResult> RetrieveReplayList()
         {
-            return this.Ok();
-        }
+			var jwt_user_id = this.HttpContext.User.FindFirst("user_id");
+
+			if (jwt_user_id == null)
+			{
+				return this.Unauthorized(new { Chat = "Invalid credentials" });
+			}
+
+			int user_id = int.Parse(jwt_user_id.Value);
+
+			try
+			{
+				var response = await this.replayLogic.RetrieveReplayListAsync(user_id);
+
+				if (!response.Success)
+				{
+					return this.NotFound(new { Message = response.Message });
+				}
+
+				return this.Ok(new { Messages = response.Data });
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+				return this.StatusCode(500, new { Message = "An error occurred while processing your request." });
+			}
+		}
 
         [Authorize]
         [HttpGet]

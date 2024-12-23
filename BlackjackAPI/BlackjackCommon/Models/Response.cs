@@ -38,6 +38,7 @@
             { "Success", "Success" },
 
             { "NoMessagesFound", "No messages found." },
+            { "NoGroupsFound", "No groups found." },
 
         };
 

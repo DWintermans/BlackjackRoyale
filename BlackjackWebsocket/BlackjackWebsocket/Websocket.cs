@@ -227,7 +227,16 @@ internal class Websocket : IWebsocket
     {
         WebSocket socket = (await context.AcceptWebSocketAsync(null)).WebSocket;
         string client_id = Guid.NewGuid().ToString();
-        connectedClients.Add(client_id, socket);
+       
+        try
+		{
+			connectedClients.Add(client_id, socket);
+		}
+		catch (Exception ex) 
+        { 
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+            return;
+        }
 
         Console.WriteLine("WebSocket connection established for client ID: " + client_id);
 

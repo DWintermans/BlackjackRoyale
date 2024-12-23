@@ -202,5 +202,33 @@ namespace BlackjackDAL.Repositories
                 throw;
             }
         }
-    }
+
+		public async Task<List<Tuple<string, DateTime>>> RetrieveGroupIdsAsync(int user_id)
+		{
+			try
+			{
+                //retrieve relevant groupids
+				var historyData = await _context.History
+			        .Where(h => h.history_user_id == user_id && h.history_action == HistoryAction.BET_PLACED)
+			        .ToListAsync(); 
+
+				//find latest history datetime
+				var groupData = historyData
+					.GroupBy(h => h.history_group_id) 
+					.Select(g => new Tuple<string, DateTime>(  
+						g.Key,  
+						g.Max(h => h.history_datetime) 
+					))
+					.OrderByDescending(g => g.Item2)  
+					.ToList();  
+
+				return groupData;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred: {ex.Message}");
+				throw;
+			}
+		}
+	}
 }
