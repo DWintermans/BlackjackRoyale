@@ -21,33 +21,55 @@ namespace BlackjackDAL.Repositories
         {
             try
             {
-                var playerIds = await _context.History
-                    .Where(h => h.history_group_id == group_id && rounds.Contains(h.history_round_number))
+				var gameActions = new List<ReplayModel>();
+
+				foreach (var round in rounds)
+				{
+					var playerIds = await _context.History
+                    .Where(h => h.history_group_id == group_id && h.history_round_number == round && h.history_action == HistoryAction.BET_PLACED)
                     .Select(h => h.history_user_id)
                     .Distinct()
                     .ToListAsync();
 
-                var members = await _context.User
-                    .Where(u => playerIds.Contains(u.user_id))
-                    .Select(u => new Member(
-                        u.user_id,
-                        u.user_name,
-                        false,
-                        false,
-                        u.user_id == user_id ? 0 : (int?)null
-                    ))
-                    .ToListAsync();
+                    //sort list based on who received their card first.
+					var playerIdsInCardDrawOrder = await _context.History
+	                    .Where(h =>
+		                    h.history_group_id == group_id &&
+		                    h.history_round_number == round &&
+		                    h.history_action == HistoryAction.CARD_DRAWN &&
+		                    playerIds.Contains(h.history_user_id)) 			                       
+	                    .OrderBy(h => h.history_datetime)
+	                    .Select(h => h.history_user_id)
+	                    .Distinct() 
+	                    .ToListAsync();
 
-                var groupModal = new GroupModel
-                {
-                    Group_ID = group_id.Substring(0, 6),
-                    Members = members
-                };
+                    //placed a bet but left before receiving a card? place user at bottom of group
+					var playersWhoHaventDrawnCard = playerIds.Except(playerIdsInCardDrawOrder).ToList();
+					var combinedPlayerIdsInOrder = playerIdsInCardDrawOrder.Concat(playersWhoHaventDrawnCard).ToList();
 
-                var gameActions = new List<ReplayModel>();
+					var members = await _context.User
+                        .Where(u => combinedPlayerIdsInOrder.Contains(u.user_id))
+                        .Select(u => new Member(
+                            u.user_id,
+                            u.user_name,
+                            false,
+                            false,
+                            u.user_id == user_id ? 0 : (int?)null
+                        ))
+                        .ToListAsync();
 
-                foreach (var round in rounds)
-                {
+                    //order based on cardreceiving order
+					var orderedMembers = members
+	                    .OrderBy(m => playerIdsInCardDrawOrder.IndexOf(m.User_ID))  
+	                    .ToList();
+
+					var groupModal = new GroupModel
+                    {
+                        Group_ID = group_id.Substring(0, 6),
+                        Members = orderedMembers
+					};
+
+                
                     gameActions.Add(new ReplayModel
                     {
                         type = "LOBBY",
@@ -117,20 +139,20 @@ namespace BlackjackDAL.Repositories
                     var roundEndTimestamp = roundTimestamps.Last();
 
                     var roundMessages = await (from m in _context.Message
-                                               join uSender in _context.User on m.message_sender equals uSender.user_id
-                                               where m.message_group == group_id
-                                                   && m.message_datetime >= roundStartTimestamp
-                                                   && m.message_datetime <= roundEndTimestamp
-                                               orderby m.message_datetime ascending
-                                               select new MessageModel
-                                               {
-                                                   Type = MessageType.GROUP,
-                                                   SenderName = uSender.user_name,
-                                                   Sender = m.message_sender,
-                                                   Receiver = 0,
-                                                   Message = m.message_deleted ? "This message has been deleted." : m.message_content,
-                                                   Datetime = m.message_datetime
-                                               }).ToListAsync();
+                        join uSender in _context.User on m.message_sender equals uSender.user_id
+                        where m.message_group == group_id
+                            && m.message_datetime >= roundStartTimestamp
+                            && m.message_datetime <= roundEndTimestamp
+                        orderby m.message_datetime ascending
+                        select new MessageModel
+                        {
+                            Type = MessageType.GROUP,
+                            SenderName = uSender.user_name,
+                            Sender = m.message_sender,
+                            Receiver = 0,
+                            Message = m.message_deleted ? "This message has been deleted." : m.message_content,
+                            Datetime = m.message_datetime
+                        }).ToListAsync();
 
 
                     //none in this round, skip to next

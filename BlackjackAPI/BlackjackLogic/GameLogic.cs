@@ -258,6 +258,7 @@ namespace BlackjackLogic
             {
                 int earnings = 0;
                 int losses = 0;
+                bool insurance_checked = false;
 
                 for (int i = 0; i < member.Hands.Count; i++)
                 {
@@ -287,8 +288,8 @@ namespace BlackjackLogic
                         continue;
                     }
 
-                    //dealer has blackjack, payout insurance
-                    if (dealerHand == 21 && group.DealerHand.Count == 2)
+                    //dealer has blackjack, payout insurance ONCE
+                    if (dealerHand == 21 && group.DealerHand.Count == 2 && !insurance_checked)
                     {
                         if (member.HasInsurance)
                         {
@@ -314,7 +315,10 @@ namespace BlackjackLogic
                         }
                     }
 
-                    if (hand.IsDoubled)
+                    insurance_checked = true;
+
+
+					if (hand.IsDoubled)
                     {
                         bet = bet * 2;
                     }

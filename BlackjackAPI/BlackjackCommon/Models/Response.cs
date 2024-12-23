@@ -8,6 +8,7 @@
 
             { "EmptyUsername", "Username is required." },
             { "UsernameTooLong", "Username cannot exceed 50 characters." },
+            { "UsernameMustContainAlphabetic", "Username must have atleast 1 alphabetic character." },
             { "UsernameFormatInvalid", "Username can only contain letters (including accented letters) and numbers." },
 
             { "EmptyPassword", "Password is required." },

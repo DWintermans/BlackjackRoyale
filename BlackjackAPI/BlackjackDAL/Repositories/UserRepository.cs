@@ -143,6 +143,7 @@ namespace BlackjackDAL.Repositories
                     user_passwordsalt = salt,
                     user_is_moderator = false,
                     user_status = UserStatus.active,
+                    user_balance = 100,
                     user_total_earnings_amt = 0,
                     user_total_losses_amt = 0,
                 };
