@@ -120,9 +120,21 @@ namespace BlackjackLogic
 						foreach (var action in gamereplay)
 						{
 							var gameModel = JsonConvert.DeserializeObject<GameModel>(action.payload);
-							if (gameModel == null || gameModel.Action != GameAction.GAME_FINISHED || gameModel.User_ID != user_id)
+							if (gameModel == null || (gameModel.Action != GameAction.GAME_FINISHED && gameModel.Action != GameAction.INSURE && gameModel.Action != GameAction.INSURANCE_PAID) || gameModel.User_ID != user_id)
 							{
 								continue; 
+							}
+
+							if (gameModel.Action == GameAction.INSURE) 
+							{
+								lossesAmt += gameModel.Bet ?? 0;
+								continue;
+							}
+
+							if (gameModel.Action == GameAction.INSURANCE_PAID)
+							{
+								earningsAmt += gameModel.Bet ?? 0;
+								continue;
 							}
 
 							var result = gameModel.Result;

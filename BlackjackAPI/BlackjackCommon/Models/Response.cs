@@ -34,6 +34,7 @@
 			//returns jwt and message
 			{ "SuccessfullAccountCreation", "Account created successfully." },
             { "SuccessfullLogin", "Logging in." },
+            { "SuccessfullNameChange", "Username changed succesfully." },
 
             { "Success", "Success" },
 

@@ -352,7 +352,8 @@ internal class Websocket : IWebsocket
         if (SharedData.TryGetExistingPlayer(user_id) != null)
         {
             player = SharedData.TryGetExistingPlayer(user_id);
-        }
+			player.UpdateName(user_name);
+		}
         else
         {
             player = new Player(user_id, user_name);

@@ -160,8 +160,9 @@ namespace BlackjackAPI.Controllers
                     return this.BadRequest(new { message = response.Message });
                 }
 
-                return this.Ok(new { message = "Username changed succesfully" });
-            }
+				string token = this.userLogic.CreateJWT(user_id, model.Username);
+				return this.Created(string.Empty, new Response<string>(token, "SuccessfullNameChange"));
+			}
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
@@ -206,7 +207,7 @@ namespace BlackjackAPI.Controllers
                     return this.BadRequest(new { message = response.Message });
                 }
 
-                return this.Ok(new { message = "Password changed succesfully" });
+                return this.Ok(new { message = "Password changed succesfully." });
             }
             catch (Exception ex)
             {
