@@ -40,6 +40,7 @@
 
             { "NoMessagesFound", "No messages found." },
             { "NoGroupsFound", "No groups found." },
+            { "NoUsersFound", "No users found for your searchterm." },
 
         };
 
