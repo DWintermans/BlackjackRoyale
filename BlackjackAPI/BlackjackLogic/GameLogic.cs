@@ -180,7 +180,27 @@ namespace BlackjackLogic
             }
         }
 
-        private async Task WhoseTurnIsIt(Group group)
+        public void SavePlaytime(int user_id, DateTime? datetime) 
+        {
+			if (datetime == null)
+			{
+                return;
+			}
+
+			try
+			{
+				TimeSpan playtime = DateTime.Now - datetime.Value;
+
+				_gameDAL.SavePlaytime(user_id, playtime);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred while saving the playtime: {ex.Message}");
+			}
+
+		}
+
+		private async Task WhoseTurnIsIt(Group group)
         {
             foreach (var member in group.Members)
             {

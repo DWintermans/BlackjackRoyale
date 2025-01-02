@@ -1,6 +1,9 @@
 ﻿using BlackjackCommon.Entities.Friend;
 using BlackjackCommon.Entities.History;
+using BlackjackCommon.Entities.User;
 using BlackjackCommon.Interfaces.Repository;
+using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace BlackjackDAL.Repositories
 {
@@ -42,5 +45,30 @@ namespace BlackjackDAL.Repositories
             }
         }
 
-    }
+
+
+        public void SavePlaytime(int user_id, TimeSpan playtime) 
+        {
+			try
+			{
+				var user = _context.User.FirstOrDefault(u => u.user_id == user_id);
+
+				if (user == null)
+				{
+					Console.WriteLine($"User with ID {user_id} not found.");
+					return;				
+                }
+
+				user.user_total_playtime = (user.user_total_playtime ?? TimeSpan.Zero) + playtime;
+
+				_context.SaveChanges();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred while saving the event: {ex.Message}");
+				throw;
+			}
+		}
+
+	}
 }

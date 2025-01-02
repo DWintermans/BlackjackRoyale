@@ -9,6 +9,7 @@
         public int Credits { get; set; }
         public bool HasFinished { get; set; }
         public bool HasInsurance { get; set; }
+        public DateTime? JoinedAt { get; set; }
 
         public Player(int user_id, string name)
         {

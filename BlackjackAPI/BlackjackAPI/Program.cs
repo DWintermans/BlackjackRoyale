@@ -60,11 +60,13 @@ builder.Services.AddScoped<IFriendLogic, FriendLogic>();
 builder.Services.AddScoped<IPlayerLogic, PlayerLogic>();
 builder.Services.AddScoped<IChatLogic, ChatLogic>();
 builder.Services.AddScoped<IReplayLogic, ReplayLogic>();
+builder.Services.AddScoped<IStatisticsLogic, StatisticsLogic>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IFriendRepository, FriendRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IReplayRepository, ReplayRepository>();
+builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 
 // add jwt bearer in header
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
