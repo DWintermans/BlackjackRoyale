@@ -21,16 +21,34 @@ namespace BlackjackAPI.Controllers
             this.userLogic = userLogic;
         }
 
-        /// <summary>
-        /// Authenticates a user.
-        /// </summary>
-        /// <param name="model">The model containing the username and password for login.</param>
-        /// <returns>Returns a JWT token if the authentication is successful, or an error message if authentication fails.</returns>
-        /// <response code="200">If the login is successful and a JWT token is generated.</response>
-        /// <response code="400">If the provided data is invalid (missing required fields or validation errors).</response>
-        /// <response code="401">If the username or password is incorrect and authentication fails.</response>
-        /// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
-        [AllowAnonymous]
+		[HttpGet]
+		[Route("Healthcheck")]
+		public IActionResult HealthCheck()
+		{
+			try
+			{
+				return this.Ok("API is running");
+			}
+			catch (Exception ex)
+			{
+				string logFilePath = "app-log.txt";
+				string logMessage = $"{DateTime.UtcNow}: - {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
+				System.IO.File.AppendAllText(logFilePath, logMessage);
+
+				return this.StatusCode(500, "An internal error occurred.");
+			}
+		}
+
+		/// <summary>
+		/// Authenticates a user.
+		/// </summary>
+		/// <param name="model">The model containing the username and password for login.</param>
+		/// <returns>Returns a JWT token if the authentication is successful, or an error message if authentication fails.</returns>
+		/// <response code="201">If the login is successful and a JWT token is generated.</response>
+		/// <response code="400">If the provided data is invalid (missing required fields or validation errors).</response>
+		/// <response code="401">If the username or password is incorrect and authentication fails.</response>
+		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+		[AllowAnonymous]
         [HttpPost]
         [Route("Login")]
         public IActionResult Login(Login model)
@@ -69,30 +87,12 @@ namespace BlackjackAPI.Controllers
             System.IO.File.AppendAllText(logFilePath, logMessage);
         }
 
-        [HttpGet]
-        [Route("Healthcheck")]
-        public IActionResult HealthCheck()
-        {
-            try
-            {
-                return this.Ok("API is running");
-            }
-            catch (Exception ex)
-            {
-                string logFilePath = "app-log.txt";
-                string logMessage = $"{DateTime.UtcNow}: - {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}";
-                System.IO.File.AppendAllText(logFilePath, logMessage);
-
-                return this.StatusCode(500, "An internal error occurred.");
-            }
-        }
-
         /// <summary>
         /// Registers a new user.
         /// </summary>
         /// <param name="model">The model containing the username and password for registration.</param>
         /// <returns>Returns a success message and a JWT token if the registration is successful, or an error message if the registration fails.</returns>
-        /// <response code="200">If the user was registered successfully and a JWT token is generated.</response>
+        /// <response code="201">If the user was registered successfully and a JWT token is generated.</response>
         /// <response code="400">If the provided data is invalid (missing required fields or validation errors).</response>
         /// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
         [AllowAnonymous]
@@ -128,7 +128,7 @@ namespace BlackjackAPI.Controllers
         /// </summary>
         /// <param name="model">The model containing the new username.</param>
         /// <returns>Returns a success message if the username is updated successfully, or an error message otherwise.</returns>
-        /// <response code="200">If the username was changed successfully.</response>
+        /// <response code="201">If the username was changed successfully.</response>
         /// <response code="400">If the provided data is invalid (missing required fields or validation errors).</response>
         /// <response code="401">If the user is unauthorized.</response>
         /// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>

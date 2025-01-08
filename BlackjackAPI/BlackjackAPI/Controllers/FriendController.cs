@@ -66,7 +66,15 @@ namespace BlackjackAPI.Controllers
             }
         }
 
-
+		/// <summary>
+		/// Searches for users based on the provided search term.
+		/// </summary>
+		/// <param name="searchTerm">The term used to search for users.</param>
+		/// <response code="200">Returns the list of matching users or a message if no data is found.</response>
+		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+		/// <response code="404">Not Found. Indicates that the search could not be completed successfully.</response>
+		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+		/// <returns></returns>
 		[Authorize]
 		[HttpGet]
 		[Route("find/{searchTerm}")]
@@ -110,7 +118,7 @@ namespace BlackjackAPI.Controllers
 		/// Request to become friends with another user.
 		/// </summary>
 		/// <param name="model">The request model containing the ID of the user to send the friend request to.</param>
-		/// <response code="200">Friend request sent successfully.</response>
+		/// <response code="201">Friend request sent successfully.</response>
 		/// <response code="400">Bad request. Occurs if the user tries to send a request to themselves or if the model is invalid.</response>
 		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
 		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>

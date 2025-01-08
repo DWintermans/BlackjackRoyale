@@ -20,7 +20,15 @@ namespace BlackjackAPI.Controllers
             this.statisticsLogic = statisticsLogic;
         }
 
-        [Authorize]
+		/// <summary>
+		/// Retrieves statistics data for the authenticated user.
+		/// </summary>
+		/// <response code="200">Returns the statistics data if successful.</response>
+		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+		/// <response code="404">Not Found. Indicates that the statistics could not be retrieved successfully.</response>
+		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+		/// <returns></returns>
+		[Authorize]
         [HttpGet]
         [Route("")]
         public async Task<IActionResult> RetrieveStatistics()
@@ -52,6 +60,13 @@ namespace BlackjackAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Retrieves the leaderboard data.
+		/// </summary>
+		/// <response code="200">Returns the leaderboard data if successful.</response>
+		/// <response code="404">Not Found. Indicates that the leaderboard data could not be retrieved successfully.</response>
+		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+		/// <returns></returns>
 		[HttpGet]
 		[Route("leaderboard")]
 		public async Task<IActionResult> RetrieveLeaderboard()

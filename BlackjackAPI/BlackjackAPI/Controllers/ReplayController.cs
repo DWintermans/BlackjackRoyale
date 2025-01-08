@@ -20,7 +20,15 @@ namespace BlackjackAPI.Controllers
             this.replayLogic = replayLogic;
         }
 
-        [Authorize]
+		/// <summary>
+		/// Retrieves the list of replay data for the authenticated user.
+		/// </summary>
+		/// <response code="200">Returns the list of replays if successful.</response>
+		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+		/// <response code="404">Not Found. Indicates that the replays could not be retrieved successfully.</response>
+		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+		/// <returns></returns>
+		[Authorize]
         [HttpGet]
         [Route("")]
         public async Task<IActionResult> RetrieveReplayList()
@@ -52,7 +60,16 @@ namespace BlackjackAPI.Controllers
 			}
 		}
 
-        [Authorize]
+		/// <summary>
+		/// Retrieves replay data for a specific group based on the provided group ID.
+		/// </summary>
+		/// <param name="group_id">The ID of the group whose replay data is being requested.</param>
+		/// <response code="200">Returns the replay data if successful.</response>
+		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+		/// <response code="404">Not Found. Indicates that the replay data could not be retrieved successfully.</response>
+		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+		/// <returns></returns>
+		[Authorize]
         [HttpGet]
         [Route("{group_id}")]
         public async Task<IActionResult> RetrieveReplay(string group_id)
