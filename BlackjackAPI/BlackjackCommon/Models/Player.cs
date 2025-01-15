@@ -21,12 +21,12 @@
             HasInsurance = false;
         }
 
-		public void UpdateName(string name)
-		{
-			Name = name;
-		}
+        public void UpdateName(string name)
+        {
+            Name = name;
+        }
 
-		public class Hand
+        public class Hand
         {
             public List<string> Cards { get; private set; }
             public bool IsFinished { get; set; }

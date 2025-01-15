@@ -14,6 +14,6 @@ namespace BlackjackCommon.Interfaces.Logic
         Task HandleGameAction(Player player, dynamic message);
         Task StartBetting(Group group);
         Task StartGame(Group group);
-		void SavePlaytime(int user_ID, DateTime? joinedAt);
-	}
+        void SavePlaytime(int user_ID, DateTime? joinedAt);
+    }
 }

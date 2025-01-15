@@ -24,17 +24,17 @@ namespace BlackjackDAL
             string password = Env.GetString(_PASSWORD);
             string database = Env.GetString(_DATABASE);
 
-		    try
-		    {
-				LogToFile($"Server={server};Database={database};User={user};Password={password};");
-				return $"Server={server};Database={database};User={user};Password={password};";
-			}
-		    catch
-		    {
-		        LogToFile("Unknown DB type");
-		    	throw new InvalidOperationException("Unknown DB.");
-		    }  
-		}
+            try
+            {
+                LogToFile($"Server={server};Database={database};User={user};Password={password};");
+                return $"Server={server};Database={database};User={user};Password={password};";
+            }
+            catch
+            {
+                LogToFile("Unknown DB type");
+                throw new InvalidOperationException("Unknown DB.");
+            }
+        }
 
         private void LogToFile(string errormsg)
         {

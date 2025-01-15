@@ -66,64 +66,64 @@ namespace BlackjackAPI.Controllers
             }
         }
 
-		/// <summary>
-		/// Searches for users based on the provided search term.
-		/// </summary>
-		/// <param name="searchTerm">The term used to search for users.</param>
-		/// <response code="200">Returns the list of matching users or a message if no data is found.</response>
-		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
-		/// <response code="404">Not Found. Indicates that the search could not be completed successfully.</response>
-		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
-		/// <returns></returns>
-		[Authorize]
-		[HttpGet]
-		[Route("find/{searchTerm}")]
-		public IActionResult SearchUser(string searchTerm)
-		{
-			var jwt_user_id = this.HttpContext.User.FindFirst("user_id");
+        /// <summary>
+        /// Searches for users based on the provided search term.
+        /// </summary>
+        /// <param name="searchTerm">The term used to search for users.</param>
+        /// <response code="200">Returns the list of matching users or a message if no data is found.</response>
+        /// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+        /// <response code="404">Not Found. Indicates that the search could not be completed successfully.</response>
+        /// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+        /// <returns></returns>
+        [Authorize]
+        [HttpGet]
+        [Route("find/{searchTerm}")]
+        public IActionResult SearchUser(string searchTerm)
+        {
+            var jwt_user_id = this.HttpContext.User.FindFirst("user_id");
 
-			if (jwt_user_id == null)
-			{
-				return this.Unauthorized(new { message = "Invalid credentials" });
-			}
+            if (jwt_user_id == null)
+            {
+                return this.Unauthorized(new { message = "Invalid credentials" });
+            }
 
-			int user_id = int.Parse(jwt_user_id.Value);
+            int user_id = int.Parse(jwt_user_id.Value);
 
-			try
-			{
-				var response = this.friendLogic.FindUser(user_id, searchTerm);
+            try
+            {
+                var response = this.friendLogic.FindUser(user_id, searchTerm);
 
-				// no data but did succesfully retrieve.
-				if (response.Data == null)
-				{
-					return this.Ok(new { Message = response.Message });
-				}
+                // no data but did succesfully retrieve.
+                if (response.Data == null)
+                {
+                    return this.Ok(new { Message = response.Message });
+                }
 
-				// failed to retrieve due to issue
-				if (!response.Success)
-				{
-					return this.NotFound(new { Message = response.Message });
-				}
+                // failed to retrieve due to issue
+                if (!response.Success)
+                {
+                    return this.NotFound(new { Message = response.Message });
+                }
 
-				return this.Ok(new { Messages = response.Data });
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(ex);
-				return this.StatusCode(500, new { message = "An error occurred while processing your request." });
-			}
-		}
+                return this.Ok(new { Messages = response.Data });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return this.StatusCode(500, new { message = "An error occurred while processing your request." });
+            }
+        }
 
-		/// <summary>
-		/// Request to become friends with another user.
-		/// </summary>
-		/// <param name="model">The request model containing the ID of the user to send the friend request to.</param>
-		/// <response code="201">Friend request sent successfully.</response>
-		/// <response code="400">Bad request. Occurs if the user tries to send a request to themselves or if the model is invalid.</response>
-		/// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
-		/// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
-		/// <returns></returns>
-		[Authorize]
+        /// <summary>
+        /// Request to become friends with another user.
+        /// </summary>
+        /// <param name="model">The request model containing the ID of the user to send the friend request to.</param>
+        /// <response code="201">Friend request sent successfully.</response>
+        /// <response code="400">Bad request. Occurs if the user tries to send a request to themselves or if the model is invalid.</response>
+        /// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
+        /// <response code="500">Internal Server Error. Occurs if there is an unexpected error during the request.</response>
+        /// <returns></returns>
+        [Authorize]
         [HttpPost]
         [Route("request/{friend_id}")]
         public IActionResult SendFriendRequest(int friend_id)

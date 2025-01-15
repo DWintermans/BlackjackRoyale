@@ -31,12 +31,10 @@ string connectionString = $"Server={dbServer};User={dbUser};Password={dbPassword
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-
 builder.WebHost.ConfigureKestrel(options =>
 {
-	options.ListenAnyIP(8080);  
+    options.ListenAnyIP(8080);
 });
-
 
 // allow everything for cors policy
 builder.Services.AddCors(options =>
@@ -134,12 +132,11 @@ app.UseCors("AllowAll");
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-	c.SwaggerEndpoint("http://localhost:8080/swagger/v1/swagger.json", "BlackjackRoyale API V1");
-	c.RoutePrefix = "swagger";
+    c.SwaggerEndpoint("http://localhost:8080/swagger/v1/swagger.json", "BlackjackRoyale API V1");
+    c.RoutePrefix = "swagger";
 });
 
-//app.UseHttpsRedirection();
-
+// app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

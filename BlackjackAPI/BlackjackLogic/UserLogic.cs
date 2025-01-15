@@ -230,12 +230,12 @@ namespace BlackjackLogic
                 return new Response<string>("UsernameTooLong");
             }
 
-			if (!username.Any(char.IsLetter))
-			{
-				return new Response<string>("UsernameMustContainAlphabetic");
-			}
+            if (!username.Any(char.IsLetter))
+            {
+                return new Response<string>("UsernameMustContainAlphabetic");
+            }
 
-			var usernameRegex = new Regex(@"^[a-zA-Z0-9À-ÖØ-öø-ÿ\s]+$");
+            var usernameRegex = new Regex(@"^[a-zA-Z0-9À-ÖØ-öø-ÿ\s]+$");
             if (!usernameRegex.IsMatch(username))
             {
                 return new Response<string>("UsernameFormatInvalid");

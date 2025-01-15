@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BlackjackCommon.Entities.Friend
 {
-	[Table("friend")]
+    [Table("friend")]
 
-	public class Friend
+    public class Friend
     {
         [Key]
         [Column("friend_user_id")]

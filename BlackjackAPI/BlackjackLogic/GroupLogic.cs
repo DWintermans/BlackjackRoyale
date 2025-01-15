@@ -265,10 +265,10 @@ namespace BlackjackLogic
             //add to group
             group.Members.Add(player);
 
-			player.JoinedAt = DateTime.Now;
+            player.JoinedAt = DateTime.Now;
 
-			//add group to list
-			SharedData.Groups[group_id] = group;
+            //add group to list
+            SharedData.Groups[group_id] = group;
 
             foreach (var g in SharedData.Groups)
             {
@@ -299,10 +299,10 @@ namespace BlackjackLogic
                 player.Hands.Clear();
                 player.IsReady = false;
 
-				_gameLogic.SavePlaytime(player.User_ID, player.JoinedAt);
+                _gameLogic.SavePlaytime(player.User_ID, player.JoinedAt);
                 player.JoinedAt = null;
 
-				await OnNotification?.Invoke(player, $"You have left group '{group.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+                await OnNotification?.Invoke(player, $"You have left group '{group.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
 
                 await OnGroupNotification?.Invoke(group, $"{player.Name} left the group.", NotificationType.GROUP, default);
 
@@ -454,8 +454,8 @@ namespace BlackjackLogic
                 {
                     group.Members.Add(player);
                     player.IsReady = true;
-					player.JoinedAt = DateTime.Now;
-					group.WaitingRoom.Remove(player);
+                    player.JoinedAt = DateTime.Now;
+                    group.WaitingRoom.Remove(player);
 
                     await ForceCheckGroup(player);
 

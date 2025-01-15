@@ -27,12 +27,12 @@ namespace BlackjackLogic
                     return new Response<StatisticsModel>(null, "Default");
                 }
 
-				if (Int32.Parse(data.balance) >= 1000)
-				{
-					data.balance = (Int32.Parse(data.balance) / 1000.0).ToString("0.##") + "K";
-				}
+                if (Int32.Parse(data.balance) >= 1000)
+                {
+                    data.balance = (Int32.Parse(data.balance) / 1000.0).ToString("0.##") + "K";
+                }
 
-				return new Response<StatisticsModel>(data, "Success");
+                return new Response<StatisticsModel>(data, "Success");
             }
             catch (Exception ex)
             {
@@ -41,28 +41,28 @@ namespace BlackjackLogic
             }
         }
 
-		public async Task<Response<List<LeaderboardModel>>> RetrieveLeaderboardAsync()
-		{
-			try
-			{
-				var data = await _statisticsDAL.RetrieveLeaderboardAsync();
+        public async Task<Response<List<LeaderboardModel>>> RetrieveLeaderboardAsync()
+        {
+            try
+            {
+                var data = await _statisticsDAL.RetrieveLeaderboardAsync();
 
-				if (data == null)
-				{
-					return new Response<List<LeaderboardModel>>(null, "Default");
-				}
+                if (data == null)
+                {
+                    return new Response<List<LeaderboardModel>>(null, "Default");
+                }
 
-				return new Response<List<LeaderboardModel>>(data, "Success");
+                return new Response<List<LeaderboardModel>>(data, "Success");
 
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"An error occurred: {ex.Message}");
-				throw;
-			}
-		}
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw;
+            }
+        }
 
 
 
-	}
+    }
 }

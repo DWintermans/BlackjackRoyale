@@ -43,32 +43,32 @@ namespace BlackjackLogic
             }
         }
 
-		public Response<List<SearchModel>> FindUser(int user_id, string searchTerm)
-		{
-			try
-			{
-				var data = _friendDAL.FindUser(user_id, searchTerm);
+        public Response<List<SearchModel>> FindUser(int user_id, string searchTerm)
+        {
+            try
+            {
+                var data = _friendDAL.FindUser(user_id, searchTerm);
 
-				if (data.Count == 0)
-				{
-					return new Response<List<SearchModel>>(null, "NoUsersFound");
-				}
+                if (data.Count == 0)
+                {
+                    return new Response<List<SearchModel>>(null, "NoUsersFound");
+                }
 
-				if (data == null)
-				{
-					return new Response<List<SearchModel>>(null, "Default");
-				}
+                if (data == null)
+                {
+                    return new Response<List<SearchModel>>(null, "Default");
+                }
 
-				return new Response<List<SearchModel>>(data, "Success");
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"An error occurred: {ex.Message}");
-				throw;
-			}
-		}
+                return new Response<List<SearchModel>>(data, "Success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw;
+            }
+        }
 
-		public Response<string> RequestFriendship(int user_id, int befriend_user_id)
+        public Response<string> RequestFriendship(int user_id, int befriend_user_id)
         {
             if (befriend_user_id < 0)
             {

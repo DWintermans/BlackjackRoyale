@@ -12,5 +12,5 @@ namespace BlackjackCommon.Interfaces.Repository
         Task<List<Tuple<string, DateTime>>> RetrieveGroupIdsAsync(int user_id);
 
 
-	}
+    }
 }

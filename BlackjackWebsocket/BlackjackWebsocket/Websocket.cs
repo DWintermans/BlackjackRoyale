@@ -227,13 +227,13 @@ internal class Websocket : IWebsocket
     {
         WebSocket socket = (await context.AcceptWebSocketAsync(null)).WebSocket;
         string client_id = Guid.NewGuid().ToString();
-       
+
         try
-		{
-			connectedClients.Add(client_id, socket);
-		}
-		catch (Exception ex) 
-        { 
+        {
+            connectedClients.Add(client_id, socket);
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
             return;
         }
@@ -352,8 +352,8 @@ internal class Websocket : IWebsocket
         if (SharedData.TryGetExistingPlayer(user_id) != null)
         {
             player = SharedData.TryGetExistingPlayer(user_id);
-			player.UpdateName(user_name);
-		}
+            player.UpdateName(user_name);
+        }
         else
         {
             player = new Player(user_id, user_name);

@@ -21,33 +21,33 @@ namespace BlackjackDAL.Repositories
         {
             try
             {
-				var gameActions = new List<ReplayModel>();
+                var gameActions = new List<ReplayModel>();
 
-				foreach (var round in rounds)
-				{
-					var playerIds = await _context.History
+                foreach (var round in rounds)
+                {
+                    var playerIds = await _context.History
                     .Where(h => h.history_group_id == group_id && h.history_round_number == round && h.history_action == HistoryAction.BET_PLACED)
                     .Select(h => h.history_user_id)
                     .Distinct()
                     .ToListAsync();
 
                     //sort list based on who received their card first.
-					var playerIdsInCardDrawOrder = await _context.History
-	                    .Where(h =>
-		                    h.history_group_id == group_id &&
-		                    h.history_round_number == round &&
-		                    h.history_action == HistoryAction.CARD_DRAWN &&
-		                    playerIds.Contains(h.history_user_id)) 			                       
-	                    .OrderBy(h => h.history_datetime)
-	                    .Select(h => h.history_user_id)
-	                    .Distinct() 
-	                    .ToListAsync();
+                    var playerIdsInCardDrawOrder = await _context.History
+                        .Where(h =>
+                            h.history_group_id == group_id &&
+                            h.history_round_number == round &&
+                            h.history_action == HistoryAction.CARD_DRAWN &&
+                            playerIds.Contains(h.history_user_id))
+                        .OrderBy(h => h.history_datetime)
+                        .Select(h => h.history_user_id)
+                        .Distinct()
+                        .ToListAsync();
 
                     //placed a bet but left before receiving a card? place user at bottom of group
-					var playersWhoHaventDrawnCard = playerIds.Except(playerIdsInCardDrawOrder).ToList();
-					var combinedPlayerIdsInOrder = playerIdsInCardDrawOrder.Concat(playersWhoHaventDrawnCard).ToList();
+                    var playersWhoHaventDrawnCard = playerIds.Except(playerIdsInCardDrawOrder).ToList();
+                    var combinedPlayerIdsInOrder = playerIdsInCardDrawOrder.Concat(playersWhoHaventDrawnCard).ToList();
 
-					var members = await _context.User
+                    var members = await _context.User
                         .Where(u => combinedPlayerIdsInOrder.Contains(u.user_id))
                         .Select(u => new Member(
                             u.user_id,
@@ -59,17 +59,17 @@ namespace BlackjackDAL.Repositories
                         .ToListAsync();
 
                     //order based on cardreceiving order
-					var orderedMembers = members
-	                    .OrderBy(m => playerIdsInCardDrawOrder.IndexOf(m.User_ID))  
-	                    .ToList();
+                    var orderedMembers = members
+                        .OrderBy(m => playerIdsInCardDrawOrder.IndexOf(m.User_ID))
+                        .ToList();
 
-					var groupModal = new GroupModel
+                    var groupModal = new GroupModel
                     {
                         Group_ID = group_id.Substring(0, 6),
                         Members = orderedMembers
-					};
+                    };
 
-                
+
                     gameActions.Add(new ReplayModel
                     {
                         type = "LOBBY",
@@ -94,7 +94,7 @@ namespace BlackjackDAL.Repositories
             {
                 var gameActions = _context.History
                     .Where(h => rounds.Contains(h.history_round_number) && h.history_group_id == group_id && h.history_action != HistoryAction.CREDITS_UPDATE)
-					.OrderBy(h => h.history_datetime)
+                    .OrderBy(h => h.history_datetime)
                     .ToList();
 
                 if (gameActions == null || gameActions.Count == 0)
@@ -139,20 +139,20 @@ namespace BlackjackDAL.Repositories
                     var roundEndTimestamp = roundTimestamps.Last();
 
                     var roundMessages = await (from m in _context.Message
-                        join uSender in _context.User on m.message_sender equals uSender.user_id
-                        where m.message_group == group_id
-                            && m.message_datetime >= roundStartTimestamp
-                            && m.message_datetime <= roundEndTimestamp
-                        orderby m.message_datetime ascending
-                        select new MessageModel
-                        {
-                            Type = MessageType.GROUP,
-                            SenderName = uSender.user_name,
-                            Sender = m.message_sender,
-                            Receiver = 0,
-                            Message = m.message_deleted ? "This message has been deleted." : m.message_content,
-                            Datetime = m.message_datetime
-                        }).ToListAsync();
+                                               join uSender in _context.User on m.message_sender equals uSender.user_id
+                                               where m.message_group == group_id
+                                                   && m.message_datetime >= roundStartTimestamp
+                                                   && m.message_datetime <= roundEndTimestamp
+                                               orderby m.message_datetime ascending
+                                               select new MessageModel
+                                               {
+                                                   Type = MessageType.GROUP,
+                                                   SenderName = uSender.user_name,
+                                                   Sender = m.message_sender,
+                                                   Receiver = 0,
+                                                   Message = m.message_deleted ? "This message has been deleted." : m.message_content,
+                                                   Datetime = m.message_datetime
+                                               }).ToListAsync();
 
 
                     //none in this round, skip to next
@@ -203,32 +203,32 @@ namespace BlackjackDAL.Repositories
             }
         }
 
-		public async Task<List<Tuple<string, DateTime>>> RetrieveGroupIdsAsync(int user_id)
-		{
-			try
-			{
+        public async Task<List<Tuple<string, DateTime>>> RetrieveGroupIdsAsync(int user_id)
+        {
+            try
+            {
                 //retrieve relevant groupids
-				var historyData = await _context.History
-			        .Where(h => h.history_user_id == user_id && h.history_action == HistoryAction.BET_PLACED)
-			        .ToListAsync(); 
+                var historyData = await _context.History
+                    .Where(h => h.history_user_id == user_id && h.history_action == HistoryAction.BET_PLACED)
+                    .ToListAsync();
 
-				//find latest history datetime
-				var groupData = historyData
-					.GroupBy(h => h.history_group_id) 
-					.Select(g => new Tuple<string, DateTime>(  
-						g.Key,  
-						g.Max(h => h.history_datetime) 
-					))
-					.OrderByDescending(g => g.Item2)  
-					.ToList();  
+                //find latest history datetime
+                var groupData = historyData
+                    .GroupBy(h => h.history_group_id)
+                    .Select(g => new Tuple<string, DateTime>(
+                        g.Key,
+                        g.Max(h => h.history_datetime)
+                    ))
+                    .OrderByDescending(g => g.Item2)
+                    .ToList();
 
-				return groupData;
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"An error occurred: {ex.Message}");
-				throw;
-			}
-		}
-	}
+                return groupData;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw;
+            }
+        }
+    }
 }

@@ -52,39 +52,39 @@ namespace BlackjackDAL.Repositories
             }
         }
 
-		public List<SearchModel> FindUser(int user_id, string searchTerm)
-		{
-			try
-			{
-				var searchResults = _context.User
-			        .Where(u => u.user_status == UserStatus.active && u.user_id != user_id &&
-								!_context.Friend_Request
-							        .Where(fr => fr.friend_user_id == user_id || fr.friend_befriend_user_id == user_id)
-							        .Select(fr => fr.friend_user_id == user_id ? fr.friend_befriend_user_id : fr.friend_user_id)
-							        .Contains(u.user_id) &&
-								!_context.Friend
-									.Where(f => f.friend_user_id == user_id || f.friend_befriend_user_id == user_id)
-									.Select(f => f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id)
-									.Contains(u.user_id) &&
-								u.user_name.Contains(searchTerm))
-			        .Select(u => new SearchModel
-			        {
-				        user_id = u.user_id,
-				        user_name = u.user_name
-			        })
-			        .Take(5)
-			        .ToList();
+        public List<SearchModel> FindUser(int user_id, string searchTerm)
+        {
+            try
+            {
+                var searchResults = _context.User
+                    .Where(u => u.user_status == UserStatus.active && u.user_id != user_id &&
+                                !_context.Friend_Request
+                                    .Where(fr => fr.friend_user_id == user_id || fr.friend_befriend_user_id == user_id)
+                                    .Select(fr => fr.friend_user_id == user_id ? fr.friend_befriend_user_id : fr.friend_user_id)
+                                    .Contains(u.user_id) &&
+                                !_context.Friend
+                                    .Where(f => f.friend_user_id == user_id || f.friend_befriend_user_id == user_id)
+                                    .Select(f => f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id)
+                                    .Contains(u.user_id) &&
+                                u.user_name.Contains(searchTerm))
+                    .Select(u => new SearchModel
+                    {
+                        user_id = u.user_id,
+                        user_name = u.user_name
+                    })
+                    .Take(5)
+                    .ToList();
 
-				return searchResults;
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"An error occurred: {ex.Message}");
-				throw;
-			}
-		}
+                return searchResults;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw;
+            }
+        }
 
-		public bool FriendshipIsPending(int user_id, int befriend_user_id)
+        public bool FriendshipIsPending(int user_id, int befriend_user_id)
         {
             try
             {

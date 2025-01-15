@@ -180,27 +180,27 @@ namespace BlackjackLogic
             }
         }
 
-        public void SavePlaytime(int user_id, DateTime? datetime) 
+        public void SavePlaytime(int user_id, DateTime? datetime)
         {
-			if (datetime == null)
-			{
+            if (datetime == null)
+            {
                 return;
-			}
+            }
 
-			try
-			{
-				TimeSpan playtime = DateTime.Now - datetime.Value;
+            try
+            {
+                TimeSpan playtime = DateTime.Now - datetime.Value;
 
-				_gameDAL.SavePlaytime(user_id, playtime);
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"An error occurred while saving the playtime: {ex.Message}");
-			}
+                _gameDAL.SavePlaytime(user_id, playtime);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while saving the playtime: {ex.Message}");
+            }
 
-		}
+        }
 
-		private async Task WhoseTurnIsIt(Group group)
+        private async Task WhoseTurnIsIt(Group group)
         {
             foreach (var member in group.Members)
             {
@@ -338,7 +338,7 @@ namespace BlackjackLogic
                     insurance_checked = true;
 
 
-					if (hand.IsDoubled)
+                    if (hand.IsDoubled)
                     {
                         bet = bet * 2;
                     }
