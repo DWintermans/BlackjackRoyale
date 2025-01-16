@@ -5,8 +5,8 @@ namespace BlackjackTest.Unit.User
     [TestClass]
     public class AttemptLogin
     {
-        private Mock<IUserRepository> _mockUserRepository;
-        private UserLogic _userLogic;
+        private Mock<IUserRepository>? _mockUserRepository;
+        private UserLogic? _userLogic;
 
         [TestInitialize]
         public void Initialize()
@@ -30,12 +30,14 @@ namespace BlackjackTest.Unit.User
             );
 
             //mock repo
-            _mockUserRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
+            _mockUserRepository?.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
 
             // Act
+            Assert.IsNotNull(_userLogic);
             int result = _userLogic.ValidateUser("testuser", "password");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.AreEqual(1, result);
         }
 
@@ -54,12 +56,14 @@ namespace BlackjackTest.Unit.User
             );
 
             //mock repo
-            _mockUserRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
+            _mockUserRepository?.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
 
             // Act
+            Assert.IsNotNull(_userLogic);
             int result = _userLogic.ValidateUser("testuser", "PASSWORD");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.AreEqual(0, result);
         }
 
@@ -78,12 +82,14 @@ namespace BlackjackTest.Unit.User
             );
 
             //mock repo
-            _mockUserRepository.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
+            _mockUserRepository?.Setup(r => r.RetrieveLoginInformation("testuser")).Returns(fakeDBLoginInfo);
 
             // Act
+            Assert.IsNotNull(_userLogic);
             int result = _userLogic.ValidateUser("Testuser", "password");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.AreEqual(0, result);
         }
     }

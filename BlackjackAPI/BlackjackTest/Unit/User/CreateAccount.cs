@@ -6,8 +6,8 @@ namespace BlackjackTest.Unit.User
     [TestClass]
     public class CreateAccount
     {
-        private Mock<IUserRepository> _mockUserRepository;
-        private UserLogic _userLogic;
+        private Mock<IUserRepository>? _mockUserRepository;
+        private UserLogic? _userLogic;
 
         [TestInitialize]
         public void Initialize()
@@ -24,15 +24,19 @@ namespace BlackjackTest.Unit.User
         public void CreateAccount_SuccessfulAccountCreation_Returns_JWT(string username, string password, int user_id)
         {
             // Arrange
-            _mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
-            _mockUserRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(user_id);
+            _mockUserRepository?.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
+            _mockUserRepository?.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(user_id);
 
             // Act
-            var result = _userLogic.CreateAccount(username, password);
+            var result = _userLogic?.CreateAccount(username, password);
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsTrue(result.Success);
             Assert.AreEqual("Account created successfully.", result.Message);
+
+            Assert.IsNotNull(result.Data, "JWT token should not be null.");
+            Assert.IsNotNull(_userLogic);
 
             int jwt_user_id = _userLogic.GetUserIDFromJWT(result.Data);
             Assert.AreEqual(user_id, jwt_user_id);
@@ -47,13 +51,14 @@ namespace BlackjackTest.Unit.User
         public void CreateAccount_InvalidVariables_Returns_ErrorResponse(string username, string password, string expectedErrorMessage)
         {
             // Arrange
-            _mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
-            _mockUserRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(1);
+            _mockUserRepository?.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
+            _mockUserRepository?.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(1);
 
             // Act
-            var result = _userLogic.CreateAccount(username, password);
+            var result = _userLogic?.CreateAccount(username, password);
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual(expectedErrorMessage, result.Message);
         }
@@ -63,12 +68,13 @@ namespace BlackjackTest.Unit.User
         public void CreateAccount_UsernameIsTaken_ReturnsErrorMessage(string username)
         {
             // Arrange
-            _mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
+            _mockUserRepository?.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(true);
 
             // Act
-            var result = _userLogic.CreateAccount(username, "password!1");
+            var result = _userLogic?.CreateAccount(username, "password!1");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual("Username already in use.", result.Message);
 
@@ -79,13 +85,14 @@ namespace BlackjackTest.Unit.User
         public void CreateAccount_DatabaseAccountCreationFails_ReturnsErrorMessage(string username, string password)
         {
             // Arrange
-            _mockUserRepository.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
-            _mockUserRepository.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(0);
+            _mockUserRepository?.Setup(dal => dal.IsUsernameTaken(It.IsAny<string>())).Returns(false);
+            _mockUserRepository?.Setup(dal => dal.CreateAccount(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(0);
 
             // Act
-            var result = _userLogic.CreateAccount(username, password);
+            var result = _userLogic?.CreateAccount(username, password);
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual("An unexpected error occurred.", result.Message);
         }

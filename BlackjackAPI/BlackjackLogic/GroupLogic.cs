@@ -3,6 +3,8 @@ using BlackjackCommon.Interfaces.Logic;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
 using System.Net.WebSockets;
+using System.Numerics;
+using System.Reflection;
 using Group = BlackjackCommon.Models.Group;
 
 namespace BlackjackLogic
@@ -67,7 +69,10 @@ namespace BlackjackLogic
                     break;
 
                 default:
-                    await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                    if (OnNotification != null)
+                    {
+                        await OnNotification.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                    }
                     return;
             }
         }
@@ -118,7 +123,10 @@ namespace BlackjackLogic
                         specificMemberModel.Members.Add(specificMemberInfo);
                     }
 
-                    await OnGroupInfoToPlayer?.Invoke(member, specificMemberModel);
+                    if (OnGroupInfoToPlayer != null)
+                    {
+                        await OnGroupInfoToPlayer.Invoke(member, specificMemberModel);
+                    }
                 }
             }
             else
@@ -129,7 +137,10 @@ namespace BlackjackLogic
                     Members = null
                 };
 
-                await OnGroupInfoToPlayer?.Invoke(player, model);
+                if (OnGroupInfoToPlayer != null)
+                {
+                    await OnGroupInfoToPlayer.Invoke(player, model);
+                }
             }
         }
 
@@ -166,7 +177,10 @@ namespace BlackjackLogic
                 Group? group = SharedData.GetGroupForPlayer(player);
                 if (group == null)
                 {
-                    await OnLobbyInfoToPlayer?.Invoke(player, lobbyModel);
+                    if (OnLobbyInfoToPlayer != null)
+                    {
+                        await OnLobbyInfoToPlayer.Invoke(player, lobbyModel);
+                    }
                 }
             }
         }
@@ -205,7 +219,10 @@ namespace BlackjackLogic
                 lobbyModel.Lobby.Add(lobby);
             }
 
-            await OnLobbyInfoToPlayer?.Invoke(player, lobbyModel);
+            if (OnLobbyInfoToPlayer != null)
+            {
+                await OnLobbyInfoToPlayer.Invoke(player, lobbyModel);
+            }
         }
 
         private async Task CheckGroup(Player player)
@@ -243,7 +260,11 @@ namespace BlackjackLogic
                     Members = null
                 };
             }
-            await OnGroupInfoToPlayer?.Invoke(player, model);
+
+            if (OnGroupInfoToPlayer != null)
+            {
+                await OnGroupInfoToPlayer.Invoke(player, model);
+            }
         }
 
         private async Task CreateGroup(Player player)
@@ -277,7 +298,10 @@ namespace BlackjackLogic
             }
 
             //await OnNotification?.Invoke(player, $"Group with ID {group.Group_ID} created.", NotificationType.TOAST, ToastType.SUCCESS);
-            await OnNotification?.Invoke(player, $"You have created group {group.Group_ID}. Press 'ready' to start betting.", NotificationType.TOAST, ToastType.INFO);
+            if (OnNotification != null)
+            {
+                await OnNotification.Invoke(player, $"You have created group {group.Group_ID}. Press 'ready' to start betting.", NotificationType.TOAST, ToastType.INFO);
+            }
         }
 
         private async Task LeaveGroup(Player player)
@@ -302,9 +326,15 @@ namespace BlackjackLogic
                 _gameLogic.SavePlaytime(player.User_ID, player.JoinedAt);
                 player.JoinedAt = null;
 
-                await OnNotification?.Invoke(player, $"You have left group '{group.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, $"You have left group '{group.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+                }
 
-                await OnGroupNotification?.Invoke(group, $"{player.Name} left the group.", NotificationType.GROUP, default);
+                if (OnGroupNotification != null)
+                {
+                    await OnGroupNotification.Invoke(group, $"{player.Name} left the group.", NotificationType.GROUP, default);
+                }
 
                 GameModel model = new GameModel
                 {
@@ -312,7 +342,11 @@ namespace BlackjackLogic
                     Action = GameAction.PLAYER_LEFT,
                 };
 
-                await OnGameInfoToGroup?.Invoke(group, model);
+                if (OnGameInfoToGroup != null)
+                {
+                    await OnGameInfoToGroup.Invoke(group, model);
+                }
+
                 _gameLogic.SaveEvent(model, group.Unique_Group_ID, group.Round);
 
                 Console.WriteLine($"User {player.User_ID} left group {group.Group_ID}");
@@ -323,7 +357,10 @@ namespace BlackjackLogic
                     {
                         foreach (var member in group.WaitingRoom.ToList())
                         {
-                            await OnNotification?.Invoke(member, "The group you were in the waitingroom for no longer exists.", NotificationType.TOAST, ToastType.INFO);
+                            if (OnNotification != null)
+                            {
+                                await OnNotification.Invoke(member, "The group you were in the waitingroom for no longer exists.", NotificationType.TOAST, ToastType.INFO);
+                            }
                         }
                     }
 
@@ -354,9 +391,15 @@ namespace BlackjackLogic
             Group? waitingRoomGroup = SharedData.GetGroupForWaitingroomPlayer(player);
             if (waitingRoomGroup != null)
             {
-                await OnNotification?.Invoke(player, $"You have left the waitingroom for group '{waitingRoomGroup.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, $"You have left the waitingroom for group '{waitingRoomGroup.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
+                }
 
-                await OnGroupNotification?.Invoke(waitingRoomGroup, $"{player.Name} left the waitingroom.", NotificationType.GROUP, default);
+                if (OnGroupNotification != null)
+                {
+                    await OnGroupNotification.Invoke(waitingRoomGroup, $"{player.Name} left the waitingroom.", NotificationType.GROUP, default);
+                }
 
                 Console.WriteLine($"User {player.User_ID} left group {waitingRoomGroup.Group_ID} waitingroom.");
 
@@ -372,7 +415,10 @@ namespace BlackjackLogic
             //check if group exists
             if (!SharedData.Groups.ContainsKey(group_id))
             {
-                await OnNotification?.Invoke(player, "Group does not exist.", NotificationType.TOAST, ToastType.WARNING);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, "Group does not exist.", NotificationType.TOAST, ToastType.WARNING);
+                }
                 return;
             }
 
@@ -381,14 +427,20 @@ namespace BlackjackLogic
             //check if already in group
             if (group.Members.Any(p => p.User_ID == player.User_ID))
             {
-                await OnNotification?.Invoke(player, "You are already in this group.", NotificationType.TOAST, ToastType.INFO);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, "You are already in this group.", NotificationType.TOAST, ToastType.INFO);
+                }
                 return;
             }
 
             //cant join a full group
             if (group.Members.Count >= MaxGroupSize)
             {
-                await OnNotification?.Invoke(player, $"Group '{group_id}' is full!", NotificationType.TOAST, ToastType.WARNING);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, $"Group '{group_id}' is full!", NotificationType.TOAST, ToastType.WARNING);
+                }
                 return;
             }
 
@@ -420,7 +472,10 @@ namespace BlackjackLogic
                     Action = GameAction.PLAYER_JOINED,
                 };
 
-                await OnGameInfoToGroup?.Invoke(group, model);
+                if (OnGameInfoToGroup != null)
+                {
+                    await OnGameInfoToGroup.Invoke(group, model);
+                }
                 _gameLogic.SaveEvent(model, group.Unique_Group_ID, group.Round);
             }
 
@@ -437,17 +492,27 @@ namespace BlackjackLogic
 
         private async Task AddPlayerToWaitingRoom(Group? group, Player player)
         {
+            if (group == null) return;
             if (!group.WaitingRoom.Contains(player))
             {
                 group.WaitingRoom.Add(player);
 
-                await OnNotification?.Invoke(player, "You have joined the waiting room. You will enter the game when the current round is over.", NotificationType.TOAST, ToastType.INFO);
-                await OnGroupNotification?.Invoke(group, $"{player.Name} is waiting and will join next round.", NotificationType.GROUP, default);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, "You have joined the waiting room. You will enter the game when the current round is over.", NotificationType.TOAST, ToastType.INFO);
+                }
+
+                if (OnGroupNotification != null)
+                {
+                    await OnGroupNotification.Invoke(group, $"{player.Name} is waiting and will join next round.", NotificationType.GROUP, default);
+                }
             }
         }
 
         public async Task MovePlayersFromWaitingRoom(Group? group)
         {
+            if (group == null) return;
+
             if (group.WaitingRoom.Count > 0)
             {
                 foreach (var player in group.WaitingRoom.ToList())
@@ -459,8 +524,15 @@ namespace BlackjackLogic
 
                     await ForceCheckGroup(player);
 
-                    await OnNotification?.Invoke(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);
-                    await OnGroupNotification?.Invoke(group, $"{player.Name} joined the group.", NotificationType.GROUP, default);
+                    if (OnNotification != null)
+                    {
+                        await OnNotification.Invoke(player, "The current round is over. You are now in the game.", NotificationType.TOAST, ToastType.INFO);
+                    }
+
+                    if (OnGroupNotification != null)
+                    {
+                        await OnGroupNotification.Invoke(group, $"{player.Name} joined the group.", NotificationType.GROUP, default);
+                    }
 
                     GameModel model = new GameModel
                     {
@@ -468,7 +540,10 @@ namespace BlackjackLogic
                         Action = GameAction.PLAYER_JOINED,
                     };
 
-                    await OnGameInfoToGroup?.Invoke(group, model);
+                    if (OnGameInfoToGroup != null)
+                    {
+                        await OnGameInfoToGroup.Invoke(group, model);
+                    }
                     _gameLogic.SaveEvent(model, group.Unique_Group_ID, group.Round);
                 }
                 group.WaitingRoom.Clear();
@@ -491,19 +566,28 @@ namespace BlackjackLogic
 
             if (group == null)
             {
-                await OnNotification?.Invoke(player, "You must be part of a group to set your readiness.", NotificationType.TOAST, ToastType.WARNING);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, "You must be part of a group to set your readiness.", NotificationType.TOAST, ToastType.WARNING);
+                }
                 return;
             }
 
             //if game has already started, dont allow ready/unready commands
             if (group.Status != Group.GroupStatus.WAITING)
             {
-                await OnNotification?.Invoke(player, "The game has already started. You cannot change your ready status now.", NotificationType.TOAST, ToastType.WARNING);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, "The game has already started. You cannot change your ready status now.", NotificationType.TOAST, ToastType.WARNING);
+                }
                 return;
             }
 
             player.IsReady = isReady;
-            await OnNotification?.Invoke(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
+            if (OnNotification != null)
+            {
+                await OnNotification.Invoke(player, isReady ? "You are now ready." : "You are now unready.", NotificationType.TOAST, ToastType.INFO);
+            }
 
             await CheckVotesAndStartBetting(group);
         }
@@ -511,6 +595,8 @@ namespace BlackjackLogic
         //check if majority is ready to play
         private async Task CheckVotesAndStartBetting(Group? group)
         {
+            if (group == null) return;
+
             //debug
             foreach (var player in group.Members)
             {
@@ -521,7 +607,10 @@ namespace BlackjackLogic
             int readyCount = group.Members.Count(player => player.IsReady);
             int totalMembers = group.Members.Count;
 
-            await OnGroupNotification?.Invoke(group, $"{readyCount}/{totalMembers} players are ready.", NotificationType.GROUP, default);
+            if (OnGroupNotification != null)
+            {
+                await OnGroupNotification.Invoke(group, $"{readyCount}/{totalMembers} players are ready.", NotificationType.GROUP, default);
+            }
 
             if (readyCount > totalMembers / 2)
             {

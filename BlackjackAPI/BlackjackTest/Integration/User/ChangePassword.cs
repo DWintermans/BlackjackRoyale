@@ -9,8 +9,8 @@ namespace BlackjackTest.Integration.User
     [TestClass]
     public class ChangePasswordIntegrationTests
     {
-        private AppDbContext _context;
-        private UserLogic _userLogic;
+        private AppDbContext? _context;
+        private UserLogic? _userLogic;
 
         [TestInitialize]
         public void Initialize()
@@ -30,8 +30,8 @@ namespace BlackjackTest.Integration.User
         [TestCleanup]
         public void Cleanup()
         {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
+            _context?.Database.EnsureDeleted();
+            _context?.Dispose();
         }
 
         [TestMethod]
@@ -49,18 +49,19 @@ namespace BlackjackTest.Integration.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
-            var result = _userLogic.ChangePassword(1, "password", "newPass!1", "newPass!1");
+            var result = _userLogic?.ChangePassword(1, "password", "newPass!1", "newPass!1");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsTrue(result.Success);
             Assert.IsNull(result.Message);
 
             //verify db
-            var updatedUser = _context.User.SingleOrDefault(u => u.user_id == 1);
+            var updatedUser = _context?.User.SingleOrDefault(u => u.user_id == 1);
             Assert.IsNotNull(updatedUser);
             Assert.AreNotEqual("2WG9Qvv+Mg4OElDUfZQOBA==", updatedUser.user_passwordhash);
         }
@@ -80,13 +81,14 @@ namespace BlackjackTest.Integration.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
-            var result = _userLogic.ChangePassword(1, "passwordt!1", "newPass!1", "newPass!1");
+            var result = _userLogic?.ChangePassword(1, "passwordt!1", "newPass!1", "newPass!1");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual("Old passwords don't match.", result.Message);
         }
@@ -106,13 +108,14 @@ namespace BlackjackTest.Integration.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
-            var result = _userLogic.ChangePassword(1, "password", "newPass!1", "newPass!1");
+            var result = _userLogic?.ChangePassword(1, "password", "newPass!1", "newPass!1");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual("An unexpected error occurred.", result.Message);
         }
@@ -132,13 +135,14 @@ namespace BlackjackTest.Integration.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
-            var result = _userLogic.ChangePassword(1, "password", "newPass!1", "newPass!1");
+            var result = _userLogic?.ChangePassword(1, "password", "newPass!1", "newPass!1");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual("An unexpected error occurred.", result.Message);
 

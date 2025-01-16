@@ -8,8 +8,8 @@ namespace BlackjackTest.Unit.User
     [TestClass]
     public class ChangeUsernameIntegrationTests
     {
-        private AppDbContext _context;
-        private UserLogic _userLogic;
+        private AppDbContext? _context;
+        private UserLogic? _userLogic;
 
         [TestInitialize]
         public void Initialize()
@@ -29,8 +29,8 @@ namespace BlackjackTest.Unit.User
         [TestCleanup]
         public void Cleanup()
         {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
+            _context?.Database.EnsureDeleted();
+            _context?.Dispose();
         }
 
         [TestMethod]
@@ -48,13 +48,14 @@ namespace BlackjackTest.Unit.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
-            var result = _userLogic.ChangeUsername(1, "newname");
+            var result = _userLogic?.ChangeUsername(1, "newname");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsTrue(result.Success);
             Assert.IsNull(result.Message);
         }
@@ -74,13 +75,14 @@ namespace BlackjackTest.Unit.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
-            var result = _userLogic.ChangeUsername(2, "newname");
+            var result = _userLogic?.ChangeUsername(2, "newname");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual("Username already in use.", result.Message);
         }
@@ -100,13 +102,14 @@ namespace BlackjackTest.Unit.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
-            var result = _userLogic.ChangeUsername(1, "newname");
+            var result = _userLogic?.ChangeUsername(1, "newname");
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual("You already have this username.", result.Message);
         }

@@ -8,8 +8,8 @@ namespace BlackjackTest.Integration.User
     [TestClass]
     public class AttemptLoginIntegrationTests
     {
-        private AppDbContext _context;
-        private UserLogic _userLogic;
+        private AppDbContext? _context;
+        private UserLogic? _userLogic;
 
         [TestInitialize]
         public void Initialize()
@@ -29,10 +29,9 @@ namespace BlackjackTest.Integration.User
         [TestCleanup]
         public void Cleanup()
         {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
+            _context?.Database.EnsureDeleted();
+            _context?.Dispose();
         }
-
 
         [TestMethod]
         public void ValidateUser_ValidCredentials_Returns_UserID()
@@ -49,10 +48,11 @@ namespace BlackjackTest.Integration.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             //Act
+            Assert.IsNotNull(_userLogic, "UserLogic instance is null.");
             int user_id = _userLogic.ValidateUser("testuser", "password");
 
             // Assert
@@ -74,10 +74,11 @@ namespace BlackjackTest.Integration.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
+            Assert.IsNotNull(_userLogic, "UserLogic instance is null.");
             int user_id = _userLogic.ValidateUser("testuser", "password1");
 
             // Assert
@@ -99,10 +100,11 @@ namespace BlackjackTest.Integration.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
+            Assert.IsNotNull(_userLogic, "UserLogic instance is null.");
             int user_id = _userLogic.ValidateUser("Testuser", "password");
 
             // Assert

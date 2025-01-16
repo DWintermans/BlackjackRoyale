@@ -8,8 +8,8 @@ namespace BlackjackTest.Integration.User
     [TestClass]
     public class CreateAccountIntegrationTests
     {
-        private AppDbContext _context;
-        private UserLogic _userLogic;
+        private AppDbContext? _context;
+        private UserLogic? _userLogic;
 
         [TestInitialize]
         public void Initialize()
@@ -29,8 +29,8 @@ namespace BlackjackTest.Integration.User
         [TestCleanup]
         public void Cleanup()
         {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
+            _context?.Database.EnsureDeleted();
+            _context?.Dispose();
         }
 
         [TestMethod]
@@ -39,16 +39,18 @@ namespace BlackjackTest.Integration.User
         public void CreateAccount_SuccessfulAccountCreation_Returns_JWT(string username, string password)
         {
             // Act
-            var result = _userLogic.CreateAccount(username, password);
+            var result = _userLogic?.CreateAccount(username, password);
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsTrue(result.Success);
             Assert.AreEqual("Account created successfully.", result.Message);
 
-            var jwtUserId = _userLogic.GetUserIDFromJWT(result.Data);
+            Assert.IsNotNull(result.Data, "Result.Data should not be null.");
+            var jwtUserId = _userLogic?.GetUserIDFromJWT(result.Data);
 
             // verify db
-            var createdUser = _context.User.SingleOrDefault(u => u.user_id == jwtUserId);
+            var createdUser = _context?.User.SingleOrDefault(u => u.user_id == jwtUserId);
             Assert.IsNotNull(createdUser);
             Assert.AreEqual(username, createdUser.user_name);
         }
@@ -62,14 +64,15 @@ namespace BlackjackTest.Integration.User
         public void CreateAccount_InvalidVariables_Returns_ErrorResponse(string username, string password, string expectedErrorMessage)
         {
             // Act
-            var result = _userLogic.CreateAccount(username, password);
+            var result = _userLogic?.CreateAccount(username, password);
 
             // Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual(expectedErrorMessage, result.Message);
 
             // verify db
-            var userCount = _context.User.Count(u => u.user_name == username);
+            var userCount = _context?.User.Count(u => u.user_name == username);
             Assert.AreEqual(0, userCount);
         }
 
@@ -89,18 +92,19 @@ namespace BlackjackTest.Integration.User
                 user_total_losses_amt = 0,
             };
 
-            _context.User.Add(newUser);
-            _context.SaveChanges();
+            _context?.User.Add(newUser);
+            _context?.SaveChanges();
 
             // Act
-            var result = _userLogic.CreateAccount(username, "password!1");
+            var result = _userLogic?.CreateAccount(username, "password!1");
 
             //Assert
+            Assert.IsNotNull(result, "Result should not be null.");
             Assert.IsFalse(result.Success);
             Assert.AreEqual("Username already in use.", result.Message);
 
             // verify db
-            var userCount = _context.User.Count(u => u.user_name == username);
+            var userCount = _context?.User.Count(u => u.user_name == username);
             Assert.AreEqual(1, userCount);
         }
     }
