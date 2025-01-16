@@ -261,7 +261,7 @@ internal class Websocket : IWebsocket
 
                 //Console.WriteLine("Received message: " + receivedMessage);
 
-                RouteMessage(receivedMessage, client_id, socket);
+                await RouteMessage(receivedMessage, client_id, socket);
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
@@ -319,7 +319,7 @@ internal class Websocket : IWebsocket
 
     private async Task RouteMessage(string receivedMessage, string client_id, WebSocket socket)
     {
-        dynamic message;
+        dynamic? message;
 
         try
         {
@@ -334,23 +334,24 @@ internal class Websocket : IWebsocket
         }
 
         //check if category and action are present
-        if (string.IsNullOrEmpty(message.category.ToString()) && string.IsNullOrEmpty(message.action.ToString()))
+        if (string.IsNullOrEmpty(message?.category.ToString()) && string.IsNullOrEmpty(message?.action.ToString()))
         {
             await SendNotificationToSocket(socket, "Invalid message format");
             return;
         }
 
         //check if token is present
-        if (string.IsNullOrEmpty(message.token.ToString()))
+        if (string.IsNullOrEmpty(message?.token?.ToString()))
         {
             await SendNotificationToSocket(socket, "Missing token");
             return;
         }
 
-        string token = message.token.ToString();
+
+		string token = message?.token?.ToString() ?? string.Empty;
 
         //check if valid user_id/name is present
-        (int user_id, string user_name) = GetUserInfoFromJWT(token);
+        (int user_id, string? user_name) = GetUserInfoFromJWT(token);
         if (user_id <= 0 || user_name == null)
         {
             await SendNotificationToSocket(socket, "Invalid or expired token");
@@ -360,12 +361,13 @@ internal class Websocket : IWebsocket
         //Player player = SharedData.TryGetExistingPlayer(user_id) ?? new Player(user_id, user_name);
         Player player;
 
-        if (SharedData.TryGetExistingPlayer(user_id) != null)
-        {
-            player = SharedData.TryGetExistingPlayer(user_id);
-            player.UpdateName(user_name);
-        }
-        else
+		var existingPlayer = SharedData.TryGetExistingPlayer(user_id);
+		if (existingPlayer != null)
+		{
+			player = existingPlayer;
+			player.UpdateName(user_name);
+		}
+		else
         {
             player = new Player(user_id, user_name);
             _playerLogic.SetCredits(player);
@@ -376,10 +378,10 @@ internal class Websocket : IWebsocket
             SharedData.Players[user_id] = player;
         }
 
-        switch (message.category.ToString())
+        switch (message?.category.ToString())
         {
             case "acknowledge":
-                Link_UserID_To_WebsocketID(player, client_id);
+                await Link_UserID_To_WebsocketID(player, client_id);
                 break;
 
             case "chat":
@@ -424,7 +426,7 @@ internal class Websocket : IWebsocket
         string Message = JsonConvert.SerializeObject(notificationModel, settings);
         byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
-        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string? client_id) && connectedClients.TryGetValue(client_id, out WebSocket? socket))
         {
             await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
         }
@@ -432,7 +434,13 @@ internal class Websocket : IWebsocket
 
     public async Task SendNotificationToGroup(Group? group, string message, NotificationType type, ToastType? toasttype = null)
     {
-        NotificationModel notificationModel = new NotificationModel
+		if (group?.Members == null || !group.Members.Any())
+		{
+			Console.WriteLine("No group members to send notifications to.");
+			return;
+		}
+
+		NotificationModel notificationModel = new NotificationModel
         {
             Type = type,
             Message = message,
@@ -448,9 +456,10 @@ internal class Websocket : IWebsocket
         string Message = JsonConvert.SerializeObject(notificationModel, settings);
         byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
+
         foreach (Player player in group.Members)
         {
-            if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+            if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string? client_id) && connectedClients.TryGetValue(client_id, out WebSocket? socket))
             {
                 await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
             }
@@ -479,13 +488,13 @@ internal class Websocket : IWebsocket
         byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
         //send message to receiver when connected
-        if (SharedData.userIDToCliendIdMap.TryGetValue(receiver_id.ToString(), out string receiver_client_id) && connectedClients.TryGetValue(receiver_client_id, out WebSocket receiverSocket))
+        if (SharedData.userIDToCliendIdMap.TryGetValue(receiver_id.ToString(), out string? receiver_client_id) && connectedClients.TryGetValue(receiver_client_id, out WebSocket? receiverSocket))
         {
             await receiverSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
         }
 
         //send message to back sender
-        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string sender_client_id) && connectedClients.TryGetValue(sender_client_id, out WebSocket senderSocket))
+        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string? sender_client_id) && connectedClients.TryGetValue(sender_client_id, out WebSocket? senderSocket))
         {
             await senderSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
         }
@@ -513,7 +522,7 @@ internal class Websocket : IWebsocket
         byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
         //send message to receiver when connected
-        if (SharedData.userIDToCliendIdMap.TryGetValue(receiver_id.ToString(), out string receiver_client_id) && connectedClients.TryGetValue(receiver_client_id, out WebSocket receiverSocket))
+        if (SharedData.userIDToCliendIdMap.TryGetValue(receiver_id.ToString(), out string? receiver_client_id) && connectedClients.TryGetValue(receiver_client_id, out WebSocket? receiverSocket))
         {
             await receiverSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
         }
@@ -521,8 +530,14 @@ internal class Websocket : IWebsocket
 
     public async Task SendGameInfoToGroup(Group? group, GameModel gameModel)
     {
-        //convert emuns to strings e.g. CARD_DRAWN instead of 0
-        var settings = new JsonSerializerSettings
+		if (group?.Members == null || !group.Members.Any())
+		{
+			Console.WriteLine("No group members to send info to.");
+			return;
+		}
+
+		//convert emuns to strings e.g. CARD_DRAWN instead of 0
+		var settings = new JsonSerializerSettings
         {
             Converters = new List<JsonConverter> { new StringEnumConverter() }
         };
@@ -532,7 +547,7 @@ internal class Websocket : IWebsocket
 
         foreach (Player player in group.Members)
         {
-            if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+            if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string? client_id) && connectedClients.TryGetValue(client_id, out WebSocket? socket))
             {
                 await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
             }
@@ -551,7 +566,7 @@ internal class Websocket : IWebsocket
         string Message = JsonConvert.SerializeObject(gameModel, settings);
         byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
-        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string? client_id) && connectedClients.TryGetValue(client_id, out WebSocket? socket))
         {
             await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
         }
@@ -567,7 +582,7 @@ internal class Websocket : IWebsocket
         string Message = JsonConvert.SerializeObject(groupModel, settings);
         byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
-        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string? client_id) && connectedClients.TryGetValue(client_id, out WebSocket? socket))
         {
             await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
         }
@@ -583,25 +598,25 @@ internal class Websocket : IWebsocket
         string Message = JsonConvert.SerializeObject(lobbyModel, settings);
         byte[] bytes = Encoding.UTF8.GetBytes(Message);
 
-        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string client_id) && connectedClients.TryGetValue(client_id, out WebSocket socket))
+        if (SharedData.userIDToCliendIdMap.TryGetValue(player.User_ID.ToString(), out string? client_id) && connectedClients.TryGetValue(client_id, out WebSocket? socket))
         {
             await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
         }
     }
 
-    private static async void Link_UserID_To_WebsocketID(Player player, string client_id)
-    {
-        SharedData.userIDToCliendIdMap[player.User_ID.ToString()] = client_id;
-        Console.WriteLine("Associating sender: " + player.User_ID + " with client ID: " + client_id);
+	private static async Task Link_UserID_To_WebsocketID(Player player, string client_id)
+	{
+		SharedData.userIDToCliendIdMap[player.User_ID.ToString()] = client_id;
+		await Console.Out.WriteLineAsync("Associating sender: " + player.User_ID + " with client ID: " + client_id);
 
-        foreach (KeyValuePair<string, string> item in SharedData.userIDToCliendIdMap)
-        {
-            Console.Write("Connected clients:");
-            Console.WriteLine("USER_ID: " + item.Key + ", CLIENT_ID: " + item.Value);
-        }
-    }
+		foreach (KeyValuePair<string, string> item in SharedData.userIDToCliendIdMap)
+		{
+			await Console.Out.WriteAsync("Connected clients:");
+			await Console.Out.WriteLineAsync("USER_ID: " + item.Key + ", CLIENT_ID: " + item.Value);
+		}
+	}
 
-    private static (int user_id, string user_name) GetUserInfoFromJWT(string token)
+	private static (int user_id, string? user_name) GetUserInfoFromJWT(string token)
     {
         string jwt = Env.GetString(_JWT);
 
@@ -618,14 +633,14 @@ internal class Websocket : IWebsocket
         try
         {
             ClaimsPrincipal claimsPrincipal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
-            string value = claimsPrincipal.FindFirst("user_id")?.Value;
+            string? value = claimsPrincipal.FindFirst("user_id")?.Value;
             int user_id = 0;
             Int32.TryParse(value, out user_id);
 
-            string user_name = claimsPrincipal.FindFirst("user_name")?.Value;
+			string? user_name = claimsPrincipal.FindFirst("user_name")?.Value;
 
 
-            return (user_id, user_name);
+			return (user_id, user_name);
         }
         catch (Exception ex)
         {
