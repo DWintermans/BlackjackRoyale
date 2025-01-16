@@ -15,7 +15,7 @@ namespace BlackjackDAL.Repositories
             _context = context;
         }
 
-        public List<FriendRequestModel> GetFriendRequests(int user_id)
+        public List<FriendRequestModel?> GetFriendRequests(int user_id)
         {
             try
             {
@@ -29,19 +29,21 @@ namespace BlackjackDAL.Repositories
                         MaxUserId = Math.Max(f.friend_user_id, f.friend_befriend_user_id)
                     })
                     .Select(g => g.OrderByDescending(f => f.friend_datetime).FirstOrDefault())
-                    .Where(f => f.friend_status == FriendStatus.pending)
+                    .Where(f => f != null && f.friend_status == FriendStatus.pending)
                     .ToList();
 
                 //build model
-                var result = friendRequests.Select(f => new FriendRequestModel
-                {
-                    user_id = f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id,
-                    user_name = _context.User
-                        .Where(u => u.user_id == (f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id))
-                        .Select(u => u.user_name)
-                        .FirstOrDefault(),
-                    can_answer = f.friend_befriend_user_id == user_id //if is receiver > true, if requested the friendship set to false.
-                }).ToList();
+                var result = friendRequests
+                    .Select(f => f == null ? null : new FriendRequestModel
+                    {
+                        user_id = f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id,
+                        user_name = _context.User
+                             .Where(u => u.user_id == (f.friend_user_id == user_id ? f.friend_befriend_user_id : f.friend_user_id))
+                             .Select(u => u.user_name)
+                             .FirstOrDefault(),
+                        can_answer = f.friend_befriend_user_id == user_id //if is receiver > true, if requested the friendship set to false.
+                    })
+                    .ToList();
 
                 return result;
             }

@@ -16,7 +16,6 @@ namespace BlackjackDAL.Repositories
             _context = context;
         }
 
-
         public async Task<List<ReplayModel>> RetrieveLobbyMembersAsync(List<int> rounds, int user_id, string group_id)
         {
             try

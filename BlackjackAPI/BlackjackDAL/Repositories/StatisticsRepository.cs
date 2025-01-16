@@ -86,7 +86,7 @@ namespace BlackjackDAL.Repositories
                 {
                     var historyPayload = JsonConvert.DeserializeObject<Dictionary<string, object>>(game.history_payload);
 
-                    if (historyPayload.ContainsKey("Bet"))
+                    if (historyPayload != null && historyPayload.ContainsKey("Bet"))
                     {
                         int betAmount = Convert.ToInt32(historyPayload["Bet"]);
 
