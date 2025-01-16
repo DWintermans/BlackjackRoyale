@@ -1,6 +1,7 @@
 // <copyright file="Program.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
+#pragma warning disable SA1200
 
 using System.Text;
 using BlackjackCommon.Interfaces.Logic;
@@ -12,6 +13,8 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
+#pragma warning restore SA1200
 
 var builder = WebApplication.CreateBuilder(args);
 

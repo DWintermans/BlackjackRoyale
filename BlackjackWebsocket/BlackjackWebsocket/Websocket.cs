@@ -33,51 +33,51 @@ internal class Websocket : IWebsocket
         }
     }
 
-	private static string? FindEnvFile()
-	{
-		string currentDirectory = Directory.GetCurrentDirectory();
-		Console.WriteLine($"Current working directory: {currentDirectory}");
+    private static string? FindEnvFile()
+    {
+        string currentDirectory = Directory.GetCurrentDirectory();
+        Console.WriteLine($"Current working directory: {currentDirectory}");
 
-		string potentialPath = Path.Combine(currentDirectory, ".env");
-		if (File.Exists(potentialPath))
-		{
-			Console.WriteLine($"Found .env file in current directory: {currentDirectory}");
-			return potentialPath;
-		}
+        string potentialPath = Path.Combine(currentDirectory, ".env");
+        if (File.Exists(potentialPath))
+        {
+            Console.WriteLine($"Found .env file in current directory: {currentDirectory}");
+            return potentialPath;
+        }
 
-		while (Directory.GetParent(currentDirectory) != null)
-		{
-			var parentDirectory = Directory.GetParent(currentDirectory);
-			if (parentDirectory != null)
-			{
-				currentDirectory = parentDirectory.FullName;
-				potentialPath = Path.Combine(currentDirectory, ".env");
+        while (Directory.GetParent(currentDirectory) != null)
+        {
+            var parentDirectory = Directory.GetParent(currentDirectory);
+            if (parentDirectory != null)
+            {
+                currentDirectory = parentDirectory.FullName;
+                potentialPath = Path.Combine(currentDirectory, ".env");
 
-				if (File.Exists(potentialPath))
-				{
-					Console.WriteLine($"Found .env file in parent directory: {currentDirectory}");
-					return potentialPath;
-				}
-			}
-		}
+                if (File.Exists(potentialPath))
+                {
+                    Console.WriteLine($"Found .env file in parent directory: {currentDirectory}");
+                    return potentialPath;
+                }
+            }
+        }
 
-		var parentDirectoryFallback = Directory.GetParent(Directory.GetCurrentDirectory());
-		if (parentDirectoryFallback != null)
-		{
-			string fallbackDirectory = Path.Combine(parentDirectoryFallback.FullName, "BlackjackWebsocket", "BlackjackWebsocket");
-			potentialPath = Path.Combine(fallbackDirectory, ".env");
-			if (File.Exists(potentialPath))
-			{
-				Console.WriteLine($"Found .env file in fallback directory: {fallbackDirectory}");
-				return potentialPath;
-			}
-		}
+        var parentDirectoryFallback = Directory.GetParent(Directory.GetCurrentDirectory());
+        if (parentDirectoryFallback != null)
+        {
+            string fallbackDirectory = Path.Combine(parentDirectoryFallback.FullName, "BlackjackWebsocket", "BlackjackWebsocket");
+            potentialPath = Path.Combine(fallbackDirectory, ".env");
+            if (File.Exists(potentialPath))
+            {
+                Console.WriteLine($"Found .env file in fallback directory: {fallbackDirectory}");
+                return potentialPath;
+            }
+        }
 
-		Console.WriteLine("No .env file found.");
-		return null;
-	}
+        Console.WriteLine("No .env file found.");
+        return null;
+    }
 
-	private const string _JWT = "JWT";
+    private const string _JWT = "JWT";
     private const string _WS_URL = "WS_URL";
 
     private readonly IChatLogic _chatLogic;
@@ -348,7 +348,7 @@ internal class Websocket : IWebsocket
         }
 
 
-		string token = message?.token?.ToString() ?? string.Empty;
+        string token = message?.token?.ToString() ?? string.Empty;
 
         //check if valid user_id/name is present
         (int user_id, string? user_name) = GetUserInfoFromJWT(token);
@@ -361,13 +361,13 @@ internal class Websocket : IWebsocket
         //Player player = SharedData.TryGetExistingPlayer(user_id) ?? new Player(user_id, user_name);
         Player player;
 
-		var existingPlayer = SharedData.TryGetExistingPlayer(user_id);
-		if (existingPlayer != null)
-		{
-			player = existingPlayer;
-			player.UpdateName(user_name);
-		}
-		else
+        var existingPlayer = SharedData.TryGetExistingPlayer(user_id);
+        if (existingPlayer != null)
+        {
+            player = existingPlayer;
+            player.UpdateName(user_name);
+        }
+        else
         {
             player = new Player(user_id, user_name);
             _playerLogic.SetCredits(player);
@@ -434,13 +434,13 @@ internal class Websocket : IWebsocket
 
     public async Task SendNotificationToGroup(Group? group, string message, NotificationType type, ToastType? toasttype = null)
     {
-		if (group?.Members == null || !group.Members.Any())
-		{
-			Console.WriteLine("No group members to send notifications to.");
-			return;
-		}
+        if (group?.Members == null || !group.Members.Any())
+        {
+            Console.WriteLine("No group members to send notifications to.");
+            return;
+        }
 
-		NotificationModel notificationModel = new NotificationModel
+        NotificationModel notificationModel = new NotificationModel
         {
             Type = type,
             Message = message,
@@ -530,14 +530,14 @@ internal class Websocket : IWebsocket
 
     public async Task SendGameInfoToGroup(Group? group, GameModel gameModel)
     {
-		if (group?.Members == null || !group.Members.Any())
-		{
-			Console.WriteLine("No group members to send info to.");
-			return;
-		}
+        if (group?.Members == null || !group.Members.Any())
+        {
+            Console.WriteLine("No group members to send info to.");
+            return;
+        }
 
-		//convert emuns to strings e.g. CARD_DRAWN instead of 0
-		var settings = new JsonSerializerSettings
+        //convert emuns to strings e.g. CARD_DRAWN instead of 0
+        var settings = new JsonSerializerSettings
         {
             Converters = new List<JsonConverter> { new StringEnumConverter() }
         };
@@ -604,19 +604,19 @@ internal class Websocket : IWebsocket
         }
     }
 
-	private static async Task Link_UserID_To_WebsocketID(Player player, string client_id)
-	{
-		SharedData.userIDToCliendIdMap[player.User_ID.ToString()] = client_id;
-		await Console.Out.WriteLineAsync("Associating sender: " + player.User_ID + " with client ID: " + client_id);
+    private static async Task Link_UserID_To_WebsocketID(Player player, string client_id)
+    {
+        SharedData.userIDToCliendIdMap[player.User_ID.ToString()] = client_id;
+        await Console.Out.WriteLineAsync("Associating sender: " + player.User_ID + " with client ID: " + client_id);
 
-		foreach (KeyValuePair<string, string> item in SharedData.userIDToCliendIdMap)
-		{
-			await Console.Out.WriteAsync("Connected clients:");
-			await Console.Out.WriteLineAsync("USER_ID: " + item.Key + ", CLIENT_ID: " + item.Value);
-		}
-	}
+        foreach (KeyValuePair<string, string> item in SharedData.userIDToCliendIdMap)
+        {
+            await Console.Out.WriteAsync("Connected clients:");
+            await Console.Out.WriteLineAsync("USER_ID: " + item.Key + ", CLIENT_ID: " + item.Value);
+        }
+    }
 
-	private static (int user_id, string? user_name) GetUserInfoFromJWT(string token)
+    private static (int user_id, string? user_name) GetUserInfoFromJWT(string token)
     {
         string jwt = Env.GetString(_JWT);
 
@@ -637,10 +637,10 @@ internal class Websocket : IWebsocket
             int user_id = 0;
             Int32.TryParse(value, out user_id);
 
-			string? user_name = claimsPrincipal.FindFirst("user_name")?.Value;
+            string? user_name = claimsPrincipal.FindFirst("user_name")?.Value;
 
 
-			return (user_id, user_name);
+            return (user_id, user_name);
         }
         catch (Exception ex)
         {

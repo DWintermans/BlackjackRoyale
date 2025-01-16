@@ -82,7 +82,10 @@ namespace BlackjackLogic
                     //await DeleteMessage();
                     break;
                 default:
-                    await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                    if (OnNotification != null)
+                    {
+                        await OnNotification.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                    }
                     break;
             }
         }
@@ -100,7 +103,10 @@ namespace BlackjackLogic
                 }
                 else
                 {
-                    await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                    if (OnNotification != null)
+                    {
+                        await OnNotification.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                    }
                 }
             }
             else if (receiver.ToString().ToUpper() == "GROUP") //group message
@@ -112,7 +118,10 @@ namespace BlackjackLogic
                 }
                 else
                 {
-                    await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                    if (OnNotification != null)
+                    {
+                        await OnNotification.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                    }
                 }
             }
             else if (int.TryParse(receiver.ToString(), out int receiver_id)) //private message
@@ -123,26 +132,42 @@ namespace BlackjackLogic
                     //only allow messages between players that are friends
                     if (_friendDAL.FriendshipExists(player.User_ID, receiver_id))
                     {
-                        await OnPrivateMessage?.Invoke(player, receiver_id, chatMessage);
+                        if (OnPrivateMessage != null)
+                        {
+                            await OnPrivateMessage.Invoke(player, receiver_id, chatMessage);
+                        }
+
                         SaveChatMessage(player.User_ID, receiver_id, null, chatMessage);
                     }
                     else
                     {
-                        await OnNotification?.Invoke(player, "You must be friends before sending a private message.", NotificationType.TOAST, ToastType.ERROR);
+                        if (OnNotification != null)
+                        {
+                            await OnNotification.Invoke(player, "You must be friends before sending a private message.", NotificationType.TOAST, ToastType.ERROR);
+                        }
                     }
                 }
             }
             else
             {
-                await OnNotification?.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                if (OnNotification != null)
+                {
+                    await OnNotification.Invoke(player, "Unknown group action", NotificationType.TOAST, ToastType.ERROR);
+                }
             }
         }
 
         public async Task SendMessageToGroup(Player player, Group? group, string chatMessage)
         {
-            foreach (var member in group.Members)
+            if (group != null)
             {
-                await OnMessage?.Invoke(player, member.User_ID, chatMessage, MessageType.GROUP);
+                foreach (var member in group.Members)
+                {
+                    if (OnMessage != null)
+                    {
+                        await OnMessage.Invoke(player, member.User_ID, chatMessage, MessageType.GROUP);
+                    }
+                }
             }
         }
 
@@ -156,7 +181,10 @@ namespace BlackjackLogic
 
                 if (!isInGroup)
                 {
-                    await OnMessage?.Invoke(player, user.User_ID, chatMessage, MessageType.GLOBAL);
+                    if (OnMessage != null)
+                    {
+                        await OnMessage.Invoke(player, user.User_ID, chatMessage, MessageType.GLOBAL);
+                    }
                 }
             }
         }

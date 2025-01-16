@@ -16,7 +16,7 @@ namespace BlackjackDAL.Repositories
             _context = context;
         }
 
-        public void SaveEvent(int user_id, string group_id, string action, string result, string payload, int round_number)
+        public void SaveEvent(int user_id, string group_id, string action, string? result, string payload, int round_number)
         {
             try
             {
