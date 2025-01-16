@@ -22,16 +22,12 @@ namespace BlackjackLogic
         {
             try
             {
-                var data = _friendDAL.GetFriendRequests(user_id);
+                var data = _friendDAL.GetFriendRequests(user_id)?.Where(item => item != null).Cast<FriendRequestModel>().ToList();
 
-                if (data.Count == 0)
+                if (data == null || data.Count == 0)
                 {
-                    return new Response<List<FriendRequestModel>>(null, "NoPendingFriendshipFound");
-                }
-
-                if (data == null)
-                {
-                    return new Response<List<FriendRequestModel>>(null, "Default");
+                    var message = data == null ? "Default" : "NoPendingFriendshipFound";
+                    return new Response<List<FriendRequestModel>>(null, message);
                 }
 
                 return new Response<List<FriendRequestModel>>(data, "Success");
