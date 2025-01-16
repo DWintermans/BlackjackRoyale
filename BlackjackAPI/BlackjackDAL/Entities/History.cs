@@ -12,10 +12,10 @@ namespace BlackjackCommon.Entities.History
 
         [Column("history_group_id")]
         [StringLength(50)]
-        public string history_group_id { get; set; }
+        required public string history_group_id { get; set; }
 
         [Column("history_user_id")]
-        public int? history_user_id { get; set; }
+        required public int history_user_id { get; set; }
 
         [Column("history_action")]
         [Required]
@@ -25,7 +25,7 @@ namespace BlackjackCommon.Entities.History
         public HistoryResult? history_result { get; set; }
 
         [Column("history_payload")]
-        public string history_payload { get; set; }
+        required public string history_payload { get; set; }
 
         [Column("history_round_number")]
         public int history_round_number { get; set; }

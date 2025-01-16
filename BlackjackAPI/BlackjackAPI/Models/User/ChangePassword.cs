@@ -10,14 +10,14 @@ namespace BlackjackAPI.Models.User
     {
         [Required(ErrorMessage = "Old password is required")]
         [StringLength(255, MinimumLength = 6, ErrorMessage = "Old password must be at least 6 characters long")]
-        public string Old_password { get; set; }
+        required public string Old_password { get; set; }
 
         [Required(ErrorMessage = "New password is required")]
         [StringLength(255, MinimumLength = 6, ErrorMessage = "New password must be at least 6 characters long")]
-        public string New_password { get; set; }
+        required public string New_password { get; set; }
 
         [Required(ErrorMessage = "Repeat new password is required")]
         [StringLength(255, MinimumLength = 6, ErrorMessage = "Repeat new password must be at least 6 characters long")]
-        public string Repeat_new_password { get; set; }
+        required public string Repeat_new_password { get; set; }
     }
 }

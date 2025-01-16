@@ -18,7 +18,7 @@ namespace BlackjackDAL.Repositories
             _context = context;
         }
 
-        public async Task<StatisticsModel> RetrieveStatisticsAsync(int user_id)
+        public async Task<StatisticsModel?> RetrieveStatisticsAsync(int user_id)
         {
             try
             {

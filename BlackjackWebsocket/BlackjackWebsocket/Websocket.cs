@@ -21,7 +21,7 @@ internal class Websocket : IWebsocket
 {
     static Websocket()
     {
-        string envPath = FindEnvFile();
+        string? envPath = FindEnvFile();
         if (!string.IsNullOrEmpty(envPath))
         {
             Console.WriteLine($"Loading .env from: {envPath}");
@@ -33,40 +33,51 @@ internal class Websocket : IWebsocket
         }
     }
 
-    private static string FindEnvFile()
-    {
-        string currentDirectory = Directory.GetCurrentDirectory();
-        Console.WriteLine($"Current working directory: {currentDirectory}");
+	private static string? FindEnvFile()
+	{
+		string currentDirectory = Directory.GetCurrentDirectory();
+		Console.WriteLine($"Current working directory: {currentDirectory}");
 
-        string potentialPath = Path.Combine(currentDirectory, ".env");
-        if (File.Exists(potentialPath))
-        {
-            return potentialPath;
-        }
+		string potentialPath = Path.Combine(currentDirectory, ".env");
+		if (File.Exists(potentialPath))
+		{
+			Console.WriteLine($"Found .env file in current directory: {currentDirectory}");
+			return potentialPath;
+		}
 
-        while (Directory.GetParent(currentDirectory) != null)
-        {
-            currentDirectory = Directory.GetParent(currentDirectory).FullName;
-            potentialPath = Path.Combine(currentDirectory, ".env");
+		while (Directory.GetParent(currentDirectory) != null)
+		{
+			var parentDirectory = Directory.GetParent(currentDirectory);
+			if (parentDirectory != null)
+			{
+				currentDirectory = parentDirectory.FullName;
+				potentialPath = Path.Combine(currentDirectory, ".env");
 
-            if (File.Exists(potentialPath))
-            {
-                return potentialPath;
-            }
-        }
+				if (File.Exists(potentialPath))
+				{
+					Console.WriteLine($"Found .env file in parent directory: {currentDirectory}");
+					return potentialPath;
+				}
+			}
+		}
 
-        string fallbackDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "BlackjackWebsocket", "BlackjackWebsocket");
-        potentialPath = Path.Combine(fallbackDirectory, ".env");
-        if (File.Exists(potentialPath))
-        {
-            Console.WriteLine($"Found .env in fallback directory: {fallbackDirectory}");
-            return potentialPath;
-        }
+		var parentDirectoryFallback = Directory.GetParent(Directory.GetCurrentDirectory());
+		if (parentDirectoryFallback != null)
+		{
+			string fallbackDirectory = Path.Combine(parentDirectoryFallback.FullName, "BlackjackWebsocket", "BlackjackWebsocket");
+			potentialPath = Path.Combine(fallbackDirectory, ".env");
+			if (File.Exists(potentialPath))
+			{
+				Console.WriteLine($"Found .env file in fallback directory: {fallbackDirectory}");
+				return potentialPath;
+			}
+		}
 
-        return null;
-    }
+		Console.WriteLine("No .env file found.");
+		return null;
+	}
 
-    private const string _JWT = "JWT";
+	private const string _JWT = "JWT";
     private const string _WS_URL = "WS_URL";
 
     private readonly IChatLogic _chatLogic;
@@ -120,7 +131,7 @@ internal class Websocket : IWebsocket
         await SendGameInfoToPlayer(player, gameModel);
     }
 
-    private async Task HandleGameInfoToGroup(Group group, GameModel gameModel)
+    private async Task HandleGameInfoToGroup(Group? group, GameModel gameModel)
     {
         await SendGameInfoToGroup(group, gameModel);
     }
@@ -147,7 +158,7 @@ internal class Websocket : IWebsocket
         }
     }
 
-    private async Task HandleGroupNotification(Group group, string message, NotificationType notificationType, ToastType? toastType)
+    private async Task HandleGroupNotification(Group? group, string message, NotificationType notificationType, ToastType? toastType)
     {
         await SendNotificationToGroup(group, message, notificationType, toastType);
     }
@@ -295,7 +306,7 @@ internal class Websocket : IWebsocket
         //leave group on socket disconnect.
         if (Int32.TryParse(userID, out int user_id))
         {
-            Player player = SharedData.TryGetExistingPlayer(user_id);
+            Player? player = SharedData.TryGetExistingPlayer(user_id);
             if (player != null)
             {
                 dynamic message = new ExpandoObject();
@@ -419,7 +430,7 @@ internal class Websocket : IWebsocket
         }
     }
 
-    public async Task SendNotificationToGroup(Group group, string message, NotificationType type, ToastType? toasttype = null)
+    public async Task SendNotificationToGroup(Group? group, string message, NotificationType type, ToastType? toasttype = null)
     {
         NotificationModel notificationModel = new NotificationModel
         {
@@ -508,7 +519,7 @@ internal class Websocket : IWebsocket
         }
     }
 
-    public async Task SendGameInfoToGroup(Group group, GameModel gameModel)
+    public async Task SendGameInfoToGroup(Group? group, GameModel gameModel)
     {
         //convert emuns to strings e.g. CARD_DRAWN instead of 0
         var settings = new JsonSerializerSettings

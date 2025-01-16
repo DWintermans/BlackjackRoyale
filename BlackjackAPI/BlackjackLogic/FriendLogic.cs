@@ -116,7 +116,7 @@ namespace BlackjackLogic
             return new Response<string>();
         }
 
-        private static Response<string> ValidateStatus(string status)
+        private static Response<string>? ValidateStatus(string status)
         {
             if (status.ToLower() != "accepted" && status.ToLower() != "rejected")
             {

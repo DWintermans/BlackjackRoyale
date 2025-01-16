@@ -74,10 +74,10 @@ namespace BlackjackLogic
             try
             {
                 ClaimsPrincipal claimsPrincipal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
-                string value = claimsPrincipal.FindFirst("user_id")?.Value;
+                string? value = claimsPrincipal.FindFirst("user_id")?.Value;
 
                 int user_id = 0;
-                if (Int32.TryParse(value, out user_id))
+                if (!string.IsNullOrEmpty(value) && Int32.TryParse(value, out user_id))
                 {
                     return user_id;
                 }
@@ -218,7 +218,7 @@ namespace BlackjackLogic
             return new Response<string>();
         }
 
-        private static Response<string> ValidateUsername(string username)
+        private static Response<string>? ValidateUsername(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
@@ -244,7 +244,7 @@ namespace BlackjackLogic
             return null;
         }
 
-        private static Response<string> ValidatePassword(string password)
+        private static Response<string>? ValidatePassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
             {
@@ -273,8 +273,7 @@ namespace BlackjackLogic
         private static byte[] CreateSalt()
         {
             var salt = new byte[16];
-            var rng = new RNGCryptoServiceProvider();
-            rng.GetBytes(salt);
+            RandomNumberGenerator.Fill(salt);
 
             return salt;
         }

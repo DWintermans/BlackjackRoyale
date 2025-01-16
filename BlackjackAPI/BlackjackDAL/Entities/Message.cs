@@ -14,14 +14,14 @@ namespace BlackjackCommon.Entities.Message
         public int message_sender { get; set; }
 
         [Column("message_receiver")]
-        public int? message_receiver { get; set; }
+        required public int message_receiver { get; set; }
 
         [Column("message_group")]
         [StringLength(50)]
         public string? message_group { get; set; }
 
         [Column("message_content")]
-        public string message_content { get; set; }
+        required public string message_content { get; set; }
 
         [Column("message_datetime")]
         public DateTime message_datetime { get; set; }

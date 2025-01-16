@@ -44,7 +44,7 @@ namespace BlackjackLogic
                     break;
 
                 case "leave_group":
-                    LeaveGroup(player);
+                    await LeaveGroup(player);
                     await ForceShowLobby();
                     break;
 
@@ -74,7 +74,7 @@ namespace BlackjackLogic
 
         private async Task ForceCheckGroup(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group != null)
             {
@@ -163,7 +163,7 @@ namespace BlackjackLogic
             {
                 Player player = playerEntry.Value;
 
-                Group group = SharedData.GetGroupForPlayer(player);
+                Group? group = SharedData.GetGroupForPlayer(player);
                 if (group == null)
                 {
                     await OnLobbyInfoToPlayer?.Invoke(player, lobbyModel);
@@ -173,7 +173,7 @@ namespace BlackjackLogic
 
         private async Task ShowLobby(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             //player in group? dont show lobby
             if (group != null)
@@ -210,7 +210,7 @@ namespace BlackjackLogic
 
         private async Task CheckGroup(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             GroupModel model;
 
@@ -249,7 +249,7 @@ namespace BlackjackLogic
         private async Task CreateGroup(Player player)
         {
             //leave current group if possible
-            LeaveGroup(player);
+            await LeaveGroup(player);
 
             string group_id = GenerateRandomGroupID();
             while (SharedData.Groups.ContainsKey(group_id))
@@ -260,7 +260,7 @@ namespace BlackjackLogic
             //create unique group id for database
             string unique_id = $"{group_id}_{Guid.NewGuid().ToString()}";
 
-            Group group = new Group(group_id, unique_id);
+            Group? group = new Group(group_id, unique_id);
 
             //add to group
             group.Members.Add(player);
@@ -283,7 +283,7 @@ namespace BlackjackLogic
         private async Task LeaveGroup(Player player)
         {
             //save group to send groupinfo update to
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             //if player left after placing a bet: possibility of losing all credits
             if (player.Credits < 10)
@@ -351,7 +351,7 @@ namespace BlackjackLogic
             }
 
             //if in waiting room
-            Group waitingRoomGroup = SharedData.GetGroupForWaitingroomPlayer(player);
+            Group? waitingRoomGroup = SharedData.GetGroupForWaitingroomPlayer(player);
             if (waitingRoomGroup != null)
             {
                 await OnNotification?.Invoke(player, $"You have left the waitingroom for group '{waitingRoomGroup.Group_ID}'.", NotificationType.TOAST, ToastType.INFO);
@@ -376,7 +376,7 @@ namespace BlackjackLogic
                 return;
             }
 
-            Group group = SharedData.Groups[group_id];
+            Group? group = SharedData.Groups[group_id];
 
             //check if already in group
             if (group.Members.Any(p => p.User_ID == player.User_ID))
@@ -393,11 +393,11 @@ namespace BlackjackLogic
             }
 
             //leave current group is possible
-            Group oldGroup = SharedData.GetGroupForPlayer(player);
-            Group oldWaitingroomGroup = SharedData.GetGroupForWaitingroomPlayer(player);
+            Group? oldGroup = SharedData.GetGroupForPlayer(player);
+            Group? oldWaitingroomGroup = SharedData.GetGroupForWaitingroomPlayer(player);
             if ((oldGroup != null && oldGroup.Group_ID != group.Group_ID) || (oldWaitingroomGroup != null && oldWaitingroomGroup.Group_ID != group.Group_ID))
             {
-                LeaveGroup(player);
+                await LeaveGroup(player);
             }
 
             //if game has started -> add to waitingroom 
@@ -435,7 +435,7 @@ namespace BlackjackLogic
 
         }
 
-        private async Task AddPlayerToWaitingRoom(Group group, Player player)
+        private async Task AddPlayerToWaitingRoom(Group? group, Player player)
         {
             if (!group.WaitingRoom.Contains(player))
             {
@@ -446,7 +446,7 @@ namespace BlackjackLogic
             }
         }
 
-        public async Task MovePlayersFromWaitingRoom(Group group)
+        public async Task MovePlayersFromWaitingRoom(Group? group)
         {
             if (group.WaitingRoom.Count > 0)
             {
@@ -487,7 +487,7 @@ namespace BlackjackLogic
 
         private async Task SetReadyStatus(Player player, bool isReady)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group == null)
             {
@@ -509,7 +509,7 @@ namespace BlackjackLogic
         }
 
         //check if majority is ready to play
-        private async Task CheckVotesAndStartBetting(Group group)
+        private async Task CheckVotesAndStartBetting(Group? group)
         {
             //debug
             foreach (var player in group.Members)

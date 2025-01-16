@@ -12,8 +12,8 @@ namespace BlackjackCommon.Interfaces.Logic
 
         void SaveEvent<T>(T model, string group_id, int round_number) where T : class;
         Task HandleGameAction(Player player, dynamic message);
-        Task StartBetting(Group group);
-        Task StartGame(Group group);
+        Task StartBetting(Group? group);
+        Task StartGame(Group? group);
         void SavePlaytime(int user_ID, DateTime? joinedAt);
     }
 }

@@ -6,6 +6,6 @@ namespace BlackjackCommon.ViewModels
     public class LeaderboardModel
     {
         public required string user_name { get; set; }
-        public string ratio { get; set; }
+        public required string ratio { get; set; }
     }
 }

@@ -11,14 +11,14 @@ namespace BlackjackCommon.ViewModels
 
         public int? message_receiver { get; set; }
 
-        public string message_content { get; set; }
+        public string? message_content { get; set; }
 
         public DateTime? message_datetime { get; set; }
 
         public bool message_deleted { get; set; }
 
-        public string sender_username { get; set; }
+        public string? sender_username { get; set; }
 
-        public string receiver_username { get; set; }
+        public string? receiver_username { get; set; }
     }
 }

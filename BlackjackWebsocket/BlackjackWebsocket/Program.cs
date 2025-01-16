@@ -23,7 +23,7 @@ internal class Program
 
             var serviceCollection = new ServiceCollection();
 
-            string envPath = FindEnvFile();
+            string? envPath = FindEnvFile();
             if (!string.IsNullOrEmpty(envPath))
             {
                 Console.WriteLine($"Loading .env from: {envPath}");
@@ -68,9 +68,12 @@ internal class Program
 
             var websocket = serviceProvider.GetService<IWebsocket>();
 
-            // Run the websocket service
-            websocket.Run().Wait();
-        }
+			// Run the websocket service
+			if (websocket != null)
+			{
+				websocket.Run().Wait();
+			}
+		}
         catch (AggregateException ex)
         {
             foreach (var innerException in ex.InnerExceptions)
@@ -108,20 +111,24 @@ internal class Program
 
     private static string DetermineLogFilePath()
     {
-        string envFilePath = FindEnvFile();
+        string? envFilePath = FindEnvFile();
 
-        if (!string.IsNullOrEmpty(envFilePath))
-        {
-            string envDirectory = Path.GetDirectoryName(envFilePath);
-            return Path.Combine(envDirectory, "program-log.txt");
-        }
+		if (!string.IsNullOrEmpty(envFilePath))
+		{
+			string? envDirectory = Path.GetDirectoryName(envFilePath);
 
-        string fallbackDirectory = Path.Combine(Directory.GetCurrentDirectory(), "program-log.txt");
+			if (envDirectory != null)
+			{
+				return Path.Combine(envDirectory, "program-log.txt");
+			}
+		}
+
+		string fallbackDirectory = Path.Combine(Directory.GetCurrentDirectory(), "program-log.txt");
         Console.WriteLine($"Log file will be created in fallback location: {fallbackDirectory}");
         return fallbackDirectory;
     }
 
-    private static string FindEnvFile()
+    private static string? FindEnvFile()
     {
         string currentDirectory = Directory.GetCurrentDirectory();
         Console.WriteLine($"Current working directory: {currentDirectory}");
@@ -135,25 +142,33 @@ internal class Program
 
         while (Directory.GetParent(currentDirectory) != null)
         {
-            currentDirectory = Directory.GetParent(currentDirectory).FullName;
-            potentialPath = Path.Combine(currentDirectory, ".env");
+			var parentDirectory = Directory.GetParent(currentDirectory);
+			if (parentDirectory != null)
+			{
+				currentDirectory = parentDirectory.FullName;
+				potentialPath = Path.Combine(currentDirectory, ".env");
 
-            if (File.Exists(potentialPath))
-            {
-                Console.WriteLine($"Found .env file in parent directory: {currentDirectory}");
-                return potentialPath;
-            }
-        }
+				if (File.Exists(potentialPath))
+				{
+					Console.WriteLine($"Found .env file in parent directory: {currentDirectory}");
+					return potentialPath;
+				}
+			}
+		}
 
-        string fallbackDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "BlackjackWebsocket", "BlackjackWebsocket");
-        potentialPath = Path.Combine(fallbackDirectory, ".env");
-        if (File.Exists(potentialPath))
-        {
-            Console.WriteLine($"Found .env file in fallback directory: {fallbackDirectory}");
-            return potentialPath;
-        }
+		var parentDirectoryFallback = Directory.GetParent(Directory.GetCurrentDirectory());
+		if (parentDirectoryFallback != null)
+		{
+			string fallbackDirectory = Path.Combine(parentDirectoryFallback.FullName, "BlackjackWebsocket", "BlackjackWebsocket");
+			potentialPath = Path.Combine(fallbackDirectory, ".env");
+			if (File.Exists(potentialPath))
+			{
+				Console.WriteLine($"Found .env file in fallback directory: {fallbackDirectory}");
+				return potentialPath;
+			}
+		}
 
-        Console.WriteLine("No .env file found.");
+		Console.WriteLine("No .env file found.");
         return null;
     }
 

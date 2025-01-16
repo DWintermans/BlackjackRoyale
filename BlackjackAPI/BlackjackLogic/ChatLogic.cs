@@ -89,7 +89,7 @@ namespace BlackjackLogic
 
         public async Task SendMessage(Player player, string receiver, string chatMessage)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (receiver.ToString().ToUpper() == "GLOBAL") //global message
             {
@@ -138,7 +138,7 @@ namespace BlackjackLogic
             }
         }
 
-        public async Task SendMessageToGroup(Player player, Group group, string chatMessage)
+        public async Task SendMessageToGroup(Player player, Group? group, string chatMessage)
         {
             foreach (var member in group.Members)
             {
@@ -185,7 +185,7 @@ namespace BlackjackLogic
 
             try
             {
-                _chatDAL.SaveChatMessage(user_id, receiver_id, group_id, message);
+                _chatDAL.SaveChatMessage(user_id, receiver_id, group_id ?? string.Empty, message);
             }
             catch (Exception ex)
             {

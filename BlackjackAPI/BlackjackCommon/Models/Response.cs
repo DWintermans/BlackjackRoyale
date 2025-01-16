@@ -41,11 +41,10 @@
             { "NoMessagesFound", "No messages found." },
             { "NoGroupsFound", "No groups found." },
             { "NoUsersFound", "No users found for your searchterm." },
-
         };
 
         public bool Success { get; set; }
-        public string Message { get; set; }
+        public string? Message { get; set; }
         public T? Data { get; set; }
 
         public Response(string code)
@@ -59,7 +58,7 @@
             Success = true;
         }
 
-        public Response(T data, string code)
+        public Response(T? data, string code)
         {
             Success = true;
             Data = data;

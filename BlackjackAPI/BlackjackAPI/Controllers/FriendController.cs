@@ -117,7 +117,7 @@ namespace BlackjackAPI.Controllers
         /// <summary>
         /// Request to become friends with another user.
         /// </summary>
-        /// <param name="model">The request model containing the ID of the user to send the friend request to.</param>
+        /// <param name="friend_id">The request model containing the ID of the user to send the friend request to.</param>
         /// <response code="201">Friend request sent successfully.</response>
         /// <response code="400">Bad request. Occurs if the user tries to send a request to themselves or if the model is invalid.</response>
         /// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>
@@ -163,7 +163,8 @@ namespace BlackjackAPI.Controllers
         /// <summary>
         /// Update the status of a friend request.
         /// </summary>
-        /// <param name="model">The status model containing the ID of the user and the new status ("accepted" or "rejected").</param>
+        /// <param name="friend_id">The status model containing the ID of the user.</param>
+        /// <param name="status">The status model containing the new status ("accepted" or "rejected").</param>
         /// <response code="200">Friend status successfully updated.</response>
         /// <response code="400">Bad request. Occurs if an invalid status is provided.</response>
         /// <response code="401">Unauthorized. Occurs if the user's JWT token is missing or invalid.</response>

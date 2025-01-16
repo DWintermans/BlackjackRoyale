@@ -14,17 +14,17 @@ namespace BlackjackCommon.Entities.User
         [Required]
         [MaxLength(50)]
         [Column("user_name")]
-        public string user_name { get; set; }
+        required public string user_name { get; set; }
 
         [Required]
         [MaxLength(255)]
         [Column("user_passwordhash")]
-        public string user_passwordhash { get; set; }
+        required public string user_passwordhash { get; set; }
 
         [Required]
         [MaxLength(255)]
         [Column("user_passwordsalt")]
-        public string user_passwordsalt { get; set; }
+        required public string user_passwordsalt { get; set; }
 
         [Column("user_is_moderator")]
         public bool user_is_moderator { get; set; }

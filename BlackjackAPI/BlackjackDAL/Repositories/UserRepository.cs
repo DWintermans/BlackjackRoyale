@@ -77,7 +77,7 @@ namespace BlackjackDAL.Repositories
             }
         }
 
-        public (int user_id, string user_name, byte[] hashed_pw, byte[] salt) RetrieveLoginInformation(string username)
+        public (int user_id, string? user_name, byte[]? hashed_pw, byte[]? salt) RetrieveLoginInformation(string username)
         {
             try
             {
@@ -107,7 +107,7 @@ namespace BlackjackDAL.Repositories
             File.AppendAllText(logFilePath, logMessage);
         }
 
-        public (byte[] hashed_pw, byte[] salt) RetrieveSalt_HashInformation(int user_id)
+        public (byte[]? hashed_pw, byte[]? salt) RetrieveSalt_HashInformation(int user_id)
         {
             try
             {

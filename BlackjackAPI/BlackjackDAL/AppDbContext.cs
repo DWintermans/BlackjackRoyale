@@ -9,7 +9,7 @@ namespace BlackjackDAL
 {
     public class AppDbContext : DbContext
     {
-        private readonly string _connectionString;
+        private readonly string? _connectionString;
 
         //for testing
         public AppDbContext(DbContextOptions<AppDbContext> options)

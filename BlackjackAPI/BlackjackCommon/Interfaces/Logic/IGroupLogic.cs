@@ -13,7 +13,7 @@ namespace BlackjackCommon.Interfaces.Logic
 
 
         Task HandleGroupAction(Player player, dynamic message);
-        Task MovePlayersFromWaitingRoom(Group group);
+        Task MovePlayersFromWaitingRoom(Group? group);
         Task ForceShowLobby();
     }
 }

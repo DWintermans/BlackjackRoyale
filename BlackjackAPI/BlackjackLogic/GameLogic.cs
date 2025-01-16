@@ -80,7 +80,7 @@ namespace BlackjackLogic
         public async Task HandleGameAction(Player player, dynamic message)
         {
             //check if group exists / if game has started (has received deck)
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group == null)
             {
@@ -200,7 +200,7 @@ namespace BlackjackLogic
 
         }
 
-        private async Task WhoseTurnIsIt(Group group)
+        private async Task WhoseTurnIsIt(Group? group)
         {
             foreach (var member in group.Members)
             {
@@ -230,7 +230,7 @@ namespace BlackjackLogic
             }
         }
 
-        private async Task TryToFinishGame(Group group)
+        private async Task TryToFinishGame(Group? group)
         {
             foreach (var member in group.Members)
             {
@@ -495,7 +495,7 @@ namespace BlackjackLogic
             return int.Parse(handValue);
         }
 
-        private async Task<bool> IsCurrentPlayersTurn(Player player, Group group)
+        private async Task<bool> IsCurrentPlayersTurn(Player player, Group? group)
         {
             if (group.Status != Group.GroupStatus.PLAYING)
             {
@@ -538,7 +538,7 @@ namespace BlackjackLogic
             return false;
         }
 
-        public async Task StartBetting(Group group)
+        public async Task StartBetting(Group? group)
         {
             await _groupLogic.Value.MovePlayersFromWaitingRoom(group);
 
@@ -553,7 +553,7 @@ namespace BlackjackLogic
             }
         }
 
-        public async Task StartGame(Group group)
+        public async Task StartGame(Group? group)
         {
             await OnGroupNotification?.Invoke(group, "Game is starting now!", NotificationType.GAME, default);
 
@@ -645,7 +645,7 @@ namespace BlackjackLogic
             await TryToFinishGame(group);
         }
 
-        private async void RemoveOldDecksAndAddTwoDecksToGroup(Group group)
+        private async void RemoveOldDecksAndAddTwoDecksToGroup(Group? group)
         {
             group.Deck.Clear();
 
@@ -678,7 +678,7 @@ namespace BlackjackLogic
 
         private async Task DealCard(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group.Status != Group.GroupStatus.PLAYING) return;
 
@@ -742,7 +742,7 @@ namespace BlackjackLogic
             Console.WriteLine($"{player.User_ID} received {cardName}, value in hand: {CalculateHandValue(activeHand.Cards)}");
         }
 
-        private async Task DealCardToDealer(Group group)
+        private async Task DealCardToDealer(Group? group)
         {
             if (group.Status != Group.GroupStatus.PLAYING) return;
 
@@ -779,7 +779,7 @@ namespace BlackjackLogic
 
         private async Task Stand(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             var (activeHand, index) = GetActiveHand(player);
 
@@ -822,7 +822,7 @@ namespace BlackjackLogic
 
         private async Task Double(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group.Status != Group.GroupStatus.PLAYING) return;
 
@@ -903,7 +903,7 @@ namespace BlackjackLogic
 
         private async Task Surrender(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group.Status != Group.GroupStatus.PLAYING) return;
 
@@ -959,7 +959,7 @@ namespace BlackjackLogic
 
         private async Task Insure(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group.Status != Group.GroupStatus.PLAYING) return;
 
@@ -1008,7 +1008,7 @@ namespace BlackjackLogic
 
         private async Task Split(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group.Status != Group.GroupStatus.PLAYING) return;
 
@@ -1092,7 +1092,7 @@ namespace BlackjackLogic
                 return;
             }
 
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             if (group.Status != Group.GroupStatus.BETTING)
             {
@@ -1143,7 +1143,7 @@ namespace BlackjackLogic
 
         private int CalculateTotalBetValue(Player player)
         {
-            Group group = SharedData.GetGroupForPlayer(player);
+            Group? group = SharedData.GetGroupForPlayer(player);
 
             int totalBet = 0;
 

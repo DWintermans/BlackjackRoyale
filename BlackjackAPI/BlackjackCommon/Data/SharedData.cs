@@ -9,7 +9,7 @@ namespace BlackjackCommon.Data.SharedData
         public static Dictionary<int, Player> Players = new Dictionary<int, Player>();
         public static Dictionary<string, Group> Groups = new Dictionary<string, Group>();
 
-        public static Group GetGroupForPlayer(Player player)
+        public static Group? GetGroupForPlayer(Player player)
         {
             foreach (var group in Groups.Values)
             {
@@ -22,7 +22,7 @@ namespace BlackjackCommon.Data.SharedData
             return null;
         }
 
-        public static Group GetGroupForWaitingroomPlayer(Player player)
+        public static Group? GetGroupForWaitingroomPlayer(Player player)
         {
             foreach (var group in Groups.Values)
             {
@@ -35,7 +35,7 @@ namespace BlackjackCommon.Data.SharedData
             return null;
         }
 
-        public static Player TryGetExistingPlayer(int user_id)
+        public static Player? TryGetExistingPlayer(int user_id)
         {
             SharedData.Players.TryGetValue(user_id, out var player);
             return player;
