@@ -1,5 +1,5 @@
 ﻿using BlackjackCommon.Data.SharedData;
-using BlackjackCommon.Interfaces.Logic;
+using BlackjackLogic.Interfaces.Logic;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
 using System.Net.WebSockets;

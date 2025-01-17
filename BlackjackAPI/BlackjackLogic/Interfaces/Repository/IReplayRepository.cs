@@ -1,6 +1,6 @@
 ﻿using BlackjackCommon.ViewModels;
 
-namespace BlackjackCommon.Interfaces.Repository
+namespace BlackjackLogic.Interfaces.Repository
 {
     public interface IReplayRepository
     {

@@ -1,6 +1,6 @@
 ﻿using BlackjackCommon.Data.SharedData;
-using BlackjackCommon.Interfaces.Logic;
-using BlackjackCommon.Interfaces.Repository;
+using BlackjackLogic.Interfaces.Logic;
+using BlackjackLogic.Interfaces.Repository;
 using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
 using Newtonsoft.Json;

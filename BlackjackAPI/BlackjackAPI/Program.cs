@@ -4,11 +4,11 @@
 #pragma warning disable SA1200
 
 using System.Text;
-using BlackjackCommon.Interfaces.Logic;
-using BlackjackCommon.Interfaces.Repository;
 using BlackjackDAL;
 using BlackjackDAL.Repositories;
 using BlackjackLogic;
+using BlackjackLogic.Interfaces.Logic;
+using BlackjackLogic.Interfaces.Repository;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;

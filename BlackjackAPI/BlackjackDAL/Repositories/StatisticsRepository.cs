@@ -1,6 +1,6 @@
 ﻿using BlackjackCommon.Entities.History;
 using BlackjackCommon.Entities.User;
-using BlackjackCommon.Interfaces.Repository;
+using BlackjackLogic.Interfaces.Repository;
 using BlackjackCommon.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;

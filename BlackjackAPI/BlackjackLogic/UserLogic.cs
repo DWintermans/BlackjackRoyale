@@ -1,5 +1,5 @@
-﻿using BlackjackCommon.Interfaces.Logic;
-using BlackjackCommon.Interfaces.Repository;
+﻿using BlackjackLogic.Interfaces.Logic;
+using BlackjackLogic.Interfaces.Repository;
 using BlackjackCommon.Models;
 using Konscious.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;

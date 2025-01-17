@@ -4,7 +4,7 @@
 
 namespace BlackjackAPI.Controllers
 {
-    using BlackjackCommon.Interfaces.Logic;
+    using BlackjackLogic.Interfaces.Logic;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 

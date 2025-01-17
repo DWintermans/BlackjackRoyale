@@ -1,7 +1,7 @@
 ﻿using BlackjackCommon.Models;
 using BlackjackCommon.ViewModels;
 
-namespace BlackjackCommon.Interfaces.Logic
+namespace BlackjackLogic.Interfaces.Logic
 {
     public interface IChatLogic
     {

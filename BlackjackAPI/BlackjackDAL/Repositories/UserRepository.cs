@@ -1,5 +1,5 @@
 ﻿using BlackjackCommon.Entities.User;
-using BlackjackCommon.Interfaces.Repository;
+using BlackjackLogic.Interfaces.Repository;
 using BlackjackCommon.Models;
 using MySql.Data.MySqlClient;
 

@@ -1,6 +1,6 @@
 ﻿using BlackjackCommon.Entities.Message;
 using BlackjackCommon.Entities.User;
-using BlackjackCommon.Interfaces.Repository;
+using BlackjackLogic.Interfaces.Repository;
 using BlackjackCommon.ViewModels;
 using System.Linq;
 

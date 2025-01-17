@@ -1,6 +1,6 @@
 ﻿using BlackjackCommon.Interfaces;
-using BlackjackCommon.Interfaces.Logic;
-using BlackjackCommon.Interfaces.Repository;
+using BlackjackLogic.Interfaces.Logic;
+using BlackjackLogic.Interfaces.Repository;
 using BlackjackDAL;
 using BlackjackDAL.Repositories;
 using BlackjackLogic;

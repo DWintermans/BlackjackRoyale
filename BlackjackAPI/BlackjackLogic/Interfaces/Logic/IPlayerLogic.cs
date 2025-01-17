@@ -1,6 +1,6 @@
 ﻿using BlackjackCommon.Models;
 
-namespace BlackjackCommon.Interfaces.Logic
+namespace BlackjackLogic.Interfaces.Logic
 {
     public interface IPlayerLogic
     {

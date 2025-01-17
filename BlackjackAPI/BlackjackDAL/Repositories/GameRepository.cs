@@ -1,7 +1,7 @@
 ﻿using BlackjackCommon.Entities.Friend;
 using BlackjackCommon.Entities.History;
 using BlackjackCommon.Entities.User;
-using BlackjackCommon.Interfaces.Repository;
+using BlackjackLogic.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
 using System;
 

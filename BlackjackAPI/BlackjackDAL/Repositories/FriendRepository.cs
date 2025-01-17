@@ -1,7 +1,7 @@
 ﻿using BlackjackCommon.Entities.Friend;
 using BlackjackCommon.Entities.Friend_Request;
 using BlackjackCommon.Entities.User;
-using BlackjackCommon.Interfaces.Repository;
+using BlackjackLogic.Interfaces.Repository;
 using BlackjackCommon.ViewModels;
 
 namespace BlackjackDAL.Repositories
